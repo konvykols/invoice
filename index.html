@@ -1630,14 +1630,17 @@ function handleFiles(input, key){
       var r=new FileReader();
       r.onload=function(e){
         if(f.type.indexOf('image/')===0){
-          toGrayscale(e.target.result, function(grayData){
-            var idx=files[key].length;
-            files[key].push({name:f.name,size:f.size,type:f.type,data:grayData,certified:false});
-            // คาดลายน้ำ + ลายเซ็นอัตโนมัติ
-            autoStamp(key, idx, function(){
-              renderChips(key);
-            });
-          });
+          (function(fileObj, k){
+            var reader2=new FileReader();
+            reader2.onload=function(ev){
+              // push placeholder ก่อน แล้วเปิด crop modal
+              var newIdx=files[k].length;
+              files[k].push({name:fileObj.name,size:fileObj.size,type:fileObj.type,data:ev.target.result,certified:false});
+              renderChips(k);
+              openCropModal(k, newIdx, ev.target.result);
+            };
+            reader2.readAsDataURL(fileObj);
+          })(f, key);
         } else {
           files[key].push({name:f.name,size:f.size,type:f.type,data:e.target.result});
           renderChips(key);
@@ -1647,6 +1650,124 @@ function handleFiles(input, key){
     })(input.files[i]);
   }
   input.value='';
+}
+
+// ── Crop System ──
+var _cropKey=null, _cropIdx=null, _cropOrigData=null;
+var _cropDrag=null, _cropStartX=0, _cropStartY=0;
+var _cropBox={x:0,y:0,w:0,h:0};
+
+function openCropModal(key, idx, dataUrl){
+  _cropKey=key; _cropIdx=idx; _cropOrigData=dataUrl;
+  var modal=document.getElementById('cropModal');
+  var img=document.getElementById('cropImg');
+  modal.style.display='flex';
+  document.body.style.overflow='hidden';
+  img.src=dataUrl;
+  img.onload=function(){ initCropBox(); };
+  if(img.complete && img.naturalWidth) initCropBox();
+}
+
+function initCropBox(){
+  var container=document.getElementById('cropContainer');
+  var img=document.getElementById('cropImg');
+  var cw=container.offsetWidth, ch=img.offsetHeight||img.clientHeight;
+  container.style.height=ch+'px';
+  // กรอบเริ่มต้น: บัตรมักอยู่กลาง ประมาณ 80% กว้าง
+  var bw=Math.round(cw*0.82), bh=Math.round(bw*0.63); // ratio บัตร 85.6x54mm
+  var bx=Math.round((cw-bw)/2), by=Math.round((ch-bh)/2);
+  _cropBox={x:bx,y:by,w:bw,h:bh};
+  applyCropBox();
+  bindCropEvents();
+}
+
+function applyCropBox(){
+  var box=document.getElementById('cropBox');
+  box.style.left=_cropBox.x+'px'; box.style.top=_cropBox.y+'px';
+  box.style.width=_cropBox.w+'px'; box.style.height=_cropBox.h+'px';
+}
+
+function bindCropEvents(){
+  var box=document.getElementById('cropBox');
+  var container=document.getElementById('cropContainer');
+  var handles=box.querySelectorAll('.crop-h');
+
+  function getXY(e){ var s=e.touches?e.touches[0]:e; return{x:s.clientX,y:s.clientY}; }
+
+  // drag กล่อง
+  box.onmousedown=box.ontouchstart=function(e){
+    if(e.target.classList.contains('crop-h')) return;
+    e.preventDefault(); _cropDrag='move';
+    var p=getXY(e); _cropStartX=p.x-_cropBox.x; _cropStartY=p.y-_cropBox.y;
+  };
+
+  // resize handles
+  handles.forEach(function(h){
+    h.onmousedown=h.ontouchstart=function(e){
+      e.preventDefault(); e.stopPropagation();
+      _cropDrag=h.dataset.pos;
+      var p=getXY(e); _cropStartX=p.x; _cropStartY=p.y;
+    };
+  });
+
+  document.onmousemove=document.ontouchmove=function(e){
+    if(!_cropDrag) return; e.preventDefault();
+    var p=getXY(e);
+    var cw=container.offsetWidth, ch=container.offsetHeight;
+    var minS=50;
+    if(_cropDrag==='move'){
+      _cropBox.x=Math.max(0,Math.min(p.x-_cropStartX, cw-_cropBox.w));
+      _cropBox.y=Math.max(0,Math.min(p.y-_cropStartY, ch-_cropBox.h));
+    } else {
+      var dx=p.x-_cropStartX, dy=p.y-_cropStartY;
+      _cropStartX=p.x; _cropStartY=p.y;
+      if(_cropDrag==='br'){ _cropBox.w=Math.max(minS,_cropBox.w+dx); _cropBox.h=Math.max(minS,_cropBox.h+dy); }
+      else if(_cropDrag==='bl'){ _cropBox.x+=dx; _cropBox.w=Math.max(minS,_cropBox.w-dx); _cropBox.h=Math.max(minS,_cropBox.h+dy); }
+      else if(_cropDrag==='tr'){ _cropBox.y+=dy; _cropBox.w=Math.max(minS,_cropBox.w+dx); _cropBox.h=Math.max(minS,_cropBox.h-dy); }
+      else if(_cropDrag==='tl'){ _cropBox.x+=dx; _cropBox.y+=dy; _cropBox.w=Math.max(minS,_cropBox.w-dx); _cropBox.h=Math.max(minS,_cropBox.h-dy); }
+      // clamp
+      _cropBox.x=Math.max(0,_cropBox.x); _cropBox.y=Math.max(0,_cropBox.y);
+      if(_cropBox.x+_cropBox.w>cw) _cropBox.w=cw-_cropBox.x;
+      if(_cropBox.y+_cropBox.h>ch) _cropBox.h=ch-_cropBox.y;
+    }
+    applyCropBox();
+  };
+  document.onmouseup=document.ontouchend=function(){ _cropDrag=null; };
+}
+
+function confirmCrop(){
+  var img=document.getElementById('cropImg');
+  var container=document.getElementById('cropContainer');
+  var displayW=container.offsetWidth;
+  var displayH=img.offsetHeight||img.clientHeight;
+  var scaleX=img.naturalWidth/displayW;
+  var scaleY=img.naturalHeight/displayH;
+
+  var canvas=document.createElement('canvas');
+  var cx=Math.round(_cropBox.x*scaleX), cy=Math.round(_cropBox.y*scaleY);
+  var cw=Math.round(_cropBox.w*scaleX), ch=Math.round(_cropBox.h*scaleY);
+  canvas.width=cw; canvas.height=ch;
+  var ctx=canvas.getContext('2d');
+  ctx.drawImage(img, cx, cy, cw, ch, 0, 0, cw, ch);
+  var cropped=canvas.toDataURL('image/jpeg',0.95);
+
+  cancelCrop();
+
+  // แปลงเป็น grayscale แล้วประทับลายน้ำ
+  toGrayscale(cropped, function(grayData){
+    if(_cropKey!==null && _cropIdx!==null){
+      files[_cropKey][_cropIdx].data=grayData;
+      files[_cropKey][_cropIdx].certified=false;
+      autoStamp(_cropKey, _cropIdx, function(){ renderChips(_cropKey); });
+    }
+  });
+}
+
+function cancelCrop(){
+  document.getElementById('cropModal').style.display='none';
+  document.body.style.overflow='';
+  document.onmousemove=null; document.ontouchmove=null;
+  document.onmouseup=null; document.ontouchend=null;
 }
 
 function autoStamp(key, idx, cb){
@@ -2947,6 +3068,32 @@ function handleOtherSelect(selId, inputId){
     กด <strong style="color:#fff">📤 Share</strong> แล้วเลือก <strong style="color:#fff">Line</strong> หรือ <strong style="color:#fff">บันทึกใน Files</strong>
   </div>
   <iframe id="iosPdfFrame" src="" style="flex:1;border:none;width:100%;background:#fff"></iframe>
+</div>
+
+<!-- Crop Modal -->
+<div id="cropModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99997;align-items:center;justify-content:center;padding:12px">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:500px;overflow:hidden">
+    <div style="background:#f73174;color:#fff;padding:11px 16px;font-size:.83rem;font-weight:700;display:flex;align-items:center;justify-content:space-between">
+      <span>✂️ ครอปรูปบัตร</span>
+      <button onclick="cancelCrop()" style="background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:8px;font-size:.68rem;color:#8a96a3;text-align:center">ลากกรอบสีเหลืองเพื่อเลือกเฉพาะส่วนบัตร</div>
+    <div style="position:relative;background:#000;overflow:hidden;touch-action:none" id="cropContainer">
+      <img id="cropImg" style="display:block;width:100%;user-select:none;-webkit-user-drag:none">
+      <!-- กรอบครอป -->
+      <div id="cropBox" style="position:absolute;border:2.5px solid #fedf22;box-shadow:0 0 0 9999px rgba(0,0,0,.45);cursor:move;box-sizing:border-box;touch-action:none">
+        <!-- handles มุม -->
+        <div class="crop-h" data-pos="tl" style="position:absolute;top:-6px;left:-6px;width:14px;height:14px;background:#fedf22;border-radius:3px;cursor:nw-resize;touch-action:none"></div>
+        <div class="crop-h" data-pos="tr" style="position:absolute;top:-6px;right:-6px;width:14px;height:14px;background:#fedf22;border-radius:3px;cursor:ne-resize;touch-action:none"></div>
+        <div class="crop-h" data-pos="bl" style="position:absolute;bottom:-6px;left:-6px;width:14px;height:14px;background:#fedf22;border-radius:3px;cursor:sw-resize;touch-action:none"></div>
+        <div class="crop-h" data-pos="br" style="position:absolute;bottom:-6px;right:-6px;width:14px;height:14px;background:#fedf22;border-radius:3px;cursor:se-resize;touch-action:none"></div>
+      </div>
+    </div>
+    <div style="padding:12px;display:flex;gap:8px">
+      <button onclick="cancelCrop()" style="flex:1;padding:10px;border:1.5px solid #dde3ea;border-radius:8px;background:#fff;font-family:Sarabun,sans-serif;font-size:.82rem;color:#666;cursor:pointer">ยกเลิก</button>
+      <button onclick="confirmCrop()" style="flex:2;padding:10px;border:none;border-radius:8px;background:#f73174;font-family:Sarabun,sans-serif;font-size:.82rem;font-weight:700;color:#fff;cursor:pointer">✅ ครอป & ใช้งาน</button>
+    </div>
+  </div>
 </div>
 
 <!-- Certified Copy Modal -->
