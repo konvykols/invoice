@@ -1810,64 +1810,58 @@ function autoStamp(key, idx, cb){
     }
     var name=v('infName')||'';
 
-    // ── ลายน้ำ — คาดขวางฝั่งรูปถ่าย ไม่บังชื่อ/ที่อยู่ ──
+    // ── ลายน้ำ คาดขวาง — clip แน่นในรูป ──
     ctx.save();
-    // clip เฉพาะครึ่งขวาของรูป (ฝั่งรูปถ่าย)
-    var clipX=imgX+imgW*0.45;
-    ctx.beginPath(); ctx.rect(clipX, imgY, imgW*0.55, imgH); ctx.clip();
+    ctx.beginPath(); ctx.rect(imgX,imgY,imgW,imgH); ctx.clip();
 
-    var cx=imgX+imgW*0.72, cy=imgY+imgH/2;
+    var cx=imgX+imgW/2, cy=imgY+imgH/2;
     ctx.translate(cx,cy); ctx.rotate(-Math.PI/4); ctx.textAlign='center';
 
-    // คำนวณ diagonal ของพื้นที่ clip เพื่อหา max width ของข้อความ
-    var diagW=Math.sqrt(Math.pow(imgW*0.55,2)+Math.pow(imgH,2))*0.7;
+    // diagonal ของรูป — ใช้เป็น maxWidth ข้อความ
+    var diagW=Math.sqrt(imgW*imgW+imgH*imgH)*0.62;
 
-    // ฟังก์ชัน auto-fit font ให้ข้อความพอดีกับ diagW
-    function fitFont(text, maxPx, fontStr){
+    // auto-fit font
+    function fitFont(text,maxPx,bold){
       var fs=maxPx;
-      ctx.font=fontStr.replace('__FS__', fs);
-      while(ctx.measureText(text).width > diagW && fs > 7){
-        fs -= 0.5;
-        ctx.font=fontStr.replace('__FS__', fs);
+      var f=(bold?'bold ':'')+fs+'px "Dancing Script",Georgia,cursive';
+      ctx.font=f;
+      while(ctx.measureText(text).width>diagW && fs>7){
+        fs-=0.5;
+        ctx.font=(bold?'bold ':'')+fs+'px "Dancing Script",Georgia,cursive';
       }
       return fs;
     }
 
-    // เส้นขีดคร่อม 2 เส้น
-    var lineH=imgH*0.10;
-    var lh=lineH*1.6;
-    ctx.globalAlpha=0.55; ctx.strokeStyle='#111';
-    ctx.lineWidth=Math.max(imgH*0.015,2); ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(-diagW*0.6,-lh); ctx.lineTo(diagW*0.6,-lh); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-diagW*0.6,lh); ctx.lineTo(diagW*0.6,lh); ctx.stroke();
+    var lineH=imgH*0.095;
 
-    ctx.globalAlpha=0.72;
-    ctx.fillStyle='#111';
-    ctx.strokeStyle='rgba(255,255,255,0.8)';
-    ctx.lineWidth=2;
+    // เส้น 2 เส้น
+    var lh=lineH*1.7;
+    ctx.globalAlpha=0.50; ctx.strokeStyle='#111';
+    ctx.lineWidth=Math.max(imgH*0.014,1.5); ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-diagW*0.55,-lh); ctx.lineTo(diagW*0.55,-lh); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-diagW*0.55,lh); ctx.lineTo(diagW*0.55,lh); ctx.stroke();
 
-    // บรรทัด 1: ใช้สำหรับ — auto fit
-    var line1='*ใช้สำหรับรับชำระค่าสมนาคุณในการรีวิวสินค้าเท่านั้น*';
-    var fs1=fitFont(line1, imgW*0.032, 'bold __FS__px "Dancing Script",Georgia,cursive');
+    ctx.globalAlpha=0.68; ctx.fillStyle='#111';
+    ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=2;
+
+    var line1='*ใช้สำหรับรับชำระค่าจ้างในการรีวิวสินค้า จาก บริษัท คอนวี่ อินเตอร์เนชั่นแนล จำกัด เท่านั้น*';
+    var fs1=fitFont(line1,imgW*0.028,true);
     ctx.font='bold '+fs1+'px "Dancing Script",Georgia,cursive';
     ctx.strokeText(line1,0,-lineH*0.65);
     ctx.fillText(line1,0,-lineH*0.65);
 
-    // บรรทัด 2: สำเนาถูกต้อง — auto fit
     var line2='สำเนาถูกต้อง';
-    var fs2=fitFont(line2, imgW*0.072, 'bold __FS__px "Dancing Script",Georgia,cursive');
+    var fs2=fitFont(line2,imgW*0.065,true);
     ctx.font='bold '+fs2+'px "Dancing Script",Georgia,cursive';
-    ctx.strokeText(line2,0,lineH*0.55);
-    ctx.fillText(line2,0,lineH*0.55);
+    ctx.strokeText(line2,0,lineH*0.5);
+    ctx.fillText(line2,0,lineH*0.5);
 
-    // บรรทัด 3: ชื่อ — auto fit
-    var fs3=fitFont(name||' ', imgW*0.030, 'bold __FS__px "Dancing Script",Georgia,cursive');
+    var fs3=fitFont(name||' ',imgW*0.026,true);
     ctx.font='bold '+fs3+'px "Dancing Script",Georgia,cursive';
     ctx.strokeText(name,0,lineH*1.5);
     ctx.fillText(name,0,lineH*1.5);
 
-    // บรรทัด 4: วันที่
-    var fs4=fitFont(dateStr, imgW*0.028, '__FS__px "Dancing Script",Georgia,cursive');
+    var fs4=fitFont(dateStr,imgW*0.024,false);
     ctx.font=fs4+'px "Dancing Script",Georgia,cursive';
     ctx.strokeText(dateStr,0,lineH*2.3);
     ctx.fillText(dateStr,0,lineH*2.3);
@@ -2769,8 +2763,8 @@ function saveCertified(){
 
   var fs1=Math.max(imgW*0.028,9);
   ctx.font='bold '+fs1+'px Sarabun,sans-serif';
-  ctx.strokeText('*ใช้สำหรับรับชำระค่าสมนาคุณในการรีวิวสินค้าเท่านั้น*',0,-lineH*2.2);
-  ctx.fillText('*ใช้สำหรับรับชำระค่าสมนาคุณในการรีวิวสินค้าเท่านั้น*',0,-lineH*2.2);
+  ctx.strokeText('*ใช้สำหรับรับชำระค่าจ้างในการรีวิวสินค้า จาก บริษัท คอนวี่ อินเตอร์เนชั่นแนล จำกัด เท่านั้น*',0,-lineH*2.2);
+  ctx.fillText('*ใช้สำหรับรับชำระค่าจ้างในการรีวิวสินค้า จาก บริษัท คอนวี่ อินเตอร์เนชั่นแนล จำกัด เท่านั้น*',0,-lineH*2.2);
 
   var fs2=Math.max(imgW*0.025,8);
   ctx.font='bold '+fs2+'px Sarabun,sans-serif';
@@ -3140,7 +3134,7 @@ function handleOtherSelect(selId, inputId){
       <canvas id="certCanvas" style="position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none"></canvas>
       <!-- ข้อความสำเนาถูกต้อง (overlay) -->
       <div id="certStamp" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:.8;width:90%">
-        <div style="font-size:.68rem;font-weight:700;color:#1a5fb4;text-shadow:0 0 3px rgba(255,255,255,.9)">*ใช้สำหรับรับชำระค่าสมนาคุณในการรีวิวสินค้าเท่านั้น*</div>
+        <div style="font-size:.68rem;font-weight:700;color:#1a5fb4;text-shadow:0 0 3px rgba(255,255,255,.9)">*ใช้สำหรับรับชำระค่าจ้างในการรีวิวสินค้า จาก บริษัท คอนวี่ อินเตอร์เนชั่นแนล จำกัด เท่านั้น*</div>
         <div style="font-size:.62rem;font-weight:700;color:#1a5fb4;text-shadow:0 0 3px rgba(255,255,255,.9);margin-bottom:4px">จาก บริษัท คอนวี่ อินเตอร์เนชั่นแนล จำกัด</div>
         <div style="font-size:1.2rem;font-weight:900;color:#1a5fb4;letter-spacing:.05em;text-shadow:0 0 4px rgba(255,255,255,.9)">สำเนาถูกต้อง</div>
         <div id="certStampName" style="font-size:.75rem;font-weight:700;color:#1a5fb4;margin-top:2px"></div>
