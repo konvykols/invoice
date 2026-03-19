@@ -1635,7 +1635,7 @@ function handleFiles(input, key){
             reader2.onload=function(ev){
               // push placeholder ก่อน แล้วเปิด crop modal
               var newIdx=files[k].length;
-              files[k].push({name:fileObj.name,size:fileObj.size,type:fileObj.type,data:ev.target.result,certified:false});
+              files[k].push({name:fileObj.name,size:fileObj.size,type:fileObj.type,data:ev.target.result,originalData:ev.target.result,certified:false});
               renderChips(k);
               openCropModal(k, newIdx, ev.target.result);
             };
@@ -1757,6 +1757,7 @@ function confirmCrop(){
   toGrayscale(cropped, function(grayData){
     if(_cropKey!==null && _cropIdx!==null){
       files[_cropKey][_cropIdx].data=grayData;
+      files[_cropKey][_cropIdx].originalData=grayData; // เก็บต้นฉบับหลัง crop+grayscale
       files[_cropKey][_cropIdx].certified=false;
       autoStamp(_cropKey, _cropIdx, function(){ renderChips(_cropKey); });
     }
@@ -1776,7 +1777,6 @@ function autoStamp(key, idx, cb){
 
   var img=new Image();
   img.onload=function(){
-    // layout เหมือน saveCertified
     var maxImgW=580, maxImgH=380, pad=50;
     var origW=img.naturalWidth, origH=img.naturalHeight;
     var scale=Math.min(maxImgW/origW, maxImgH/origH, 1);
@@ -1890,7 +1890,8 @@ function autoStamp(key, idx, cb){
       finishStamp();
     }
   };
-  img.src=f.data;
+  // ใช้ต้นฉบับเสมอ ป้องกันลายน้ำซ้อน
+  img.src=f.originalData||f.data;
 }
 
 function renderChips(key){
