@@ -1868,7 +1868,7 @@ function autoStamp(key, idx, cb){
 
     ctx.restore();
 
-    // ── ลายเซ็นมุมขวาล่าง ──
+    // ── ลายเซ็นใต้วันที่ในลายน้ำ ──
     function finishStamp(){
       files[key][idx].data=canvas.toDataURL('image/jpeg',0.92);
       files[key][idx].certified=true;
@@ -1878,10 +1878,20 @@ function autoStamp(key, idx, cb){
     if(sigData){
       var sigEl=new Image();
       sigEl.onload=function(){
-        var sw=imgW*0.25, sh=sw*(sigEl.height/sigEl.width);
-        var sx=imgX+imgW-sw-imgW*0.03, sy=imgY+imgH-sh-imgH*0.04;
-        ctx.save(); ctx.globalAlpha=0.85;
-        ctx.drawImage(sigEl,sx,sy,sw,sh);
+        // วาดลายเซ็นใต้วันที่ในพื้นที่ลายน้ำ (ฝั่งขวา)
+        var lineH2=imgH*0.10;
+        var sigMaxW=imgW*0.28;
+        var sigMaxH=imgH*0.14;
+        var sigRatio=sigEl.width/sigEl.height;
+        var sw=sigMaxW, sh=sw/sigRatio;
+        if(sh>sigMaxH){ sh=sigMaxH; sw=sh*sigRatio; }
+
+        // คำนวณตำแหน่งหลัง rotate — ต้องวาดใน coordinate ปกติ
+        // ลายเซ็นอยู่ฝั่งขวา ใต้วันที่ประมาณ 65-80% ของความสูงรูป
+        var sx=imgX+imgW*0.60, sy=imgY+imgH*0.65;
+        ctx.save();
+        ctx.globalAlpha=0.92;
+        ctx.drawImage(sigEl, sx, sy, sw, sh);
         ctx.restore();
         finishStamp();
       };
