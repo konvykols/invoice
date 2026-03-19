@@ -1630,10 +1630,13 @@ function handleFiles(input, key){
       var r=new FileReader();
       r.onload=function(e){
         if(f.type.indexOf('image/')===0){
-          // แปลงเป็นขาวดำก่อนเก็บ
           toGrayscale(e.target.result, function(grayData){
-            files[key].push({name:f.name,size:f.size,type:f.type,data:grayData});
-            renderChips(key);
+            var idx=files[key].length;
+            files[key].push({name:f.name,size:f.size,type:f.type,data:grayData,certified:false});
+            // คาดลายน้ำ + ลายเซ็นอัตโนมัติ
+            autoStamp(key, idx, function(){
+              renderChips(key);
+            });
           });
         } else {
           files[key].push({name:f.name,size:f.size,type:f.type,data:e.target.result});
@@ -1644,6 +1647,112 @@ function handleFiles(input, key){
     })(input.files[i]);
   }
   input.value='';
+}
+
+function autoStamp(key, idx, cb){
+  var f=files[key][idx];
+  if(!f || f.type.indexOf('image/')!==0){ if(cb)cb(); return; }
+
+  var img=new Image();
+  img.onload=function(){
+    // layout เหมือน saveCertified
+    var maxImgW=580, maxImgH=380, pad=50;
+    var origW=img.naturalWidth, origH=img.naturalHeight;
+    var scale=Math.min(maxImgW/origW, maxImgH/origH, 1);
+    var imgW=Math.round(origW*scale), imgH=Math.round(origH*scale);
+    var imgX=pad, imgY=pad;
+    var canvasW=imgW+pad*2, canvasH=imgH+pad*2;
+
+    var canvas=document.createElement('canvas');
+    canvas.width=canvasW; canvas.height=canvasH;
+    var ctx=canvas.getContext('2d');
+
+    // พื้นหลังขาว + กรอบ
+    ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,canvasW,canvasH);
+    ctx.strokeStyle='#cccccc'; ctx.lineWidth=1;
+    ctx.strokeRect(imgX-2,imgY-2,imgW+4,imgH+4);
+
+    // วาดรูป
+    ctx.drawImage(img,imgX,imgY,imgW,imgH);
+
+    // วันที่จากใบแจ้งหนี้
+    var invDateVal=document.getElementById('invDate')?document.getElementById('invDate').value:'';
+    var dateStr='';
+    if(invDateVal){
+      var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var p=invDateVal.split('-');
+      dateStr=parseInt(p[2])+' / '+months[parseInt(p[1])-1]+' / '+p[0];
+    } else {
+      var today=new Date();
+      var months2=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      dateStr=today.getDate()+' / '+months2[today.getMonth()]+' / '+today.getFullYear();
+    }
+    var name=v('infName')||'';
+
+    // ── ลายน้ำคาดขวาง ──
+    ctx.save();
+    ctx.beginPath(); ctx.rect(imgX,imgY,imgW,imgH); ctx.clip();
+    var cx=imgX+imgW/2, cy=imgY+imgH/2;
+    ctx.translate(cx,cy); ctx.rotate(-Math.PI/4); ctx.textAlign='center';
+
+    // เส้น 2 เส้น
+    var lh=imgH*0.36;
+    ctx.globalAlpha=0.25; ctx.strokeStyle='#1a5fb4'; ctx.lineWidth=imgH*0.022;
+    ctx.beginPath(); ctx.moveTo(-imgW*0.65,-lh); ctx.lineTo(imgW*0.65,-lh); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-imgW*0.65,lh); ctx.lineTo(imgW*0.65,lh); ctx.stroke();
+
+    // ข้อความ
+    ctx.globalAlpha=0.35; ctx.fillStyle='#1a5fb4';
+    ctx.strokeStyle='rgba(255,255,255,0.95)'; ctx.lineWidth=1.5;
+    var lineH=imgH*0.055;
+
+    var fs1=Math.max(imgW*0.028,9);
+    ctx.font='bold '+fs1+'px Sarabun,sans-serif';
+    ctx.strokeText('*ใช้สำหรับรับชำระค่าสมนาคุณในการรีวิวสินค้าเท่านั้น*',0,-lineH*2.2);
+    ctx.fillText('*ใช้สำหรับรับชำระค่าสมนาคุณในการรีวิวสินค้าเท่านั้น*',0,-lineH*2.2);
+
+    var fs2=Math.max(imgW*0.025,8);
+    ctx.font='bold '+fs2+'px Sarabun,sans-serif';
+    ctx.strokeText('จาก บริษัท คอนวี่ อินเตอร์เนชั่นแนล จำกัด',0,-lineH*0.9);
+    ctx.fillText('จาก บริษัท คอนวี่ อินเตอร์เนชั่นแนล จำกัด',0,-lineH*0.9);
+
+    var fs3=Math.max(imgW*0.052,14);
+    ctx.font='bold '+fs3+'px Sarabun,sans-serif';
+    ctx.strokeText('สำเนาถูกต้อง',0,lineH*0.8);
+    ctx.fillText('สำเนาถูกต้อง',0,lineH*0.8);
+
+    var fs4=Math.max(imgW*0.025,8);
+    ctx.font='bold '+fs4+'px Sarabun,sans-serif';
+    ctx.strokeText(name,0,lineH*2.2);
+    ctx.fillText(name,0,lineH*2.2);
+    ctx.font=fs4+'px Sarabun,sans-serif';
+    ctx.strokeText(dateStr,0,lineH*3.3);
+    ctx.fillText(dateStr,0,lineH*3.3);
+    ctx.restore();
+
+    // ── ลายเซ็นมุมขวาล่าง ──
+    function finishStamp(){
+      files[key][idx].data=canvas.toDataURL('image/jpeg',0.92);
+      files[key][idx].certified=true;
+      if(cb)cb();
+    }
+
+    if(sigData){
+      var sigEl=new Image();
+      sigEl.onload=function(){
+        var sw=imgW*0.25, sh=sw*(sigEl.height/sigEl.width);
+        var sx=imgX+imgW-sw-imgW*0.03, sy=imgY+imgH-sh-imgH*0.04;
+        ctx.save(); ctx.globalAlpha=0.85;
+        ctx.drawImage(sigEl,sx,sy,sw,sh);
+        ctx.restore();
+        finishStamp();
+      };
+      sigEl.src=sigData;
+    } else {
+      finishStamp();
+    }
+  };
+  img.src=f.data;
 }
 
 function renderChips(key){
@@ -1665,20 +1774,14 @@ function renderChips(key){
       info.innerHTML='<div class="chip-n">'+f.name+'</div><div class="chip-s">'+((f.size/1024).toFixed(1))+' KB</div>';
       var btn=document.createElement('button'); btn.className='chip-rm'; btn.textContent='✕';
       btn.onclick=function(){ files[key].splice(idx,1); renderChips(key); };
-      chip.appendChild(thumb); chip.appendChild(info); chip.appendChild(btn);
-      if(f.type.indexOf('image/')===0){
-        var certBadge=document.createElement('button');
-        certBadge.style.cssText='font-size:.7rem;font-weight:700;padding:4px 8px;border-radius:8px;cursor:pointer;flex-shrink:0;font-family:Sarabun,sans-serif;margin-left:4px;border:none;display:block;width:100%;margin-top:6px;';
-        if(f.certified){
-          certBadge.style.background='#d8f3dc'; certBadge.style.color='#2d6a4f';
-          certBadge.textContent='✅ เซ็นแล้ว';
-        } else {
-          certBadge.style.background='#f73174'; certBadge.style.color='#fff';
-          certBadge.textContent='✍️ เซ็นสำเนาถูกต้อง';
-        }
-        certBadge.onclick=(function(k,i){return function(){ openCertModal(k,i); };})(key,idx);
-        chip.appendChild(certBadge);
+      // badge เซ็นแล้ว (อัตโนมัติ ไม่ต้องกด)
+      if(f.type.indexOf('image/')===0 && f.certified){
+        var certBadge=document.createElement('div');
+        certBadge.style.cssText='font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:8px;background:#d8f3dc;color:#2d6a4f;margin-top:4px;display:inline-block;';
+        certBadge.textContent='✅ ประทับสำเนาแล้ว';
+        info.appendChild(certBadge);
       }
+      chip.appendChild(thumb); chip.appendChild(info); chip.appendChild(btn);
       wrap.appendChild(chip);
     })(files[key][i], i);
   }
