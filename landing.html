@@ -295,64 +295,22 @@ var isIOS=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
 var isAndroid=/Android/.test(ua);
 var baseUrl='https://konvykols.github.io/invoice/';
 
-// ถ้าเปิดใน LINE → แสดง banner บอกให้เปิด external browser ทันที
-window.addEventListener('DOMContentLoaded', function(){
-  if(isLineBrowser){
-    showLineBanner();
-  }
-});
-
-function showLineBanner(){
-  var banner=document.createElement('div');
-  banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#1a1a2e;color:#fff;padding:14px 16px;text-align:center;font-family:Sarabun,sans-serif;box-shadow:0 2px 12px rgba(0,0,0,.4)';
-  if(isIOS){
-    banner.innerHTML='<div style="font-size:.85rem;font-weight:700;margin-bottom:6px">⚠️ กรุณาเปิดใน Safari เพื่อดาวน์โหลด PDF ได้ค่ะ</div>'+
-      '<div style="font-size:.75rem;color:#aaa;margin-bottom:10px">กด ··· มุมขวาบน → <strong style="color:#fedf22">เปิดในเบราว์เซอร์</strong></div>'+
-      '<button onclick="openExternal()" style="background:#f73174;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:.9rem;font-weight:700;font-family:Sarabun,sans-serif;cursor:pointer">🌐 เปิดใน Safari</button>';
-  } else {
-    banner.innerHTML='<div style="font-size:.85rem;font-weight:700;margin-bottom:6px">⚠️ กรุณาเปิดใน Chrome เพื่อดาวน์โหลด PDF ได้ค่ะ</div>'+
-      '<div style="font-size:.75rem;color:#aaa;margin-bottom:10px">กด ··· มุมขวาบน → <strong style="color:#fedf22">เปิดในเบราว์เซอร์</strong></div>'+
-      '<button onclick="openExternal()" style="background:#f73174;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:.9rem;font-weight:700;font-family:Sarabun,sans-serif;cursor:pointer">🌐 เปิดใน Chrome</button>';
-  }
-  document.body.insertBefore(banner, document.body.firstChild);
-  // เพิ่ม padding top ให้หน้าไม่ถูกบัง
-  document.body.style.paddingTop='110px';
-}
-
-function openExternal(){
-  var url=window.location.href;
-  if(isAndroid){
-    // Android — intent เปิด Chrome
-    var intentUrl='intent://'+url.replace(/^https?:\/\//,'')+
-      '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+
-      encodeURIComponent(url)+';end';
-    window.location.href=intentUrl;
-  } else if(isIOS){
-    // iOS — x-safari trick
-    window.location.href=url.replace('https://','googlechromes://');
-    setTimeout(function(){
-      window.location.href=url.replace('https://','x-safari-https://');
-    },300);
-    setTimeout(function(){
-      window.location.href=url;
-    },800);
-  } else {
-    window.open(url,'_blank');
-  }
-}
-
 function goLang(path){
   var url=baseUrl+path;
   if(isLineBrowser){
-    // พยายามเปิดนอก LINE
     if(isAndroid){
       var intentUrl='intent://'+url.replace(/^https?:\/\//,'')+
         '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+
         encodeURIComponent(url)+';end';
       window.location.href=intentUrl;
     } else if(isIOS){
-      window.location.href=url.replace('https://','x-safari-https://');
-      setTimeout(function(){ window.location.href=url; },800);
+      window.location.href=url.replace('https://','googlechromes://');
+      setTimeout(function(){
+        window.location.href=url.replace('https://','x-safari-https://');
+      },300);
+      setTimeout(function(){
+        window.location.href=url;
+      },800);
     } else {
       window.location.href=url;
     }
@@ -362,7 +320,7 @@ function goLang(path){
 }
 
 function openApp(e){ if(e)e.preventDefault(); goLang('index.html'); }
-function openInBrowser(){ openExternal(); }
+function openInBrowser(){ goLang('index.html'); }
 </script>
 </body>
 </html>
