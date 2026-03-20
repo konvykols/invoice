@@ -251,8 +251,26 @@ body{
   <div class="card">
     <span class="card-emoji">📋</span>
     <div class="card-title">สร้าง<span>ใบแจ้งหนี้</span><br>KOL</div>
-    <div class="card-sub">กรอกข้อมูล เลือกแบบ บันทึก PDF<br>ส่งให้ทีม KONVY ได้เลยค่ะ</div>
-    <a class="btn-main" href="#" onclick="openApp(event)">
+    <div style="font-size:.65rem;color:#bbb;margin:-6px 0 4px;letter-spacing:.04em">KOL Invoice Creator</div>
+    <div class="card-sub">กรอกข้อมูล เลือกแบบ บันทึก PDF<br>ส่งให้ทีม KONVY ได้เลยค่ะ
+      <div style="font-size:.68rem;color:#bbb;margin-top:3px">Fill in · Choose template · Save PDF</div>
+    </div>
+    <!-- Language chooser -->
+<div style="font-size:.72rem;font-weight:700;color:#aaa;text-align:center;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px">
+  🌐 กรุณาเลือกภาษา &nbsp;·&nbsp; Please select language
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;width:100%;margin-top:4px">
+  <a href="javascript:void(0)" onclick="goLang('index.html')" style="text-decoration:none;display:flex;align-items:center;justify-content:center;padding:9px 14px;border-radius:10px;background:#f73174;color:#fff;font-family:Sarabun,sans-serif;font-size:.85rem;font-weight:700">
+    <svg width="22" height="15" viewBox="0 0 22 15" style="border-radius:2px;vertical-align:middle;margin-right:6px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.8)"><rect width="22" height="15" fill="#A51931"/><rect y="2.5" width="22" height="10" fill="#F4F5F8"/><rect y="5" width="22" height="5" fill="#2D2A4A"/></svg> ภาษาไทย
+  </a>
+  <a href="javascript:void(0)" onclick="goLang('index-en.html')" style="text-decoration:none;display:flex;align-items:center;justify-content:center;padding:9px 14px;border-radius:10px;background:#4a90d9;color:#fff;font-family:Sarabun,sans-serif;font-size:.85rem;font-weight:700">
+    <svg width="22" height="15" viewBox="0 0 22 15" style="border-radius:2px;vertical-align:middle;margin-right:6px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.8)"><rect width="22" height="15" fill="#B22234"/><rect y="1.15" width="22" height="1.15" fill="#fff"/><rect y="2.3" width="22" height="1.15" fill="#B22234"/><rect y="3.46" width="22" height="1.15" fill="#fff"/><rect y="4.61" width="22" height="1.15" fill="#B22234"/><rect y="5.77" width="22" height="1.15" fill="#fff"/><rect y="6.92" width="22" height="1.15" fill="#B22234"/><rect y="8.07" width="22" height="1.15" fill="#fff"/><rect y="9.23" width="22" height="1.15" fill="#B22234"/><rect y="10.38" width="22" height="1.15" fill="#fff"/><rect y="11.53" width="22" height="1.15" fill="#B22234"/><rect y="12.69" width="22" height="1.15" fill="#fff"/><rect width="9" height="8.07" fill="#3C3B6E"/></svg> English
+  </a>
+  <a href="javascript:void(0)" onclick="goLang('index-zh.html')" style="text-decoration:none;display:flex;align-items:center;justify-content:center;padding:9px 14px;border-radius:10px;background:#e05a3a;color:#fff;font-family:Sarabun,sans-serif;font-size:.85rem;font-weight:700">
+    <svg width="22" height="15" viewBox="0 0 22 15" style="border-radius:2px;vertical-align:middle;margin-right:6px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.8)" xmlns="http://www.w3.org/2000/svg"><rect width="22" height="15" fill="#DE2910"/><polygon points="3.5,1.8 4.2,4 6.6,4 4.8,5.3 5.4,7.5 3.5,6.2 1.6,7.5 2.3,5.3 0.4,4 2.8,4" fill="#FFDE00"/><polygon points="8.5,1 8.9,2.2 10.1,2.2 9.1,2.9 9.5,4.1 8.5,3.4 7.5,4.1 7.9,2.9 6.9,2.2 8.1,2.2" fill="#FFDE00"/><polygon points="10.5,3 10.9,4.2 12.1,4.2 11.1,4.9 11.5,6.1 10.5,5.4 9.5,6.1 9.9,4.9 8.9,4.2 10.1,4.2" fill="#FFDE00"/><polygon points="10.5,6.5 10.9,7.7 12.1,7.7 11.1,8.4 11.5,9.6 10.5,8.9 9.5,9.6 9.9,8.4 8.9,7.7 10.1,7.7" fill="#FFDE00"/><polygon points="8.5,8.5 8.9,9.7 10.1,9.7 9.1,10.4 9.5,11.6 8.5,10.9 7.5,11.6 7.9,10.4 6.9,9.7 8.1,9.7" fill="#FFDE00"/></svg> 中文
+  </a>
+</div>
+<a class="btn-main" href="#" onclick="openApp(event)" style="display:none">
       <span>✏️</span>
       <span>สร้างใบแจ้งหนี้เลย</span>
       <span class="btn-arrow">→</span>
@@ -272,33 +290,79 @@ body{
 
 <script>
 var ua=navigator.userAgent;
-var isLineBrowser=/Line\/[0-9]/.test(ua);
+var isLineBrowser=/Line\/[0-9]/.test(ua)||/FBAN|FBAV/.test(ua);
 var isIOS=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
 var isAndroid=/Android/.test(ua);
-var appUrl='https://konvykols.github.io/invoice/index.html';
+var baseUrl='https://konvykols.github.io/invoice/';
 
+// ถ้าเปิดใน LINE → แสดง banner บอกให้เปิด external browser ทันที
+window.addEventListener('DOMContentLoaded', function(){
+  if(isLineBrowser){
+    showLineBanner();
+  }
+});
 
-function openApp(e){
-  e.preventDefault();
-  if(isAndroid&&isLineBrowser){
-    var intentUrl='intent://'+appUrl.replace(/^https?:\/\//,'')+
-      '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+
-      encodeURIComponent(appUrl)+';end';
-    window.location.href=intentUrl;
-  } else if(isIOS&&isLineBrowser){
-    window.location.href=appUrl.replace('https://','x-safari-https://');
-    setTimeout(function(){ window.location.href=appUrl; },1000);
+function showLineBanner(){
+  var banner=document.createElement('div');
+  banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#1a1a2e;color:#fff;padding:14px 16px;text-align:center;font-family:Sarabun,sans-serif;box-shadow:0 2px 12px rgba(0,0,0,.4)';
+  if(isIOS){
+    banner.innerHTML='<div style="font-size:.85rem;font-weight:700;margin-bottom:6px">⚠️ กรุณาเปิดใน Safari เพื่อดาวน์โหลด PDF ได้ค่ะ</div>'+
+      '<div style="font-size:.75rem;color:#aaa;margin-bottom:10px">กด ··· มุมขวาบน → <strong style="color:#fedf22">เปิดในเบราว์เซอร์</strong></div>'+
+      '<button onclick="openExternal()" style="background:#f73174;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:.9rem;font-weight:700;font-family:Sarabun,sans-serif;cursor:pointer">🌐 เปิดใน Safari</button>';
   } else {
-    window.location.href=appUrl;
+    banner.innerHTML='<div style="font-size:.85rem;font-weight:700;margin-bottom:6px">⚠️ กรุณาเปิดใน Chrome เพื่อดาวน์โหลด PDF ได้ค่ะ</div>'+
+      '<div style="font-size:.75rem;color:#aaa;margin-bottom:10px">กด ··· มุมขวาบน → <strong style="color:#fedf22">เปิดในเบราว์เซอร์</strong></div>'+
+      '<button onclick="openExternal()" style="background:#f73174;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:.9rem;font-weight:700;font-family:Sarabun,sans-serif;cursor:pointer">🌐 เปิดใน Chrome</button>';
+  }
+  document.body.insertBefore(banner, document.body.firstChild);
+  // เพิ่ม padding top ให้หน้าไม่ถูกบัง
+  document.body.style.paddingTop='110px';
+}
+
+function openExternal(){
+  var url=window.location.href;
+  if(isAndroid){
+    // Android — intent เปิด Chrome
+    var intentUrl='intent://'+url.replace(/^https?:\/\//,'')+
+      '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+
+      encodeURIComponent(url)+';end';
+    window.location.href=intentUrl;
+  } else if(isIOS){
+    // iOS — x-safari trick
+    window.location.href=url.replace('https://','googlechromes://');
+    setTimeout(function(){
+      window.location.href=url.replace('https://','x-safari-https://');
+    },300);
+    setTimeout(function(){
+      window.location.href=url;
+    },800);
+  } else {
+    window.open(url,'_blank');
   }
 }
 
-function openInBrowser(){
-  window.open(appUrl,'_system');
-  setTimeout(function(){
-    alert('กด ··· มุมขวาบน แล้วเลือก "เปิดในเบราว์เซอร์ภายนอก" ค่ะ');
-  },500);
+function goLang(path){
+  var url=baseUrl+path;
+  if(isLineBrowser){
+    // พยายามเปิดนอก LINE
+    if(isAndroid){
+      var intentUrl='intent://'+url.replace(/^https?:\/\//,'')+
+        '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+
+        encodeURIComponent(url)+';end';
+      window.location.href=intentUrl;
+    } else if(isIOS){
+      window.location.href=url.replace('https://','x-safari-https://');
+      setTimeout(function(){ window.location.href=url; },800);
+    } else {
+      window.location.href=url;
+    }
+  } else {
+    window.location.href=url;
+  }
 }
+
+function openApp(e){ if(e)e.preventDefault(); goLang('index.html'); }
+function openInBrowser(){ openExternal(); }
 </script>
 </body>
 </html>
