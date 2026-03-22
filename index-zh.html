@@ -1023,7 +1023,10 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 <div id="step2Panel" style="display:none;background:#0f1923;padding:12px 20px;border-top:1px solid rgba(255,255,255,.1)">
   <div style="max-width:1100px;margin:0 auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div style="color:rgba(255,255,255,.45);font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase">选择发票样式</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="color:rgba(255,255,255,.45);font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase">选择发票样式</div>
+        <button onclick="randomTemplate()" style="background:rgba(240,192,64,.15);border:1.5px solid #f0c040;color:#f0c040;border-radius:20px;padding:4px 12px;font-size:.72rem;font-family:Sarabun,sans-serif;font-weight:700;cursor:pointer">🎲 随机</button>
+      </div>
       <div style="display:flex;gap:8px">
         <button class="btn-act" onclick="goToStep(1)" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);font-size:.75rem;padding:6px 12px">← 返回</button>
         <button class="btn-act btn-save" onclick="openPdfModal()" style="font-size:.75rem;padding:6px 14px">⬇️ 保存PDF</button>
@@ -1075,7 +1078,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
         <div class="fr">
           <div class="field"><label>昵称</label><input id="infNick" placeholder="昵称" oninput="renderInvoice()"></div>
           <div class="field"><label>平台</label>
-            <select id="infPlatform" onchange="handleOtherSelect('infPlatform','infPlatformOther');renderInvoice()"><option value="">请选择</option><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Facebook</option><option>X (Twitter)</option><option>WeChat</option><option>Weibo</option><option>Douyin</option><option>Toutiao</option><option>Xiaohongshu</option><option value="其他">其他</option></select>
+            <select id="infPlatform" onchange="handleOtherSelect('infPlatform','infPlatformOther');renderInvoice()"><option value="">请选择</option><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Facebook</option><option>X (Twitter)</option><option>WeChat</option><option>Weibo</option><option>Douyin</option><option>Toutiao</option><option>Xiaohongshu</option><option>Konvy Community</option><option value="其他">其他</option></select>
             <input id="infPlatformOther" placeholder="输入平台名称..." style="display:none;margin-top:5px;border:1.5px solid #dde3ea;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none" oninput="renderInvoice()">
           </div>
         </div>
@@ -1091,7 +1094,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
       <div class="fc-head" style="background:#f73174;color:#fff"><span>💳 银行账户</span></div>
       <div class="fc-body">
         <div class="field"><label>银行 <span class="req">*</span></label>
-          <select id="bankName" onchange="handleOtherSelect('bankName','bankNameOther');renderInvoice()"><option value="">-- 请选择 --</option><option>ธนาคารกรุงเทพ (BBL)</option><option>ธนาคารกสิกรไทย (KBANK)</option><option>ธนาคารไทยพาณิชย์ (SCB)</option><option>ธนาคารกรุงไทย (KTB)</option><option>ธนาคารกรุงศรีอยุธยา (BAY)</option><option>ธนาคารทหารไทยธนชาต (TTB)</option><option>ธนาคารเกียรตินาคินภัทร (KKP)</option><option>ธนาคารซีไอเอ็มบีไทย (CIMBT)</option><option>ธนาคารทิสโก้ (TISCO)</option><option>ธนาคารยูโอบี (UOB)</option><option>ธนาคารแลนด์ แอนด์ เฮ้าส์ (LH Bank)</option><option>ธนาคารไอซีบีซี (ไทย)</option><option>ธนาคารไทยเครดิตเพื่อรายย่อย (TCD)</option><option>ธนาคารออมสิน</option><option>ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร (ธ.ก.ส.)</option><option>ธนาคารอาคารสงเคราะห์ (ธอส.)</option><option>ธนาคารอิสลามแห่งประเทศไทย</option><option>ธนาคารเพื่อการส่งออกและนำเข้าแห่งประเทศไทย (EXIM Bank)</option><option>ธนาคารพัฒนาวิสาหกิจขนาดกลางและขนาดย่อมแห่งประเทศไทย (SME D Bank)</option><option value="others">其他</option></select>
+          <select id="bankName" onchange="handleOtherSelect('bankName','bankNameOther');renderInvoice()"><option value="">-- 请选择 --</option><option>KBANK - Kasikornbank</option><option>SCB - The Siam Commercial Bank</option><option>BBL - Bangkok Bank</option><option>KTB - Krung Thai Bank</option><option>BAY - Bank of Ayudhya</option><option>TTB - TMBThanachart Bank</option><option>GSB - Government Savings Bank</option><option>UOBT - United Overseas Bank (Thai)</option><option>KKP - Kiatnakin Phatra Bank</option><option>CIMBT - CIMB Thai Bank</option><option>ICBC - Industrial & Commercial Bank of China (Thai)</option><option>TISCOB - TISCO Bank</option><option>LH BANK - Land and Houses Bank</option><option>SCBT - Standard Chartered Bank (Thai)</option><option>CITI - Citibank N.A.</option><option>HSBC - The Hongkong and Shanghai Banking</option><option value="其他">其他</option></select>
           <input id="bankNameOther" placeholder="输入银行名称..." style="display:none;margin-top:5px;border:1.5px solid #dde3ea;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none" oninput="renderInvoice()">
         </div>
         <div class="fr">
@@ -1222,7 +1225,7 @@ const TPLS=[
   {id:'t18',name:'Earthy Warm',desc:'暖棕金色'},
   {id:'t20',name:'Official Document',desc:'官方印章 / 3处签名'},
 ];
-let currentTpl='t1', rowCount=0, sigData=null;
+let currentTpl=null, rowCount=0, sigData=null;
 const files={id:[],book:[]};
 var postEvidences=[];
 
@@ -1850,11 +1853,11 @@ function autoStamp(key, idx, cb){
     // auto-fit font
     function fitFont(text,maxPx,bold){
       var fs=maxPx;
-      var f=(bold?'bold ':'')+fs+'px "Dancing Script",Georgia,cursive';
+      var f=(bold?'bold ':'')+fs+'px "Arial",sans-serif';
       ctx.font=f;
       while(ctx.measureText(text).width>diagW && fs>7){
         fs-=0.5;
-        ctx.font=(bold?'bold ':'')+fs+'px "Dancing Script",Georgia,cursive';
+        ctx.font=(bold?'bold ':'')+fs+'px "Arial",sans-serif';
       }
       return fs;
     }
@@ -1873,23 +1876,23 @@ function autoStamp(key, idx, cb){
 
     var line1='*仅用于 KONVY International Co., Ltd. 内容创作服务款项*';
     var fs1=fitFont(line1,imgW*0.028,true);
-    ctx.font='bold '+fs1+'px "Dancing Script",Georgia,cursive';
+    ctx.font='bold '+fs1+'px "Arial",sans-serif';
     ctx.strokeText(line1,0,-lineH*0.65);
     ctx.fillText(line1,0,-lineH*0.65);
 
     var line2='本复印件与原件一致';
     var fs2=fitFont(line2,imgW*0.065,true);
-    ctx.font='bold '+fs2+'px "Dancing Script",Georgia,cursive';
+    ctx.font='bold '+fs2+'px "Arial",sans-serif';
     ctx.strokeText(line2,0,lineH*0.5);
     ctx.fillText(line2,0,lineH*0.5);
 
     var fs3=fitFont(name||' ',imgW*0.026,true);
-    ctx.font='bold '+fs3+'px "Dancing Script",Georgia,cursive';
+    ctx.font='bold '+fs3+'px "Arial",sans-serif';
     ctx.strokeText(name,0,lineH*1.5);
     ctx.fillText(name,0,lineH*1.5);
 
     var fs4=fitFont(dateStr,imgW*0.024,false);
-    ctx.font=fs4+'px "Dancing Script",Georgia,cursive';
+    ctx.font=fs4+'px "Arial",sans-serif';
     ctx.strokeText(dateStr,0,lineH*2.3);
     ctx.fillText(dateStr,0,lineH*2.3);
 
@@ -2102,8 +2105,8 @@ function renderPostEvidences(){
     box.appendChild(platLabel);
     var platSel=document.createElement('select');
     platSel.style.cssText='border:1.5px solid #dde3ea;border-radius:6px;padding:7px 10px;font-size:.82rem;font-family:Sarabun,sans-serif;width:100%;margin-bottom:6px;outline:none';
-    var platOptions=['','Instagram','TikTok','Facebook','YouTube','X (Twitter)','WeChat','Weibo','Douyin','Toutiao','Xiaohongshu','其他'];
-    var knownPlatforms=['','Instagram','TikTok','Facebook','YouTube','X (Twitter)','WeChat','Weibo','Douyin','Toutiao','Xiaohongshu','其他'];
+    var platOptions=['','Instagram','TikTok','Facebook','YouTube','X (Twitter)','WeChat','Weibo','Douyin','Toutiao','Xiaohongshu','Konvy Community','其他'];
+    var knownPlatforms=['','Instagram','TikTok','Facebook','YouTube','X (Twitter)','WeChat','Weibo','Douyin','Toutiao','Xiaohongshu','Konvy Community','其他'];
     var isOther = p.platform && knownPlatforms.indexOf(p.platform)===-1;
     platOptions.forEach(function(pl){
       var opt=document.createElement('option');
@@ -3113,6 +3116,9 @@ function handleOtherSelect(selId, inputId){
   var today=new Date().toISOString().split('T')[0];
   document.getElementById('invDate').value=today;
   updateDue();
+  // สุ่ม template อัตโนมัติ
+  if(!currentTpl) currentTpl=TPLS[Math.floor(Math.random()*TPLS.length)].id;
+
   var g=document.getElementById('tplGrid');
   TPLS.forEach(function(t,i){
     var b=document.createElement('button');
@@ -3129,6 +3135,18 @@ function handleOtherSelect(selId, inputId){
   setTimeout(initSigCanvas,300);
   calcTotal(); renderInvoice();
 })();
+function randomTemplate(){
+  var idx=Math.floor(Math.random()*TPLS.length);
+  var tid=TPLS[idx].id;
+  currentTpl=tid;
+  document.querySelectorAll('.tpl-btn').forEach(function(btn,j){
+    btn.classList.toggle('active',TPLS[j].id===tid);
+  });
+  renderInvoice();
+  // scroll ให้เห็น preview
+  var wrap=document.getElementById('invoiceWrap');
+  if(wrap) wrap.scrollIntoView({behavior:'smooth',block:'start'});
+}
 </script>
 
 <div class="mob-nav" id="mobNav">

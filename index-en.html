@@ -1023,7 +1023,10 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 <div id="step2Panel" style="display:none;background:#0f1923;padding:12px 20px;border-top:1px solid rgba(255,255,255,.1)">
   <div style="max-width:1100px;margin:0 auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div style="color:rgba(255,255,255,.45);font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase">Choose Invoice Style</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="color:rgba(255,255,255,.45);font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase">Choose Invoice Style</div>
+        <button onclick="randomTemplate()" style="background:rgba(240,192,64,.15);border:1.5px solid #f0c040;color:#f0c040;border-radius:20px;padding:4px 12px;font-size:.72rem;font-family:Sarabun,sans-serif;font-weight:700;cursor:pointer">🎲 Random</button>
+      </div>
       <div style="display:flex;gap:8px">
         <button class="btn-act" onclick="goToStep(1)" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);font-size:.75rem;padding:6px 12px">← Edit Info</button>
         <button class="btn-act btn-save" onclick="openPdfModal()" style="font-size:.75rem;padding:6px 14px">⬇️ Save PDF</button>
@@ -1075,7 +1078,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
         <div class="fr">
           <div class="field"><label>Nickname</label><input id="infNick" placeholder="Nickname" oninput="renderInvoice()"></div>
           <div class="field"><label>Platform</label>
-            <select id="infPlatform" onchange="handleOtherSelect('infPlatform','infPlatformOther');renderInvoice()"><option value="">Select</option><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Facebook</option><option>X (Twitter)</option><option>WeChat</option><option>Weibo</option><option>Douyin</option><option>Toutiao</option><option>Xiaohongshu</option><option value="Others">Others</option></select>
+            <select id="infPlatform" onchange="handleOtherSelect('infPlatform','infPlatformOther');renderInvoice()"><option value="">Select</option><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Facebook</option><option>X (Twitter)</option><option>WeChat</option><option>Weibo</option><option>Douyin</option><option>Toutiao</option><option>Xiaohongshu</option><option>Konvy Community</option><option value="Others">Others</option></select>
             <input id="infPlatformOther" placeholder="Enter platform..." style="display:none;margin-top:5px;border:1.5px solid #dde3ea;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none" oninput="renderInvoice()">
           </div>
         </div>
@@ -1091,7 +1094,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
       <div class="fc-head" style="background:#f73174;color:#fff"><span>💳 Bank Account</span></div>
       <div class="fc-body">
         <div class="field"><label>Bank <span class="req">*</span></label>
-          <select id="bankName" onchange="handleOtherSelect('bankName','bankNameOther');renderInvoice()"><option value="">-- Select --</option><option>Bangkok Bank (BBL)</option><option>Kasikorn Bank (KBANK)</option><option>SCB (SCB)</option><option>Krungthai Bank (KTB)</option><option>Bank of Ayudhya (BAY)</option><option>TTB Bank (TTB)</option><option>KKP Bank (KKP)</option><option>CIMB Thai (CIMBT)</option><option>TISCO Bank (TISCO)</option><option>UOB Thailand (UOB)</option><option>LH Bank (LH Bank)</option><option>ICBC Thai</option><option>Thai Credit Bank (TCD)</option><option>Government Savings Bank</option><option>BAAC</option><option>Government Housing Bank</option><option>Islamic Bank of Thailand</option><option>EXIM Bank Thailand</option><option>SME D Bank</option><option value="Others">Others</option></select>
+          <select id="bankName" onchange="handleOtherSelect('bankName','bankNameOther');renderInvoice()"><option value="">-- Select --</option><option>KBANK - Kasikornbank</option><option>SCB - The Siam Commercial Bank</option><option>BBL - Bangkok Bank</option><option>KTB - Krung Thai Bank</option><option>BAY - Bank of Ayudhya</option><option>TTB - TMBThanachart Bank</option><option>GSB - Government Savings Bank</option><option>UOBT - United Overseas Bank (Thai)</option><option>KKP - Kiatnakin Phatra Bank</option><option>CIMBT - CIMB Thai Bank</option><option>ICBC - Industrial & Commercial Bank of China (Thai)</option><option>TISCOB - TISCO Bank</option><option>LH BANK - Land and Houses Bank</option><option>SCBT - Standard Chartered Bank (Thai)</option><option>CITI - Citibank N.A.</option><option>HSBC - The Hongkong and Shanghai Banking</option><option value="Others">Others</option></select>
           <input id="bankNameOther" placeholder="Enter bank name..." style="display:none;margin-top:5px;border:1.5px solid #dde3ea;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none" oninput="renderInvoice()">
         </div>
         <div class="fr">
@@ -1222,7 +1225,7 @@ const TPLS=[
   {id:'t18',name:'Earthy Warm',desc:'Warm Brown Gold'},
   {id:'t20',name:'Official Document',desc:'Official stamp / 3 signatures'},
 ];
-let currentTpl='t1', rowCount=0, sigData=null;
+let currentTpl=null, rowCount=0, sigData=null;
 const files={id:[],book:[]};
 var postEvidences=[];
 
@@ -1850,11 +1853,11 @@ function autoStamp(key, idx, cb){
     // auto-fit font
     function fitFont(text,maxPx,bold){
       var fs=maxPx;
-      var f=(bold?'bold ':'')+fs+'px "Dancing Script",Georgia,cursive';
+      var f=(bold?'bold ':'')+fs+'px "Arial",sans-serif';
       ctx.font=f;
       while(ctx.measureText(text).width>diagW && fs>7){
         fs-=0.5;
-        ctx.font=(bold?'bold ':'')+fs+'px "Dancing Script",Georgia,cursive';
+        ctx.font=(bold?'bold ':'')+fs+'px "Arial",sans-serif';
       }
       return fs;
     }
@@ -1873,23 +1876,23 @@ function autoStamp(key, idx, cb){
 
     var line1='*For payment of content creation services from KONVY International Co., Ltd. only*';
     var fs1=fitFont(line1,imgW*0.028,true);
-    ctx.font='bold '+fs1+'px "Dancing Script",Georgia,cursive';
+    ctx.font='bold '+fs1+'px "Arial",sans-serif';
     ctx.strokeText(line1,0,-lineH*0.65);
     ctx.fillText(line1,0,-lineH*0.65);
 
     var line2='Certified True Copy';
     var fs2=fitFont(line2,imgW*0.065,true);
-    ctx.font='bold '+fs2+'px "Dancing Script",Georgia,cursive';
+    ctx.font='bold '+fs2+'px "Arial",sans-serif';
     ctx.strokeText(line2,0,lineH*0.5);
     ctx.fillText(line2,0,lineH*0.5);
 
     var fs3=fitFont(name||' ',imgW*0.026,true);
-    ctx.font='bold '+fs3+'px "Dancing Script",Georgia,cursive';
+    ctx.font='bold '+fs3+'px "Arial",sans-serif';
     ctx.strokeText(name,0,lineH*1.5);
     ctx.fillText(name,0,lineH*1.5);
 
     var fs4=fitFont(dateStr,imgW*0.024,false);
-    ctx.font=fs4+'px "Dancing Script",Georgia,cursive';
+    ctx.font=fs4+'px "Arial",sans-serif';
     ctx.strokeText(dateStr,0,lineH*2.3);
     ctx.fillText(dateStr,0,lineH*2.3);
 
@@ -2102,8 +2105,8 @@ function renderPostEvidences(){
     box.appendChild(platLabel);
     var platSel=document.createElement('select');
     platSel.style.cssText='border:1.5px solid #dde3ea;border-radius:6px;padding:7px 10px;font-size:.82rem;font-family:Sarabun,sans-serif;width:100%;margin-bottom:6px;outline:none';
-    var platOptions=['','Instagram','TikTok','Facebook','YouTube','X (Twitter)','WeChat','Weibo','Douyin','Toutiao','Xiaohongshu','Others'];
-    var knownPlatforms=['','Instagram','TikTok','Facebook','YouTube','X (Twitter)','WeChat','Weibo','Douyin','Toutiao','Xiaohongshu','Others'];
+    var platOptions=['','Instagram','TikTok','Facebook','YouTube','X (Twitter)','WeChat','Weibo','Douyin','Toutiao','Xiaohongshu','Konvy Community','Others'];
+    var knownPlatforms=['','Instagram','TikTok','Facebook','YouTube','X (Twitter)','WeChat','Weibo','Douyin','Toutiao','Xiaohongshu','Konvy Community','Others'];
     var isOther = p.platform && knownPlatforms.indexOf(p.platform)===-1;
     platOptions.forEach(function(pl){
       var opt=document.createElement('option');
@@ -3113,6 +3116,9 @@ function handleOtherSelect(selId, inputId){
   var today=new Date().toISOString().split('T')[0];
   document.getElementById('invDate').value=today;
   updateDue();
+  // สุ่ม template อัตโนมัติ
+  if(!currentTpl) currentTpl=TPLS[Math.floor(Math.random()*TPLS.length)].id;
+
   var g=document.getElementById('tplGrid');
   TPLS.forEach(function(t,i){
     var b=document.createElement('button');
@@ -3129,6 +3135,18 @@ function handleOtherSelect(selId, inputId){
   setTimeout(initSigCanvas,300);
   calcTotal(); renderInvoice();
 })();
+function randomTemplate(){
+  var idx=Math.floor(Math.random()*TPLS.length);
+  var tid=TPLS[idx].id;
+  currentTpl=tid;
+  document.querySelectorAll('.tpl-btn').forEach(function(btn,j){
+    btn.classList.toggle('active',TPLS[j].id===tid);
+  });
+  renderInvoice();
+  // scroll ให้เห็น preview
+  var wrap=document.getElementById('invoiceWrap');
+  if(wrap) wrap.scrollIntoView({behavior:'smooth',block:'start'});
+}
 </script>
 
 <div class="mob-nav" id="mobNav">

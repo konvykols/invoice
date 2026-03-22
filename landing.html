@@ -196,7 +196,33 @@ body{font-family:'Sarabun',sans-serif;background:#f5f6fa;min-height:100vh;color:
 
 <script>
 var ua=navigator.userAgent;
-var isLineBrowser=/Line\/[0-9]/.test(ua)||/FBAN|FBAV/.test(ua);
+var isLineBrowser=(
+  /Line\/[0-9]/.test(ua) ||        // LINE
+  /FBAN|FBAV/.test(ua) ||            // Facebook
+  /Instagram/.test(ua) ||            // Instagram
+  /Twitter/.test(ua) ||              // Twitter/X
+  /Snapchat/.test(ua) ||             // Snapchat
+  /TikTok/.test(ua) ||               // TikTok (Global)
+  /musical_ly/.test(ua) ||           // TikTok (old UA)
+  /Douyin/.test(ua) ||               // Douyin 抖音 (TikTok จีน)
+  /DingTalk/.test(ua) ||             // DingTalk 钉钉
+  /MicroMessenger/.test(ua) ||       // WeChat 微信
+  /Weibo/.test(ua) ||                // Weibo 微博
+  /wb_app/.test(ua) ||               // Weibo (alt UA)
+  /Xiaohongshu/.test(ua) ||          // Xiaohongshu 小红书 (RED)
+  /xhsWebView/.test(ua) ||           // Xiaohongshu (WebView)
+  /Bilibili/.test(ua) ||             // Bilibili 哔哩哔哩
+  /QQ\//.test(ua) ||                // QQ
+  /MQQBrowser/.test(ua) ||           // QQ Browser
+  /Kuaishou/.test(ua) ||             // Kuaishou 快手
+  /kwai/.test(ua) ||                 // Kuaishou (alt)
+  /Baidu/.test(ua) ||                // Baidu 百度
+  /baiduboxapp/.test(ua) ||          // Baidu App
+  /ZhihuHybrid/.test(ua) ||          // Zhihu 知乎
+  /LinkedIn/.test(ua) ||             // LinkedIn
+  /Pinterest/.test(ua) ||            // Pinterest
+  /Telegram/.test(ua)                // Telegram
+);
 var isIOS=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
 var isAndroid=/Android/.test(ua);
 var baseUrl='https://konvykols.github.io/invoice/';
