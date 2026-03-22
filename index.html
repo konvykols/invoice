@@ -1226,7 +1226,7 @@ const TPLS=[
 ];
 let currentTpl=null, rowCount=0, sigData=null;
 const files={id:[],book:[]};
-var postEvidences=[];
+var postEvidences=[{img:null, platform:'', date:'', link:''}];
 
 // ── FIX 1: addRow uses DOM methods to avoid quote-escaping issues ──
 function addRow(){
@@ -3132,6 +3132,7 @@ function handleOtherSelect(selId, inputId){
   });
   addRow(); addRow();
   setTimeout(initSigCanvas,300);
+  renderPostEvidences();
   calcTotal(); renderInvoice();
 })();
 function randomTemplate(){
