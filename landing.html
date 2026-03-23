@@ -199,14 +199,17 @@ var ua=navigator.userAgent;
 // แอปที่บล็อค intent (ต้อง copy link)
 var isCopyOnly=(
   /DingTalk/.test(ua) ||             // DingTalk 钉钉
-  /MicroMessenger/.test(ua)          // WeChat 微信
+  /MicroMessenger/.test(ua) ||       // WeChat 微信
+  /Weibo|weibo/.test(ua) ||          // Weibo 微博
+  /Douyin/.test(ua) ||               // Douyin 抖音
+  /XiaoHongShu/.test(ua) ||          // 小红书
+  /qq\/|QQBrowser/.test(ua) ||      // QQ Browser
+  /ToutiaoMicroApp|Bytedance/.test(ua) // Toutiao / ByteDance
 );
 
 // แอปที่ redirect ได้
 var isLineBrowser=isCopyOnly || (
   /Line\/|NAVER|naver|linecorp/.test(ua) ||        // LINE
-  /Weibo|weibo|Douyin|XiaoHongShu/.test(ua) ||      // Chinese apps
-  /qq\/|QQBrowser|ToutiaoMicroApp|Bytedance/.test(ua) || // More Chinese
   /FBAN|FBAV/.test(ua) ||            // Facebook
   /Instagram/.test(ua) ||            // Instagram
   /Twitter/.test(ua) ||              // Twitter/X
@@ -237,9 +240,10 @@ var baseUrl='https://konvykols.github.io/invoice/';
 function goLang(path){
   var url=baseUrl+path;
   if(isCopyOnly){
-    // DingTalk/WeChat บล็อค redirect — แสดง copy UI
+    // WeChat/DingTalk/แอพจีน บล็อค redirect → แสดง QR + copy link
     showCopyUI(url);
   } else if(isLineBrowser){
+    // LINE/FB/IG/TikTok → redirect ตรงๆ แอพจะขึ้น popup "เปิดใน browser" เอง
     if(isAndroid){
       var intentUrl='intent://'+url.replace(/^https?:\/\//,'')+
         '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+
