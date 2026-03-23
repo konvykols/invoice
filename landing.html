@@ -204,7 +204,7 @@ var isCopyOnly=(
 
 // แอปที่ redirect ได้
 var isLineBrowser=isCopyOnly || (
-  /Line\/[0-9]/.test(ua) ||        // LINE
+  /Line\//.test(ua) ||             // LINE
   /FBAN|FBAV/.test(ua) ||            // Facebook
   /Instagram/.test(ua) ||            // Instagram
   /Twitter/.test(ua) ||              // Twitter/X
