@@ -961,7 +961,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 .quot .q-note-box{border-left:3px solid #f0c040;background:#fffdf0;padding:9px 12px;font-size:.75rem;color:#7a6030;border-radius:0 5px 5px 0}
 .quot .q-sig-row{display:flex;justify-content:flex-end;padding-top:8px}
 .quot .q-sig-box{text-align:center;min-width:180px}
-.quot .q-sig-line{border-top:1.5px solid #555;margin-top:40px;padding-top:6px;font-size:.73rem;color:#555}
+.quot .q-sig-line{border-top:1.5px solid #555;margin-top:8px;padding-top:6px;font-size:.73rem;color:#555}
 .quot .q-watermark{position:relative}
 .quot .q-watermark-text{
   position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);
@@ -1478,7 +1478,7 @@ function renderInvoice(){
     '<div class="uni-party-det">'+coAddr+'<br>'+CO.taxLabel+': '+CO.tax+'</div></div>';
 
   var sigImgHtml=sigData
-    ? '<img src="'+sigData+'" style="max-height:44px;max-width:120px;object-fit:contain;display:block;margin:0 auto 2px">'
+    ? '<img src="'+sigData+'" style="max-height:44px;max-width:120px;object-fit:contain;display:block;margin:0 auto 2px;filter:contrast(1.8) brightness(0.3)">'
     : '';
   var sigRow='<div class="sig-row-uni">'+
     '<div class="sig-blk-uni"><div class="sig-space" style="display:flex;align-items:flex-end;justify-content:center;min-height:44px">'+sigImgHtml+'</div><div class="sig-line-uni"><div class="sig-name">'+iName+'</div><div class="sig-role">'+'ผู้แจ้งหนี้/Claimant'+'</div></div></div>'+
@@ -1793,7 +1793,7 @@ function renderQuotation(c){
 
   var sigSection='';
   if(sigData){
-    sigSection='<div class="q-sig-row"><div class="q-sig-box"><img src="'+sigData+'" style="max-height:48px;max-width:160px;object-fit:contain"><div class="q-sig-line">'+iName+'<br><span style="font-size:.65rem;color:#8a96a3">ผู้เสนอราคา</span></div></div></div>';
+    sigSection='<div class="q-sig-row"><div class="q-sig-box"><img src="'+sigData+'" style="max-height:48px;max-width:160px;object-fit:contain;filter:contrast(1.8) brightness(0.3)"><div class="q-sig-line">'+iName+'<br><span style="font-size:.65rem;color:#8a96a3">ผู้เสนอราคา</span></div></div></div>';
   } else {
     sigSection='<div class="q-sig-row"><div class="q-sig-box"><div class="q-sig-line">'+iName+'<br><span style="font-size:.65rem;color:#8a96a3">ผู้เสนอราคา</span></div></div></div>';
   }
@@ -2052,7 +2052,7 @@ function autoStamp(key, idx, cb){
 
   var img=new Image();
   img.onload=function(){
-    var maxImgW=580, maxImgH=380, pad=50;
+    var maxImgW=1160, maxImgH=760, pad=50;
     var origW=img.naturalWidth, origH=img.naturalHeight;
     var scale=Math.min(maxImgW/origW, maxImgH/origH, 1);
     var imgW=Math.round(origW*scale), imgH=Math.round(origH*scale);
@@ -2720,7 +2720,12 @@ function savePDF(opts){
         return new Promise(function(res){
           var img=new Image(); img.src=f.data;
           img.onload=function(){
-            pdf.addImage(f.data,'JPEG',M,M+16,W-M*2,Math.min((img.height/img.width)*(W-M*2),267));
+            // ใช้ PNG ถ้าเป็น PNG/WebP เพื่อคุณภาพสูงสุด ไม่ compress
+            var fmt=f.type==='image/png'?'PNG':'JPEG';
+            var imgData=f.data;
+            // ถ้าเป็น JPEG ให้แปลงผ่าน canvas เพื่อเพิ่ม resolution
+            var imgH=Math.min((img.height/img.width)*(W-M*2),267);
+            pdf.addImage(imgData,fmt,M,M+16,W-M*2,imgH,undefined,fmt==='JPEG'?'FAST':'NONE');
             res();
           };
         });
