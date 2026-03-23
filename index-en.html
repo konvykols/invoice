@@ -908,6 +908,76 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 .pdf-modal-confirm{flex:2;padding:10px;border:none;border-radius:8px;background:#4a90d9;font-family:Sarabun,sans-serif;font-size:.82rem;font-weight:700;color:#fff;cursor:pointer}
 .pdf-modal-confirm:hover{background:#3a80c9}
 
+/* ── QUOTATION PAGE ── */
+.quotation-divider{
+  max-width:794px;margin:20px auto 0;
+  background:#1a2535;border-radius:10px 10px 0 0;
+  padding:8px 20px;
+  display:flex;align-items:center;gap:8px;
+}
+.quotation-divider-text{
+  font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.55);
+}
+.quotation-divider-badge{
+  background:#f0c040;color:#1a1a2e;
+  font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:10px;
+  letter-spacing:.04em;
+}
+/* Quotation document styles */
+.quot{width:794px !important;min-height:1123px !important;box-sizing:border-box;margin:0 auto;background:#fff;font-family:'Sarabun',sans-serif}
+.quot .q-top{background:linear-gradient(135deg,#1a2535 0%,#2d4a6b 100%);color:#fff;padding:28px 36px 20px}
+.quot .q-top-row{display:flex;justify-content:space-between;align-items:flex-start}
+.quot .q-doc-title{font-size:1.8rem;font-weight:700;letter-spacing:-.5px;margin-bottom:2px}
+.quot .q-doc-sub{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;opacity:.55;margin-bottom:6px}
+.quot .q-meta-grid{display:grid;grid-template-columns:auto auto;gap:2px 14px;font-size:.75rem;text-align:right;opacity:.9}
+.quot .qmk{text-align:left;opacity:.65}
+.quot .qmv{font-weight:700}
+.quot .q-body{padding:22px 36px;display:flex;flex-direction:column;gap:16px}
+.quot .q-section-head{font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:#1a2535;padding:4px 12px;border-radius:3px;display:inline-block;margin-bottom:8px}
+.quot .q-parties{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.quot .q-party-box{border:1.5px solid #e8ecf2;border-radius:8px;padding:12px 14px}
+.quot .q-party-lbl{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a96a3;margin-bottom:5px}
+.quot .q-party-name{font-weight:700;font-size:.9rem;color:#1a1a2e;margin-bottom:3px}
+.quot .q-party-det{font-size:.74rem;color:#555;line-height:1.65}
+.quot .q-table{width:100%;border-collapse:collapse}
+.quot .q-table thead th{background:#1a2535;color:#fff;padding:9px 11px;font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;text-align:left}
+.quot .q-table thead th:last-child{text-align:right}
+.quot .q-table thead th:nth-child(3),.quot .q-table thead th:nth-child(4){text-align:right}
+.quot .q-table tbody td{padding:8px 11px;border-bottom:1px solid #eef1f5;font-size:.8rem;color:#1a1a2e;vertical-align:middle}
+.quot .q-table tbody tr:nth-child(even) td{background:#f8fafc}
+.quot .q-table tbody td:nth-child(3),.quot .q-table tbody td:nth-child(4),.quot .q-table tbody td:nth-child(5){text-align:right}
+.quot .q-sum-area{display:flex;justify-content:flex-end}
+.quot .q-sum-box{width:240px;border:1.5px solid #e8ecf2;border-radius:8px;overflow:hidden}
+.quot .q-sum-row{display:flex;justify-content:space-between;align-items:center;padding:7px 13px;border-bottom:1px solid #eef1f5;font-size:.77rem}
+.quot .q-sum-row:last-of-type{border:none}
+.quot .q-sum-lbl{color:#8a96a3}
+.quot .q-sum-val{font-weight:600}
+.quot .q-sum-total{background:#1a2535;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:10px 13px;font-weight:700}
+.quot .q-sum-total-lbl{font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+.quot .q-sum-total-val{font-size:1.05rem}
+.quot .q-validity{background:#f4f7fa;border-radius:7px;padding:10px 14px;font-size:.75rem;color:#555}
+.quot .q-validity strong{color:#1a1a2e}
+.quot .q-note-box{border-left:3px solid #f0c040;background:#fffdf0;padding:9px 12px;font-size:.75rem;color:#7a6030;border-radius:0 5px 5px 0}
+.quot .q-sig-row{display:flex;justify-content:flex-end;padding-top:8px}
+.quot .q-sig-box{text-align:center;min-width:180px}
+.quot .q-sig-line{border-top:1.5px solid #555;margin-top:40px;padding-top:6px;font-size:.73rem;color:#555}
+.quot .q-watermark{position:relative}
+.quot .q-watermark-text{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);
+  font-size:3rem;font-weight:900;color:rgba(240,192,64,.08);
+  white-space:nowrap;pointer-events:none;letter-spacing:.2em;text-transform:uppercase;
+}
+/* Indicator badge in preview */
+#quotBadge{
+  display:none;
+  background:#f0c040;color:#1a1a2e;
+  font-size:.62rem;font-weight:800;
+  padding:2px 8px;border-radius:10px;
+  margin-left:auto;
+}
+#quotBadge.show{display:inline-flex;align-items:center}
+
 </style>
 </head>
 <body>
@@ -1052,6 +1122,11 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
   <div id="step2ScrollWrap" style="overflow:auto;-webkit-overflow-scrolling:touch;padding:16px">
     <div id="step2ZoomInner" style="transform-origin:top center;transition:transform .2s">
       <div class="inv-wrap" id="step2PreviewInner" style="width:794px;margin:0 auto"></div>
+      <div id="step2QuotDivider" style="display:none;width:794px;margin:16px auto 0;background:#1a2535;border-radius:10px 10px 0 0;padding:8px 20px">
+        <span style="font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55)">Page 2 — Quotation</span>
+        <span style="background:#f0c040;color:#1a1a2e;font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:10px;margin-left:8px">Auto when total ≥ ฿5,000</span>
+      </div>
+      <div class="inv-wrap" id="step2QuotationInner" style="width:794px;margin:0 auto;display:none"></div>
     </div>
   </div>
 </div>
@@ -1178,6 +1253,11 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
   <div class="preview-area">
     <div class="prev-lbl">Invoice Preview (Live)</div>
     <div class="inv-wrap" id="invoiceWrap"></div>
+    <div id="quotDividerDesktop" style="display:none;max-width:794px;margin:12px auto 0;background:#1a2535;border-radius:10px 10px 0 0;padding:8px 20px;align-items:center;gap:8px">
+      <span style="font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55)">Page 2 — Quotation</span>
+      <span style="background:#f0c040;color:#1a1a2e;font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:10px;margin-left:8px">Auto when total ≥ ฿5,000</span>
+    </div>
+    <div class="inv-wrap" id="quotationWrap" style="display:none;margin-top:0"></div>
   </div>
 </div>
 
@@ -1633,7 +1713,153 @@ function renderInvoice(){
   if(s2p) s2p.innerHTML=html;
   var ct=document.getElementById('captureTarget');
   if(ct) ct.innerHTML=html;
+  // Render quotation if total >= 5000
+  renderQuotation(c);
 }
+
+// ── Quotation Generator ──
+function renderQuotation(c){
+  if(!c) c=calcTotal();
+  var show = c.sub >= 5000;
+
+  var qw=document.getElementById('quotationWrap');
+  var qd=document.getElementById('quotDividerDesktop');
+  var s2qw=document.getElementById('step2QuotationInner');
+  var s2qd=document.getElementById('step2QuotDivider');
+  var badge=document.getElementById('quotBadge');
+  var cq=document.getElementById('captureQuot');
+
+  if(!show){
+    if(qw) qw.style.display='none';
+    if(qd) qd.style.display='none';
+    if(s2qw) s2qw.style.display='none';
+    if(s2qd) s2qd.style.display='none';
+    if(badge) badge.classList.remove('show');
+    if(cq) cq.innerHTML='';
+    return;
+  }
+
+  var iName=v('infName')||'ชื่ออินฟลูเอนเซอร์';
+  var iNick=v('infNick'), iPad=v('infAddr'), iPhone=v('infPhone');
+  var iEmail=v('infEmail'), iCard=v('infCardNo');
+  var proj=v('invProject'), note=v('invNote');
+  var bankSel=v('bankName'), bankOth=v('bankNameOther');
+  var bank=bankSel==='อื่นๆ'?bankOth:bankSel;
+  var bAcc=v('bankAccName'), bNo=v('bankAccNo'), bBr=v('bankBranch');
+  var items=getItems();
+  var coData=getCO();
+  var coAddr=coData.addr.replace(/\n/g,'<br>');
+
+  var quotNo=(v('invNo')||'QT').replace(/^INV/i,'QT').replace(/^inv/i,'QT');
+  if(quotNo==='QT') quotNo='QT-'+new Date().toISOString().slice(0,10).replace(/-/g,'');
+
+  var validDate='';
+  if(v('invDate')){
+    var d2=new Date(v('invDate')); d2.setDate(d2.getDate()+30);
+    validDate=fmtDate(d2.toISOString().split('T')[0]);
+  }
+  var invDateStr=fmtDate(v('invDate'));
+
+  var tRows=items.filter(function(it){return it.desc||it.qty||it.price;}).map(function(it,i){
+    var ln=(it.qty||0)*(it.price||0);
+    return '<tr><td>'+(i+1)+'</td><td>'+(it.desc||'–')+'</td>'+
+      '<td style="text-align:right">'+fmt(it.qty||0)+'</td>'+
+      '<td style="text-align:right">฿'+fmt(it.price||0)+'</td>'+
+      '<td style="text-align:right;font-weight:600">฿'+fmt(ln)+'</td></tr>';
+  }).join('');
+
+  var sumRows='<div class="q-sum-row"><span class="q-sum-lbl">ยอดรวมก่อนหัก</span><span class="q-sum-val">฿'+fmt(c.sub)+'</span></div>';
+  if(c.wht>0) sumRows+='<div class="q-sum-row"><span class="q-sum-lbl">หัก ณ ที่จ่าย ('+c.whtPct+'%)</span><span class="q-sum-val" style="color:#e05050">-฿'+fmt(c.wht)+'</span></div>';
+  if(c.vat>0) sumRows+='<div class="q-sum-row"><span class="q-sum-lbl">VAT ('+c.vatPct+'%)</span><span class="q-sum-val">฿'+fmt(c.vat)+'</span></div>';
+
+  var sigSection='';
+  if(sigData){
+    sigSection='<div class="q-sig-row"><div class="q-sig-box"><img src="'+sigData+'" style="max-height:48px;max-width:160px;object-fit:contain"><div class="q-sig-line">'+iName+'<br><span style="font-size:.65rem;color:#8a96a3">ผู้เสนอราคา</span></div></div></div>';
+  } else {
+    sigSection='<div class="q-sig-row"><div class="q-sig-box"><div class="q-sig-line">'+iName+'<br><span style="font-size:.65rem;color:#8a96a3">ผู้เสนอราคา</span></div></div></div>';
+  }
+
+  var html='<div class="quot">'+
+    '<div class="q-top">'+
+      '<div class="q-top-row">'+
+        '<div>'+
+          '<div class="q-doc-sub">QUOTATION · ใบเสนอราคา</div>'+
+          '<div class="q-doc-title">ใบเสนอราคา</div>'+
+          (proj?'<div style="font-size:.7rem;opacity:.75;margin-top:4px">แคมเปญ: '+proj+'</div>':'')+
+        '</div>'+
+        '<div class="q-meta-grid">'+
+          '<span class="qmk">เลขที่:</span><span class="qmv">'+quotNo+'</span>'+
+          '<span class="qmk">วันที่ออก:</span><span class="qmv">'+invDateStr+'</span>'+
+          '<span class="qmk">ใช้ได้ถึง:</span><span class="qmv">'+(validDate||'–')+'</span>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="q-body">'+
+      '<div>'+
+        '<div class="q-section-head">คู่สัญญา</div>'+
+        '<div class="q-parties">'+
+          '<div class="q-party-box">'+
+            '<div class="q-party-lbl">ผู้เสนอราคา (KOL / Influencer)</div>'+
+            '<div class="q-party-name">'+iName+(iNick?' ('+iNick+')':'')+'</div>'+
+            '<div class="q-party-det">'+(iPad?iPad.replace(/\n/g,'<br>'):'')+(iPhone?'<br>โทร: '+iPhone:'')+(iEmail?'<br>'+iEmail:'')+'</div>'+
+          '</div>'+
+          '<div class="q-party-box">'+
+            '<div class="q-party-lbl">เสนอให้กับ (ผู้ว่าจ้าง)</div>'+
+            '<div class="q-party-name">'+coData.name+'</div>'+
+            '<div class="q-party-det">'+coAddr+'<br>'+coData.taxLabel+': '+coData.tax+'</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<div>'+
+        '<div class="q-section-head">รายการงาน / บริการที่เสนอราคา</div>'+
+        '<table class="q-table">'+
+          '<thead><tr>'+
+            '<th style="width:32px">#</th>'+
+            '<th>รายการ</th>'+
+            '<th style="width:70px;text-align:right">จำนวน</th>'+
+            '<th style="width:90px;text-align:right">ราคา/หน่วย</th>'+
+            '<th style="width:100px;text-align:right">รวม</th>'+
+          '</tr></thead>'+
+          '<tbody>'+(tRows||'<tr><td colspan="5" style="text-align:center;color:#aaa;padding:20px">ยังไม่มีรายการ</td></tr>')+'</tbody>'+
+        '</table>'+
+      '</div>'+
+      '<div class="q-sum-area">'+
+        '<div class="q-sum-box">'+sumRows+
+          '<div class="q-sum-total">'+
+            '<span class="q-sum-total-lbl">ยอดที่จะได้รับ</span>'+
+            '<span class="q-sum-total-val">฿'+fmt(c.total)+'</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="q-validity">'+
+        '<strong>เงื่อนไข:</strong> ใบเสนอราคานี้มีผลภายใน 30 วัน นับจากวันที่ออก'+
+        (validDate?' (ถึง '+validDate+')'  :'')+
+        ' ราคาดังกล่าวเป็นค่าบริการรีวิวสินค้าผ่าน Social Media เท่านั้น'+
+      '</div>'+
+      (note?'<div class="q-note-box">หมายเหตุ: '+note+'</div>':'')+
+      '<div>'+
+        '<div class="q-section-head">บัญชีสำหรับชำระเงิน</div>'+
+        '<div style="font-size:.78rem;line-height:2;background:#f8fafc;border-radius:7px;padding:10px 14px;border:1px solid #e8ecf2">'+
+          '<strong>ธนาคาร:</strong> '+(bank||'–')+'&nbsp;&nbsp;|&nbsp;&nbsp;'+
+          '<strong>ชื่อบัญชี:</strong> '+(bAcc||iName)+'&nbsp;&nbsp;|&nbsp;&nbsp;'+
+          '<strong>เลขบัญชี:</strong> '+(bNo||'–')+(bBr?'&nbsp;&nbsp;|&nbsp;&nbsp;<strong>สาขา:</strong> '+bBr:'')+
+        '</div>'+
+      '</div>'+
+      sigSection+
+      '<div style="text-align:center;font-size:.62rem;color:#c0cad4;padding-top:8px;border-top:1px solid #eef1f5;margin-top:auto">'+
+        'เอกสารนี้ออกโดยอัตโนมัติจากระบบ KONVY KOL Invoice System'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+
+  if(qw){ qw.innerHTML=html; qw.style.display='block'; }
+  if(qd){ qd.style.display='flex'; }
+  if(s2qw){ s2qw.innerHTML=html; s2qw.style.display='block'; }
+  if(s2qd) s2qd.style.display='flex';
+  if(badge) badge.classList.add('show');
+  if(cq) cq.innerHTML=html;
+}
+
 
 // ── FIX 2: Single handleFiles + renderChips (removed duplicate) ──
 function toGrayscale(dataUrl, callback){
@@ -2385,6 +2611,54 @@ function savePDF(opts){
     });
   }
 
+  // ── 1b. Quotation page (auto when total >= 5000) ──
+  if(pagesToRender.some(function(p){return p.type==='quotation';})){
+    chain=chain.then(function(){
+      var quotEl=document.getElementById('captureQuot');
+      if(!quotEl || !quotEl.innerHTML || !quotEl.innerHTML.trim()) return;
+      return document.fonts.ready.then(function(){
+        return html2canvas(quotEl,{
+          scale:2,
+          useCORS:true,
+          allowTaint:true,
+          backgroundColor:'#ffffff',
+          logging:false,
+          windowWidth:794,
+          windowHeight:1123,
+          onclone:function(doc){
+            var el=doc.getElementById('captureQuot');
+            if(el){
+              el.style.position='static';
+              el.style.left='auto';
+              el.style.visibility='visible';
+              el.style.opacity='1';
+              el.parentElement.style.height='auto';
+              el.parentElement.style.overflow='visible';
+            }
+          }
+        });
+      }).then(function(cv){
+        if(!firstPage) pdf.addPage();
+        firstPage=false;
+        var iW=W-M*2, iH=iW*(cv.height/cv.width), pH=297-M*2;
+        if(iH<=pH){
+          pdf.addImage(cv.toDataURL('image/jpeg',.93),'JPEG',M,M,iW,iH);
+        } else {
+          var n=Math.ceil(iH/pH);
+          for(var p=0;p<n;p++){
+            if(p>0) pdf.addPage();
+            var sy=(p*pH/iH)*cv.height;
+            var sh=Math.min((pH/iH)*cv.height, cv.height-sy);
+            var tc=document.createElement('canvas');
+            tc.width=cv.width; tc.height=sh;
+            tc.getContext('2d').drawImage(cv,0,sy,cv.width,sh,0,0,cv.width,sh);
+            pdf.addImage(tc.toDataURL('image/jpeg',.93),'JPEG',M,M,iW,Math.min(pH,(sh/cv.width)*iW));
+          }
+        }
+      });
+    });
+  }
+
   // ── 2. Attachment pages (id card + book bank) ──
   pagesToRender.forEach(function(pg){
     if(pg.type!=='id' && pg.type!=='book') return;
@@ -2896,6 +3170,11 @@ function saveCertified(){
 function buildPageMap(){
   var map=[];
   map.push({label:'Invoice',type:'invoice',icon:'🧾'});
+  // Add quotation page if total >= 5000
+  var c=calcTotal();
+  if(c.sub >= 5000){
+    map.push({label:'Quotation',type:'quotation',icon:'📋'});
+  }
   files.id.forEach(function(f,i){
     map.push({label:'Passport'+(files.id.length>1?' '+(i+1):''),type:'id',icon:'🪪',file:f});
   });
@@ -3131,7 +3410,7 @@ function handleOtherSelect(selId, inputId){
     };})(t.id);
     g.appendChild(b);
   });
-  addRow(); addRow();
+  addRow();
   setTimeout(initSigCanvas,300);
   renderPostEvidences();
   calcTotal(); renderInvoice();
