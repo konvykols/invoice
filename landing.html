@@ -204,7 +204,9 @@ var isCopyOnly=(
 
 // แอปที่ redirect ได้
 var isLineBrowser=isCopyOnly || (
-  /Line\/[0-9]/.test(ua) ||        // LINE
+  /Line\/|NAVER|naver|linecorp/.test(ua) ||        // LINE
+  /Weibo|weibo|Douyin|XiaoHongShu/.test(ua) ||      // Chinese apps
+  /qq\/|QQBrowser|ToutiaoMicroApp|Bytedance/.test(ua) || // More Chinese
   /FBAN|FBAV/.test(ua) ||            // Facebook
   /Instagram/.test(ua) ||            // Instagram
   /Twitter/.test(ua) ||              // Twitter/X

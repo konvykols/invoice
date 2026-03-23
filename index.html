@@ -2777,7 +2777,7 @@ function savePDF(opts){
     var ua=navigator.userAgent;
     var isIOS=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
     var isAndroid=/Android/.test(ua);
-    var isLineBrowser=/Line\/[0-9]|MicroMessenger|DingTalk/.test(ua);
+    var isLineBrowser=/Line\/|NAVER|naver|linecorp|MicroMessenger|DingTalk|Weibo|weibo|Douyin|XiaoHongShu|qq\/|QQBrowser|ToutiaoMicroApp|Bytedance/.test(ua);
 
     var name=(v('infName')||'KOL').replace(/\s+/g,'-');
     var camp=(v('invProject')||'invoice').replace(/\s+/g,'_');
