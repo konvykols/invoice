@@ -1171,7 +1171,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
           <div class="field"><label>เบอร์โทร</label><input id="infPhone" placeholder="0xx-xxx-xxxx" oninput="renderInvoice()"></div>
           <div class="field"><label>อีเมล</label><input id="infEmail" placeholder="email@" oninput="renderInvoice()"></div>
         </div>
-        <div class="field"><label>เลขบัตรประชาชน</label><input id="infCardNo" placeholder="x-xxxx-xxxxx-xx-x" oninput="renderInvoice()"></div>
+        <div class="field"><label>เลขบัตรประชาชน</label><input id="infCardNo" placeholder="x-xxxx-xxxxx-xx-x" oninput="calcTotal();renderInvoice()"></div>
         <div class="field"><label>ที่อยู่</label><textarea id="infAddr" rows="2" placeholder="ที่อยู่ตามบัตรประชาชน" oninput="renderInvoice()"></textarea></div>
       </div>
     </div>
@@ -1196,7 +1196,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
         <button class="btn-ar" type="button" onclick="addRow()">+ เพิ่มรายการ</button>
         <div class="sum-s">
           <div class="sum-sr"><span class="sum-sl">ยอดรวม</span><span class="sum-sv" id="sumSub">฿0.00</span></div>
-          <div class="sum-sr" id="whtRow"><span class="sum-sl">หัก ณ ที่จ่าย<select class="sum-ssel" id="whtSel" onchange="calcTotal();renderInvoice()"><option value="0">ไม่มี</option><option value="3" selected>3%</option><option value="5">5%</option></select></span><span class="sum-sv" style="color:#e05050" id="sumWht">-฿0.00</span></div>
+          <div class="sum-sr" id="whtRow"><span class="sum-sl">หัก ณ ที่จ่าย</span><span class="sum-sv" style="color:#e05050" id="sumWht">-฿0.00</span></div>
           <div class="sum-sr"><span class="sum-sl">VAT<select class="sum-ssel" id="vatSel" onchange="calcTotal();renderInvoice()"><option value="0" selected>ไม่มี</option><option value="7">7%</option></select></span><span class="sum-sv" id="sumVat">฿0.00</span></div>
           <div class="sum-tot"><span class="sum-tot-l">ยอดที่ได้รับ</span><span class="sum-tot-v" id="sumTotal">฿0.00</span></div>
         </div>
@@ -1398,11 +1398,13 @@ function calcTotal(){
     if(valEl) valEl.textContent='฿'+fmt(t);
   }
   var vatPct=parseFloat(document.getElementById('vatSel').value)||0;
-  // WHT: หักเฉพาะเมื่อ subtotal >= 1000 บาท
+  // WHT: 3% คนไทย (เลขบัตร 13 หลัก), 5% ต่างชาติ (passport), เฉพาะ subtotal >= 1000
   var whtRow=document.getElementById('whtRow');
+  var cardNo=(document.getElementById('infCardNo')?document.getElementById('infCardNo').value:'').replace(/[-\s]/g,'');
+  var isThai=/^\d{13}$/.test(cardNo);
   var whtPct=0;
   if(sub>=1000){
-    whtPct=parseFloat(document.getElementById('whtSel').value)||0;
+    whtPct=isThai?3:5;
     if(whtRow) whtRow.style.display='';
   } else {
     if(whtRow) whtRow.style.display='none';

@@ -1195,7 +1195,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
         <button class="btn-ar" type="button" onclick="addRow()">+ 添加项目</button>
         <div class="sum-s">
           <div class="sum-sr"><span class="sum-sl">小计</span><span class="sum-sv" id="sumSub">฿0.00</span></div>
-          <div class="sum-sr"><span class="sum-sl">预扣税<select class="sum-ssel" id="whtSel" onchange="calcTotal();renderInvoice()"><option value="0">无</option><option value="3" selected>3%</option><option value="5">5%</option></select></span><span class="sum-sv" style="color:#e05050" id="sumWht">-฿0.00</span></div>
+          <div class="sum-sr" id="whtRow"><span class="sum-sl">预扣税</span><span class="sum-sv" style="color:#e05050" id="sumWht">-฿0.00</span></div>
           <div class="sum-sr"><span class="sum-sl">VAT<select class="sum-ssel" id="vatSel" onchange="calcTotal();renderInvoice()"><option value="0" selected>无</option><option value="7">7%</option></select></span><span class="sum-sv" id="sumVat">฿0.00</span></div>
           <div class="sum-tot"><span class="sum-tot-l">Net Payable</span><span class="sum-tot-v" id="sumTotal">฿0.00</span></div>
         </div>
@@ -1398,11 +1398,13 @@ function calcTotal(){
     if(valEl) valEl.textContent='฿'+fmt(t);
   }
   var vatPct=parseFloat(document.getElementById('vatSel').value)||0;
-  // WHT: หักเฉพาะเมื่อ subtotal >= 1000 บาท
+  // WHT: 3% คนไทย (เลขบัตร 13 หลัก), 5% ต่างชาติ (passport), เฉพาะ subtotal >= 1000
   var whtRow=document.getElementById('whtRow');
+  var cardNo=(document.getElementById('infCardNo')?document.getElementById('infCardNo').value:'').replace(/[-\s]/g,'');
+  var isThai=/^\d{13}$/.test(cardNo);
   var whtPct=0;
   if(sub>=1000){
-    whtPct=parseFloat(document.getElementById('whtSel').value)||0;
+    whtPct=isThai?3:5;
     if(whtRow) whtRow.style.display='';
   } else {
     if(whtRow) whtRow.style.display='none';
