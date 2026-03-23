@@ -1099,11 +1099,11 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
   </div>
 </div>
 
-<div id="step2Panel" style="display:none;background:#0f1923;padding:12px 20px;border-top:1px solid rgba(255,255,255,.1)">
+<div id="step2Panel" style="display:none !important;visibility:hidden;height:0;overflow:hidden;background:#0f1923;padding:12px 20px;border-top:1px solid rgba(255,255,255,.1)">
   <div style="max-width:1100px;margin:0 auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div style="color:rgba(255,255,255,.45);font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase">เลือกสไตล์ใบแจ้งหนี้</div>
+        <div style="color:rgba(255,255,255,.45);font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase">พรีวิวใบแจ้งหนี้</div>
         <button onclick="randomTemplate()" style="background:rgba(240,192,64,.15);border:1.5px solid #f0c040;color:#f0c040;border-radius:20px;padding:4px 12px;font-size:.72rem;font-family:Sarabun,sans-serif;font-weight:700;cursor:pointer">🎲 สุ่มแบบ</button>
       </div>
       <div style="display:flex;gap:8px">
@@ -1111,7 +1111,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
         <button class="btn-act btn-save" onclick="openPdfModal()" style="font-size:.75rem;padding:6px 14px">⬇️ บันทึก PDF</button>
       </div>
     </div>
-    <div class="tpl-grid" id="tplGrid"></div>
+    <div class="tpl-grid" id="tplGrid" style="display:none"></div>
   </div>
 </div>
 
@@ -2540,14 +2540,30 @@ function goToStep(n){
     mainWrap.style.display='grid'; step2Panel.style.display='none';
     if(step2Prev) step2Prev.style.display='none';
     btnNext.style.display='inline-flex';
+    var existSave=document.getElementById('btnSavePdfTop');
+    if(existSave) existSave.style.display='none';
     if(mobNav) mobNav.innerHTML='<button class="mob-nav-btn mob-nav-next" onclick="goToStep(2)">'+'ถัดไป: เลือกแบบ →'+'</button>';
     if(s1){ s1.style.color='#f0c040'; s1.querySelector('div').style.background='#f0c040'; s1.querySelector('div').style.color='#1a1a2e'; }
     if(s2){ s2.style.color='rgba(255,255,255,.35)'; }
     if(s2c){ s2c.style.background='rgba(255,255,255,.15)'; s2c.style.color='rgba(255,255,255,.4)'; }
   } else {
-    mainWrap.style.display='none'; step2Panel.style.display='block';
+    mainWrap.style.display='none'; // step2Panel ซ่อนอยู่ ไม่ต้องแสดง
+    randomTemplate(); // สุ่ม template อัตโนมัติ
     if(step2Prev) step2Prev.style.display='block';
     btnNext.style.display='none';
+    // แสดงปุ่ม Save PDF ใน topActions
+    var ta=document.getElementById('topActions');
+    if(ta&&!document.getElementById('btnSavePdfTop')){
+      var sb=document.createElement('button');
+      sb.id='btnSavePdfTop'; sb.className='btn-act btn-save';
+      sb.style.cssText='font-size:.75rem;padding:6px 14px';
+      sb.textContent='⬇️ บันทึก PDF';
+      sb.onclick=function(){openPdfModal();};
+      ta.appendChild(sb);
+    } else if(ta){
+      var existing=document.getElementById('btnSavePdfTop');
+      if(existing) existing.style.display='inline-flex';
+    }
     if(mobNav) mobNav.innerHTML='<button class="mob-nav-btn mob-nav-back" onclick="goToStep(1)">'+'← แก้ไข'+'</button><button class="mob-nav-btn mob-nav-save" onclick="openPdfModal()">'+'⬇️ บันทึก PDF'+'</button>';
     if(s1){ s1.style.color='rgba(255,255,255,.45)'; s1.querySelector('div').style.background='rgba(255,255,255,.15)'; s1.querySelector('div').style.color='rgba(255,255,255,.4)'; }
     if(s2){ s2.style.color='#f0c040'; }

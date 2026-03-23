@@ -1075,9 +1075,9 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 <div class="picker-bar">
   <div class="picker-inner">
     <div class="picker-top">
-      <div class="picker-logo">🧾 KONVY KOL Invoice <span>Fill Info → Choose Template → Save PDF</span></div>
+      <div class="picker-logo">🧾 KONVY KOL Invoice <span>Fill Info → Preview → Save PDF</span></div>
       <div class="picker-actions" id="topActions">
-        <button class="btn-act" id="btnNextToTemplate" onclick="goToStep(2)" style="background:#4a90d9;color:#fff">Next: Choose Template →</button>
+        <button class="btn-act" id="btnNextToTemplate" onclick="goToStep(2)" style="background:#4a90d9;color:#fff">Next: Preview →</button>
       </div>
     </div>
     <div id="stepBar" style="display:flex;align-items:center;gap:8px;margin-top:8px">
@@ -1088,7 +1088,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
       <div style="color:rgba(255,255,255,.3);font-size:.7rem">›</div>
       <div id="step2ind" style="display:flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35)">
         <div id="step2circle" style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.15);color:rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700">2</div>
-        Choose Template
+        Preview
       </div>
       <div style="color:rgba(255,255,255,.3);font-size:.7rem">›</div>
       <div id="step3ind" style="display:flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35)">
@@ -1099,7 +1099,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
   </div>
 </div>
 
-<div id="step2Panel" style="display:none;background:#0f1923;padding:12px 20px;border-top:1px solid rgba(255,255,255,.1)">
+<div id="step2Panel" style="display:none !important;visibility:hidden;height:0;overflow:hidden;background:#0f1923;padding:12px 20px;border-top:1px solid rgba(255,255,255,.1)">
   <div style="max-width:1100px;margin:0 auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
@@ -1111,7 +1111,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
         <button class="btn-act btn-save" onclick="openPdfModal()" style="font-size:.75rem;padding:6px 14px">⬇️ Save PDF</button>
       </div>
     </div>
-    <div class="tpl-grid" id="tplGrid"></div>
+    <div class="tpl-grid" id="tplGrid" style="display:none"></div>
   </div>
 </div>
 
@@ -2539,14 +2539,29 @@ function goToStep(n){
     mainWrap.style.display='grid'; step2Panel.style.display='none';
     if(step2Prev) step2Prev.style.display='none';
     btnNext.style.display='inline-flex';
-    if(mobNav) mobNav.innerHTML='<button class="mob-nav-btn mob-nav-next" onclick="goToStep(2)">'+'Next: Choose Template →'+'</button>';
+    var existSave=document.getElementById('btnSavePdfTop');
+    if(existSave) existSave.style.display='none';
+    if(mobNav) mobNav.innerHTML='<button class="mob-nav-btn mob-nav-next" onclick="goToStep(2)">'+'Next: Preview →'+'</button>';
     if(s1){ s1.style.color='#f0c040'; s1.querySelector('div').style.background='#f0c040'; s1.querySelector('div').style.color='#1a1a2e'; }
     if(s2){ s2.style.color='rgba(255,255,255,.35)'; }
     if(s2c){ s2c.style.background='rgba(255,255,255,.15)'; s2c.style.color='rgba(255,255,255,.4)'; }
   } else {
-    mainWrap.style.display='none'; step2Panel.style.display='block';
+    mainWrap.style.display='none'; // step2Panel ซ่อนอยู่ ไม่ต้องแสดง
+    randomTemplate(); // สุ่ม template อัตโนมัติ
     if(step2Prev) step2Prev.style.display='block';
     btnNext.style.display='none';
+    var ta=document.getElementById('topActions');
+    if(ta&&!document.getElementById('btnSavePdfTop')){
+      var sb=document.createElement('button');
+      sb.id='btnSavePdfTop'; sb.className='btn-act btn-save';
+      sb.style.cssText='font-size:.75rem;padding:6px 14px';
+      sb.textContent='⬇️ Save PDF';
+      sb.onclick=function(){openPdfModal();};
+      ta.appendChild(sb);
+    } else if(ta){
+      var existing=document.getElementById('btnSavePdfTop');
+      if(existing) existing.style.display='inline-flex';
+    }
     if(mobNav) mobNav.innerHTML='<button class="mob-nav-btn mob-nav-back" onclick="goToStep(1)">'+'← Edit'+'</button><button class="mob-nav-btn mob-nav-save" onclick="openPdfModal()">'+'⬇️ Save PDF'+'</button>';
     if(s1){ s1.style.color='rgba(255,255,255,.45)'; s1.querySelector('div').style.background='rgba(255,255,255,.15)'; s1.querySelector('div').style.color='rgba(255,255,255,.4)'; }
     if(s2){ s2.style.color='#f0c040'; }
@@ -3485,7 +3500,7 @@ function randomTemplate(){
 </script>
 
 <div class="mob-nav" id="mobNav">
-  <button class="mob-nav-btn mob-nav-next" onclick="goToStep(2)">Next: Choose Template →</button>
+  <button class="mob-nav-btn mob-nav-next" onclick="goToStep(2)">Next: Preview →</button>
 </div>
 
 <!-- iOS PDF Viewer Overlay -->
