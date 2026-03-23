@@ -2814,9 +2814,11 @@ function savePDF(opts){
       if(lineWarn){ lineWarn.style.display='block'; lbwDrawQR(); }
       if(doneMsg) doneMsg.textContent='WeChat / DingTalk ไม่รองรับการดาวน์โหลด กรุณาเปิดใน Safari หรือ Chrome ค่ะ';
     } else if(isIOS||isAndroid){
+      // Mobile — popup share sheet ทันที
       if(shareBtn) shareBtn.style.display='block';
       if(dlBtn){ dlBtn.style.display='block'; dlBtn.textContent=isIOS?'📂 เปิด PDF':'⬇️ ดาวน์โหลด'; }
-      if(doneMsg) doneMsg.textContent='กดปุ่มสีเขียวเพื่อแชร์ PDF ผ่าน Line หรือแอปอื่นได้เลยค่ะ';
+      if(doneMsg) doneMsg.textContent='กำลังเปิด share sheet...';
+      setTimeout(function(){ doShare(); }, 300);
     } else {
       // Desktop — download อัตโนมัติ
       pdf.save(fileName);

@@ -2815,7 +2815,8 @@ function savePDF(opts){
     } else if(isIOS||isAndroid){
       if(shareBtn) shareBtn.style.display='block';
       if(dlBtn){ dlBtn.style.display='block'; dlBtn.textContent=isIOS?'📂 Open PDF':'⬇️ Download'; }
-      if(doneMsg) doneMsg.textContent='Tap the share button to send PDF via Line or other apps.';
+      if(doneMsg) doneMsg.textContent='Opening share sheet...';
+      setTimeout(function(){ doShare(); }, 300);
     } else {
       // Desktop — download อัตโนมัติ
       pdf.save(fileName);
