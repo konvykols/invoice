@@ -176,15 +176,15 @@ body{font-family:'Sarabun',sans-serif;background:#f5f6fa;min-height:100vh;color:
   <div class="section-head" style="margin-top:24px">🌐 กรุณาเลือกภาษา · SELECT LANGUAGE</div>
 
   <div class="lang-btns">
-    <a class="lang-btn lang-btn-th" href="#" onclick="goLang('index.html',event)">
+    <a class="lang-btn lang-btn-th" href="#" onclick="goLang('index.html',this,event)">
       <svg width="22" height="15" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.8)"><rect width="22" height="15" fill="#A51931"/><rect y="2.5" width="22" height="10" fill="#F4F5F8"/><rect y="5" width="22" height="5" fill="#2D2A4A"/></svg>
       ภาษาไทย
     </a>
-    <a class="lang-btn lang-btn-en" href="#" onclick="goLang('index-en.html',event)">
+    <a class="lang-btn lang-btn-en" href="#" onclick="goLang('index-en.html',this,event)">
       <svg width="22" height="15" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.8)"><rect width="22" height="15" fill="#B22234"/><rect y="1.15" width="22" height="1.15" fill="#fff"/><rect y="2.3" width="22" height="1.15" fill="#B22234"/><rect y="3.46" width="22" height="1.15" fill="#fff"/><rect y="4.61" width="22" height="1.15" fill="#B22234"/><rect y="5.77" width="22" height="1.15" fill="#fff"/><rect y="6.92" width="22" height="1.15" fill="#B22234"/><rect y="8.07" width="22" height="1.15" fill="#fff"/><rect y="9.23" width="22" height="1.15" fill="#B22234"/><rect y="10.38" width="22" height="1.15" fill="#fff"/><rect y="11.53" width="22" height="1.15" fill="#B22234"/><rect y="12.69" width="22" height="1.15" fill="#fff"/><rect width="9" height="8.07" fill="#3C3B6E"/></svg>
       English
     </a>
-    <a class="lang-btn lang-btn-zh" href="#" onclick="goLang('index-zh.html',event)">
+    <a class="lang-btn lang-btn-zh" href="#" onclick="goLang('index-zh.html',this,event)">
       <svg width="22" height="15" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.8)" xmlns="http://www.w3.org/2000/svg"><rect width="22" height="15" fill="#DE2910"/><polygon points="3.5,1.8 4.2,4 6.6,4 4.8,5.3 5.4,7.5 3.5,6.2 1.6,7.5 2.3,5.3 0.4,4 2.8,4" fill="#FFDE00"/><polygon points="8.5,1 8.9,2.2 10.1,2.2 9.1,2.9 9.5,4.1 8.5,3.4 7.5,4.1 7.9,2.9 6.9,2.2 8.1,2.2" fill="#FFDE00"/><polygon points="10.5,3 10.9,4.2 12.1,4.2 11.1,4.9 11.5,6.1 10.5,5.4 9.5,6.1 9.9,4.9 8.9,4.2 10.1,4.2" fill="#FFDE00"/><polygon points="10.5,6.5 10.9,7.7 12.1,7.7 11.1,8.4 11.5,9.6 10.5,8.9 9.5,9.6 9.9,8.4 8.9,7.7 10.1,7.7" fill="#FFDE00"/><polygon points="8.5,8.5 8.9,9.7 10.1,9.7 9.1,10.4 9.5,11.6 8.5,10.9 7.5,11.6 7.9,10.4 6.9,9.7 8.1,9.7" fill="#FFDE00"/></svg>
       中文
     </a>
@@ -232,33 +232,26 @@ var isIOS=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
 var isAndroid=/Android/.test(ua);
 var baseUrl='https://konvykols.github.io/invoice/';
 
-function goLang(path,e){
+function goLang(path,el,e){
   if(e) e.preventDefault();
   var url=baseUrl+path;
   if(isCopyOnly){
-    // DingTalk/WeChat บล็อค redirect — แสดง copy UI
     showCopyUI(url);
-  } else if(isLineBrowser){
-    if(isAndroid){
-      var intentUrl='intent://'+url.replace(/^https?:\/\//,'')+
-        '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+
-        encodeURIComponent(url)+';end';
-      window.location.href=intentUrl;
-    } else if(isIOS){
-      window.location.href=url.replace('https://','googlechromes://');
-      setTimeout(function(){
-        window.location.href=url.replace('https://','x-safari-https://');
-      },300);
-      setTimeout(function(){
-        window.location.href=url;
-      },800);
-    } else {
-      window.location.href=url;
-    }
   } else {
-    window.location.href=url;
+    setTimeout(function(){
+      if(isAndroid&&isLineBrowser){
+        window.location.href='intent://'+url.replace(/^https?:\/\//,'')+
+          '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(url)+';end';
+      } else if(isIOS&&isLineBrowser){
+        window.location.href=url.replace('https://','x-safari-https://');
+        setTimeout(function(){window.location.href=url;},1000);
+      } else {
+        window.location.href=url;
+      }
+    },200);
   }
 }
+
 
 function showCopyUI(url){
   // สร้าง overlay
