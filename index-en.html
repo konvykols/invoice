@@ -1195,7 +1195,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
         <button class="btn-ar" type="button" onclick="addRow()">+ Add Item</button>
         <div class="sum-s">
           <div class="sum-sr"><span class="sum-sl">Subtotal</span><span class="sum-sv" id="sumSub">฿0.00</span></div>
-          <div class="sum-sr"><span class="sum-sl">Withholding Tax<select class="sum-ssel" id="whtSel" onchange="calcTotal();renderInvoice()"><option value="0">None</option><option value="3" selected>3%</option><option value="5">5%</option></select></span><span class="sum-sv" style="color:#e05050" id="sumWht">-฿0.00</span></div>
+          <div class="sum-sr" id="whtRow"><span class="sum-sl">Withholding Tax<select class="sum-ssel" id="whtSel" onchange="calcTotal();renderInvoice()"><option value="0">None</option><option value="3" selected>3%</option><option value="5">5%</option></select></span><span class="sum-sv" style="color:#e05050" id="sumWht">-฿0.00</span></div>
           <div class="sum-sr"><span class="sum-sl">VAT<select class="sum-ssel" id="vatSel" onchange="calcTotal();renderInvoice()"><option value="0" selected>None</option><option value="7">7%</option></select></span><span class="sum-sv" id="sumVat">฿0.00</span></div>
           <div class="sum-tot"><span class="sum-tot-l">Net Payable</span><span class="sum-tot-v" id="sumTotal">฿0.00</span></div>
         </div>
@@ -1397,8 +1397,16 @@ function calcTotal(){
     var valEl=document.getElementById('rtv'+rid);
     if(valEl) valEl.textContent='฿'+fmt(t);
   }
-  var whtPct=parseFloat(document.getElementById('whtSel').value)||0;
   var vatPct=parseFloat(document.getElementById('vatSel').value)||0;
+  // WHT: หักเฉพาะเมื่อ subtotal >= 1000 บาท
+  var whtRow=document.getElementById('whtRow');
+  var whtPct=0;
+  if(sub>=1000){
+    whtPct=parseFloat(document.getElementById('whtSel').value)||0;
+    if(whtRow) whtRow.style.display='';
+  } else {
+    if(whtRow) whtRow.style.display='none';
+  }
   var wht=sub*whtPct/100, vat=sub*vatPct/100, total=sub-wht+vat;
   document.getElementById('sumSub').textContent='฿'+fmt(sub);
   document.getElementById('sumWht').textContent='-฿'+fmt(wht);
