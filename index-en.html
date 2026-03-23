@@ -2541,6 +2541,8 @@ function goToStep(n){
     btnNext.style.display='inline-flex';
     var existSave=document.getElementById('btnSavePdfTop');
     if(existSave) existSave.style.display='none';
+    var existBack=document.getElementById('btnBackTop');
+    if(existBack) existBack.style.display='none';
     if(mobNav) mobNav.innerHTML='<button class="mob-nav-btn mob-nav-next" onclick="goToStep(2)">'+'Next: Preview →'+'</button>';
     if(s1){ s1.style.color='#f0c040'; s1.querySelector('div').style.background='#f0c040'; s1.querySelector('div').style.color='#1a1a2e'; }
     if(s2){ s2.style.color='rgba(255,255,255,.35)'; }
@@ -2557,10 +2559,19 @@ function goToStep(n){
       sb.style.cssText='font-size:.75rem;padding:6px 14px';
       sb.textContent='⬇️ Save PDF';
       sb.onclick=function(){openPdfModal();};
+      // ปุ่ม back
+      var bb=document.createElement('button');
+      bb.id='btnBackTop'; bb.className='btn-act';
+      bb.style.cssText='font-size:.75rem;padding:6px 12px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)';
+      bb.textContent='← Edit Info';
+      bb.onclick=function(){goToStep(1);};
+      ta.insertBefore(bb, ta.firstChild);
       ta.appendChild(sb);
     } else if(ta){
       var existing=document.getElementById('btnSavePdfTop');
       if(existing) existing.style.display='inline-flex';
+      var existingBack=document.getElementById('btnBackTop');
+      if(existingBack) existingBack.style.display='inline-flex';
     }
     if(mobNav) mobNav.innerHTML='<button class="mob-nav-btn mob-nav-back" onclick="goToStep(1)">'+'← Edit'+'</button><button class="mob-nav-btn mob-nav-save" onclick="openPdfModal()">'+'⬇️ Save PDF'+'</button>';
     if(s1){ s1.style.color='rgba(255,255,255,.45)'; s1.querySelector('div').style.background='rgba(255,255,255,.15)'; s1.querySelector('div').style.color='rgba(255,255,255,.4)'; }
