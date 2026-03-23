@@ -196,7 +196,14 @@ body{font-family:'Sarabun',sans-serif;background:#f5f6fa;min-height:100vh;color:
 
 <script>
 var ua=navigator.userAgent;
-var isLineBrowser=(
+// แอปที่บล็อค intent (ต้อง copy link)
+var isCopyOnly=(
+  /DingTalk/.test(ua) ||             // DingTalk 钉钉
+  /MicroMessenger/.test(ua)          // WeChat 微信
+);
+
+// แอปที่ redirect ได้
+var isLineBrowser=isCopyOnly || (
   /Line\/[0-9]/.test(ua) ||        // LINE
   /FBAN|FBAV/.test(ua) ||            // Facebook
   /Instagram/.test(ua) ||            // Instagram
@@ -204,12 +211,10 @@ var isLineBrowser=(
   /Snapchat/.test(ua) ||             // Snapchat
   /TikTok/.test(ua) ||               // TikTok (Global)
   /musical_ly/.test(ua) ||           // TikTok (old UA)
-  /Douyin/.test(ua) ||               // Douyin 抖音 (TikTok จีน)
-  /DingTalk/.test(ua) ||             // DingTalk 钉钉
-  /MicroMessenger/.test(ua) ||       // WeChat 微信
+  /Douyin/.test(ua) ||               // Douyin 抖音
   /Weibo/.test(ua) ||                // Weibo 微博
-  /wb_app/.test(ua) ||               // Weibo (alt UA)
-  /Xiaohongshu/.test(ua) ||          // Xiaohongshu 小红书 (RED)
+  /wb_app/.test(ua) ||               // Weibo (alt)
+  /Xiaohongshu/.test(ua) ||          // Xiaohongshu 小红书
   /xhsWebView/.test(ua) ||           // Xiaohongshu (WebView)
   /Bilibili/.test(ua) ||             // Bilibili 哔哩哔哩
   /QQ\//.test(ua) ||                // QQ
@@ -229,7 +234,10 @@ var baseUrl='https://konvykols.github.io/invoice/';
 
 function goLang(path){
   var url=baseUrl+path;
-  if(isLineBrowser){
+  if(isCopyOnly){
+    // DingTalk/WeChat บล็อค redirect — แสดง copy UI
+    showCopyUI(url);
+  } else if(isLineBrowser){
     if(isAndroid){
       var intentUrl='intent://'+url.replace(/^https?:\/\//,'')+
         '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+
@@ -248,6 +256,55 @@ function goLang(path){
     }
   } else {
     window.location.href=url;
+  }
+}
+
+function showCopyUI(url){
+  // สร้าง overlay
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML=
+    '<div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:340px;text-align:center;font-family:Sarabun,sans-serif">'+
+    '<div style="font-size:1.8rem;margin-bottom:8px">📋</div>'+
+    '<div style="font-weight:700;font-size:1rem;margin-bottom:4px;color:#1a1a2e">กรุณาคัดลอกลิงก์นี้</div>'+
+    '<div style="font-size:.75rem;color:#888;margin-bottom:14px">แล้วเปิดใน Browser ภายนอกค่ะ<br><span style="color:#f73174">Please copy & open in external browser</span></div>'+
+    '<div style="background:#f5f6fa;border-radius:8px;padding:10px 12px;font-size:.72rem;color:#555;word-break:break-all;margin-bottom:14px;text-align:left">'+url+'</div>'+
+    '<button onclick="copyUrl(''+url+'')" style="width:100%;background:#f73174;color:#fff;border:none;border-radius:10px;padding:12px;font-family:Sarabun,sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;margin-bottom:8px" id="copyBtn">📋 คัดลอกลิงก์</button>'+
+    '<div style="text-align:center;margin:12px 0 8px">'+
+    '<div style="font-size:.72rem;color:#888;margin-bottom:8px">หรือสแกน QR Code เพื่อเปิดใน browser</div>'+
+    '<canvas id="landingQrCanvas" width="120" height="120" style="border:2px solid #f73174;border-radius:8px;background:#fff"></canvas>'+
+    '</div>'+
+    '<button onclick="this.parentElement.parentElement.remove()" style="width:100%;background:none;border:1px solid #ddd;border-radius:10px;padding:10px;font-family:Sarabun,sans-serif;font-size:.85rem;color:#888;cursor:pointer">ปิด</button>'+
+    '</div>';
+  // Draw QR after appending
+  setTimeout(function(){
+    var qc=document.getElementById('landingQrCanvas');
+    if(!qc) return;
+    var qi=new Image(); qi.crossOrigin='anonymous';
+    qi.onload=function(){qc.getContext('2d').drawImage(qi,0,0,120,120);};
+    qi.onerror=function(){
+      var ctx=qc.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,120,120);
+      ctx.fillStyle='#333'; ctx.font='7px monospace'; ctx.textAlign='center';
+      url.replace('https://','').split('/').forEach(function(w,i){ctx.fillText(w,60,20+i*14);});
+    };
+    qi.src='https://api.qrserver.com/v1/create-qr-code/?size=120x120&data='+encodeURIComponent(url);
+  },100);
+  document.body.appendChild(overlay);
+}
+
+function copyUrl(url){
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(function(){
+      var btn=document.getElementById('copyBtn');
+      if(btn){ btn.textContent='✅ คัดลอกแล้ว!'; btn.style.background='#2dd393'; }
+    });
+  } else {
+    var ta=document.createElement('textarea');
+    ta.value=url; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    var btn=document.getElementById('copyBtn');
+    if(btn){ btn.textContent='✅ คัดลอกแล้ว!'; btn.style.background='#2dd393'; }
   }
 }
 

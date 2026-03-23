@@ -988,10 +988,19 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
     <div style="font-size:2.4rem;margin-bottom:8px">✅</div>
     <div style="font-size:1rem;font-weight:700;color:#1a1a2e;margin-bottom:6px">Create PDF Done!</div>
     <div style="font-size:.82rem;color:#8a96a3;line-height:1.6;margin-bottom:14px" id="doneMsg">Your file is ready!</div>
-    <div id="lineBrowserWarn" style="display:none;background:#fff8e1;border:1.5px solid #ffc107;border-radius:10px;padding:12px 14px;margin-bottom:14px;text-align:left">
-      <div style="font-size:.85rem;font-weight:700;color:#7a5c00;margin-bottom:5px">⚠️ Open via LINE Browser</div>
-      <div style="font-size:.78rem;color:#7a5c00;line-height:1.6;margin-bottom:10px">LINE browser File download not supported Please tap ··· then select "Open in Browser" or tap the button below</div>
-      <button onclick="openInBrowser()" style="width:100%;background:#06c755;color:#fff;border:none;border-radius:8px;padding:11px;font-family:Sarabun,sans-serif;font-size:.9rem;font-weight:700;cursor:pointer">🌐 Open in Safari / Chrome</button>
+    <div id="lineBrowserWarn" style="display:none;background:#fff8e1;border:1.5px solid #ffc107;border-radius:10px;padding:14px;margin-bottom:14px;text-align:left">
+      <div style="font-size:.85rem;font-weight:700;color:#7a5c00;margin-bottom:6px">⚠️ WeChat / DingTalk Detected</div>
+      <div style="font-size:.78rem;color:#7a5c00;line-height:1.6;margin-bottom:10px">This app blocks file downloads. Please open the link below in Safari or Chrome instead.</div>
+      <!-- URL box -->
+      <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center">
+        <div id="lbwUrlBox" style="flex:1;background:#fff;border:1.5px solid #ffc107;border-radius:6px;padding:7px 10px;font-size:.72rem;color:#555;word-break:break-all;line-height:1.4">https://konvykols.github.io/invoice/</div>
+        <button onclick="lbwCopyUrl()" id="lbwCopyBtn" style="flex-shrink:0;background:#f0c040;color:#1a1a2e;border:none;border-radius:7px;padding:8px 12px;font-family:Sarabun,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap">📋 Copy Link</button>
+      </div>
+      <!-- QR Code -->
+      <div style="text-align:center;margin-bottom:8px">
+        <div style="font-size:.68rem;color:#9a7a30;margin-bottom:6px">Or scan the QR Code to open in browser</div>
+        <canvas id="lbwQrCanvas" width="120" height="120" style="border:3px solid #ffc107;border-radius:6px;background:#fff"></canvas>
+      </div>
     </div>
     <button class="done-btn" id="doneShareBtn" onclick="doShare()"
       style="display:none;background:#06c755;color:#fff;font-size:1rem;font-family:Sarabun,sans-serif">
@@ -2767,7 +2776,7 @@ function savePDF(opts){
     var ua=navigator.userAgent;
     var isIOS=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
     var isAndroid=/Android/.test(ua);
-    var isLineBrowser=/Line\/[0-9]/.test(ua);
+    var isLineBrowser=/Line\/[0-9]|MicroMessenger|DingTalk/.test(ua);
 
     var name=(v('infName')||'KOL').replace(/\s+/g,'-');
     var camp=(v('invProject')||'invoice').replace(/\s+/g,'_');
@@ -2791,7 +2800,7 @@ function savePDF(opts){
     if(lineWarn) lineWarn.style.display='none';
 
     if(isLineBrowser){
-      if(lineWarn) lineWarn.style.display='block';
+      if(lineWarn){ lineWarn.style.display='block'; lbwDrawQR(); }
       if(doneMsg) doneMsg.textContent='LINE browser does not support download. Please open in Safari or Chrome.';
     } else if(isIOS||isAndroid){
       if(shareBtn) shareBtn.style.display='block';
@@ -3415,6 +3424,41 @@ function handleOtherSelect(selId, inputId){
   renderPostEvidences();
   calcTotal(); renderInvoice();
 })();
+// ── LINE/WeChat/DingTalk browser warning helpers ──
+function lbwCopyUrl(){
+  var url='https://konvykols.github.io/invoice/';
+  var btn=document.getElementById('lbwCopyBtn');
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(function(){
+      if(btn){ var orig=btn.textContent; btn.textContent='✅'; setTimeout(function(){btn.textContent=orig;},1500); }
+    });
+  } else {
+    var ta=document.createElement('textarea'); ta.value=url;
+    ta.style.cssText='position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    if(btn){ var orig2=btn.textContent; btn.textContent='✅'; setTimeout(function(){btn.textContent=orig2;},1500); }
+  }
+}
+function lbwDrawQR(){
+  var canvas=document.getElementById('lbwQrCanvas');
+  if(!canvas) return;
+  var ctx=canvas.getContext('2d');
+  var url='https://konvykols.github.io/invoice/';
+  // Simple QR via Google Charts API rendered into img
+  var img=new Image();
+  img.crossOrigin='anonymous';
+  img.onload=function(){ ctx.drawImage(img,0,0,120,120); };
+  img.onerror=function(){
+    // Fallback: draw URL as text
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,120,120);
+    ctx.fillStyle='#333'; ctx.font='7px monospace'; ctx.textAlign='center';
+    var words=url.replace('https://','').split('/');
+    words.forEach(function(w,i){ ctx.fillText(w,60,20+i*14); });
+  };
+  img.src='https://api.qrserver.com/v1/create-qr-code/?size=120x120&data='+encodeURIComponent(url);
+}
+
 function randomTemplate(){
   var idx=Math.floor(Math.random()*TPLS.length);
   var tid=TPLS[idx].id;
