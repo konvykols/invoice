@@ -1801,7 +1801,6 @@ function renderQuotation(c, invoiceHtml){
   var qd=document.getElementById('quotDividerDesktop');
   var s2qw=document.getElementById('step2QuotationInner');
   var s2qd=document.getElementById('step2QuotDivider');
-  var badge=document.getElementById('quotBadge');
   var cq=document.getElementById('captureQuot');
 
   if(!invoiceHtml){
@@ -1812,24 +1811,37 @@ function renderQuotation(c, invoiceHtml){
     return;
   }
 
-  // ใช้ HTML เดียวกับใบแจ้งหนี้ เปลี่ยนแค่ title
-    var quotHtml = invoiceHtml
-    .replace('INVOICE · ใบแจ้งหนี้', 'QUOTATION · ใบเสนอราคา')
-    .replace('>ใบแจ้งหนี้<', '>ใบเสนอราคา<')
-    .replace('INV-', 'QT-')
-    .replace('ผู้แจ้งหนี้ (ผู้รับเงิน)', 'ผู้เสนอราคา (KOL / INFLUENCER)')
-    .replace('ผู้จ่ายเงิน', 'เสนอให้ (ผู้ว่าจ้าง)')
-    .replace('ข้อมูลผู้รับเงิน', 'คู่สัญญา')
-    .replace('ข้อมูลคู่สัญญา', 'คู่สัญญา')
-    .replace('รายการแจ้งหนี้', 'รายการงาน / บริการที่เสนอราคา')
-    .replace('รายการและราคา', 'รายการงาน / บริการที่เสนอราคา')
-    .replace('ข้อมูลบัญชีธนาคาร', 'บัญชีสำหรับชำระเงิน')
-    .replace('ข้อมูลการโอนเงิน', 'บัญชีสำหรับชำระเงิน')
-    .replace('กำหนดชำระ', 'ใช้ได้ถึง')
-    .replace('ผู้แจ้งหนี้', 'ผู้เสนอราคา')
-    .replace('ผู้รับเอกสาร', 'ผู้ว่าจ้าง')
-    .replace('ผู้อนุมัติจ่าย', 'ผู้ว่าจ้าง')
-    .replace('เอกสารนี้ออกโดยอัตโนมัติ', 'ใบเสนอราคานี้มีผลภายใน 30 วัน นับจากวันที่ออก ราคาดังกล่าวเป็นค่าบริการรีวิวสินค้าผ่าน Social Media เท่านั้น เอกสารนี้ออกโดยอัตโนมัติ');
+  // replace ข้อความ
+  var quotHtml = invoiceHtml
+    .replace(/INVOICE · ใบแจ้งหนี้/g, 'QUOTATION · ใบเสนอราคา')
+    .replace(/ใบแจ้งหนี้/g, 'ใบเสนอราคา')
+    .replace(/INVOICE/g, 'QUOTATION')
+    .replace(/INV-/g, 'QT-')
+    .replace(/ผู้แจ้งหนี้ \(ผู้รับเงิน\)/g, 'ผู้เสนอราคา (KOL / INFLUENCER)')
+    .replace(/ผู้จ่ายเงิน/g, 'เสนอให้ (ผู้ว่าจ้าง)')
+    .replace(/ข้อมูลผู้รับเงิน/g, 'คู่สัญญา')
+    .replace(/ข้อมูลคู่สัญญา/g, 'คู่สัญญา')
+    .replace(/รายการแจ้งหนี้/g, 'รายการงาน / บริการที่เสนอราคา')
+    .replace(/รายการและราคา/g, 'รายการงาน / บริการที่เสนอราคา')
+    .replace(/ข้อมูลบัญชีธนาคาร/g, 'บัญชีสำหรับชำระเงิน')
+    .replace(/ข้อมูลการโอนเงิน/g, 'บัญชีสำหรับชำระเงิน')
+    .replace(/กำหนดชำระ/g, 'ใช้ได้ถึง')
+    .replace(/เอกสารนี้ออกโดยอัตโนมัติโดยมีเจ้าหน้าที่จากระบบ KONVY KOL Invoice System/g, 'ใบเสนอราคานี้มีผลภายใน 30 วัน นับจากวันที่ออก ราคาดังกล่าวเป็นค่าบริการรีวิวสินค้าผ่าน Social Media เท่านั้น');
+
+  // replace sig row ทั้งก้อน → 2 ช่อง
+  quotHtml = quotHtml.replace(
+    /<div class="sig-row-uni">.*?<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*<\/div>/s,
+    function(m){
+      // เอาแค่ sig-blk ช่องแรก (มี sigImg) แล้วเพิ่มช่องที่ 2 ใหม่
+      var firstBlock = m.match(/<div class="sig-blk-uni">.*?<\/div>\s*<\/div>\s*<\/div>/s);
+      if(!firstBlock) return m;
+      var blk1 = firstBlock[0]
+        .replace(/>ผู้แจ้งหนี้[^<]*</, '>ผู้เสนอราคา/Proposer/Claimant<')
+        .replace(/>ผู้แจ้งหนี้\/[^<]*</, '>ผู้เสนอราคา/Proposer/Claimant<');
+      var blk2 = '<div class="sig-blk-uni"><div class="sig-space"></div><div class="sig-line-uni"><div class="sig-name">&nbsp;</div><div class="sig-role">ผู้อนุมัติ/Approver</div></div></div>';
+      return '<div class="sig-row-uni">' + blk1 + blk2 + '</div>';
+    }
+  );
 
   if(qw){ qw.innerHTML=quotHtml; qw.style.display='block'; }
   if(qd){ qd.style.display='flex'; }

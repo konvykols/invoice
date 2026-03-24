@@ -1800,7 +1800,6 @@ function renderQuotation(c, invoiceHtml){
   var qd=document.getElementById('quotDividerDesktop');
   var s2qw=document.getElementById('step2QuotationInner');
   var s2qd=document.getElementById('step2QuotDivider');
-  var badge=document.getElementById('quotBadge');
   var cq=document.getElementById('captureQuot');
 
   if(!invoiceHtml){
@@ -1811,22 +1810,37 @@ function renderQuotation(c, invoiceHtml){
     return;
   }
 
-    var quotHtml = invoiceHtml
-    .replace('INVOICE · ใบแจ้งหนี้/发票', 'QUOTATION · ใบเสนอราคา/报价单')
-    .replace('>ใบแจ้งหนี้/发票<', '>ใบเสนอราคา/报价单<')
-    .replace('INV-', 'QT-')
-    .replace('ผู้แจ้งหนี้ (ผู้รับเงิน)', 'ผู้เสนอราคา/报价方 (KOL / INFLUENCER)')
-    .replace('ผู้จ่ายเงิน', 'เสนอให้/委托方')
-    .replace('ข้อมูลผู้รับเงิน', 'คู่สัญญา/合同方')
-    .replace('ข้อมูลคู่สัญญา', 'คู่สัญญา/合同方')
-    .replace('รายการแจ้งหนี้', 'รายการงาน/报价项目')
-    .replace('รายการและราคา', 'รายการงาน/报价项目')
-    .replace('ข้อมูลบัญชีธนาคาร', 'บัญชีชำระเงิน/付款账户')
-    .replace('ข้อมูลการโอนเงิน', 'บัญชีชำระเงิน/付款账户')
-    .replace('กำหนดชำระ', 'ใช้ได้ถึง/有效期至')
-    .replace('ผู้แจ้งหนี้', 'ผู้เสนอราคา/报价人')
-    .replace('ผู้รับเอกสาร', 'ผู้ว่าจ้าง/委托方')
-    .replace('ผู้อนุมัติจ่าย', 'ผู้ว่าจ้าง/委托方');
+  // replace ข้อความ
+  var quotHtml = invoiceHtml
+    .replace(/INVOICE · ใบแจ้งหนี้\/发票/g, 'QUOTATION · ใบเสนอราคา/报价单')
+    .replace(/ใบแจ้งหนี้\/发票/g, 'ใบเสนอราคา/报价单')
+    .replace(/ใบแจ้งหนี้/g, 'ใบเสนอราคา')
+    .replace(/INVOICE/g, 'QUOTATION')
+    .replace(/INV-/g, 'QT-')
+    .replace(/ผู้แจ้งหนี้ \(ผู้รับเงิน\)/g, 'ผู้เสนอราคา/报价方 (KOL / INFLUENCER)')
+    .replace(/ผู้จ่ายเงิน/g, 'เสนอให้/委托方')
+    .replace(/ข้อมูลผู้รับเงิน/g, 'คู่สัญญา/合同方')
+    .replace(/ข้อมูลคู่สัญญา/g, 'คู่สัญญา/合同方')
+    .replace(/รายการแจ้งหนี้/g, 'รายการงาน/报价项目')
+    .replace(/รายการและราคา/g, 'รายการงาน/报价项目')
+    .replace(/ข้อมูลบัญชีธนาคาร/g, 'บัญชีชำระเงิน/付款账户')
+    .replace(/ข้อมูลการโอนเงิน/g, 'บัญชีชำระเงิน/付款账户')
+    .replace(/กำหนดชำระ/g, 'ใช้ได้ถึง/有效期至');
+
+  // replace sig row ทั้งก้อน → 2 ช่อง
+  quotHtml = quotHtml.replace(
+    /<div class="sig-row-uni">.*?<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*<\/div>/s,
+    function(m){
+      // เอาแค่ sig-blk ช่องแรก (มี sigImg) แล้วเพิ่มช่องที่ 2 ใหม่
+      var firstBlock = m.match(/<div class="sig-blk-uni">.*?<\/div>\s*<\/div>\s*<\/div>/s);
+      if(!firstBlock) return m;
+      var blk1 = firstBlock[0]
+        .replace(/>ผู้แจ้งหนี้[^<]*</, '>ผู้เสนอราคา/报价人<')
+        .replace(/>ผู้แจ้งหนี้\/[^<]*</, '>ผู้เสนอราคา/报价人<');
+      var blk2 = '<div class="sig-blk-uni"><div class="sig-space"></div><div class="sig-line-uni"><div class="sig-name">&nbsp;</div><div class="sig-role">ผู้อนุมัติ/审批人</div></div></div>';
+      return '<div class="sig-row-uni">' + blk1 + blk2 + '</div>';
+    }
+  );
 
   if(qw){ qw.innerHTML=quotHtml; qw.style.display='block'; }
   if(qd){ qd.style.display='flex'; }

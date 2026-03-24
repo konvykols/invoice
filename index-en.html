@@ -1800,7 +1800,6 @@ function renderQuotation(c, invoiceHtml){
   var qd=document.getElementById('quotDividerDesktop');
   var s2qw=document.getElementById('step2QuotationInner');
   var s2qd=document.getElementById('step2QuotDivider');
-  var badge=document.getElementById('quotBadge');
   var cq=document.getElementById('captureQuot');
 
   if(!invoiceHtml){
@@ -1811,23 +1810,38 @@ function renderQuotation(c, invoiceHtml){
     return;
   }
 
-    var quotHtml = invoiceHtml
-    .replace('INVOICE · ใบแจ้งหนี้/Invoice', 'QUOTATION · ใบเสนอราคา/Quotation')
-    .replace('>ใบแจ้งหนี้/Invoice<', '>ใบเสนอราคา/Quotation<')
-    .replace('INV-', 'QT-')
-    .replace('ผู้แจ้งหนี้ (ผู้รับเงิน)', 'ผู้เสนอราคา/Proposer (KOL / INFLUENCER)')
-    .replace('ผู้จ่ายเงิน', 'เสนอให้/Client')
-    .replace('ข้อมูลผู้รับเงิน', 'คู่สัญญา/Parties')
-    .replace('ข้อมูลคู่สัญญา', 'คู่สัญญา/Parties')
-    .replace('รายการแจ้งหนี้', 'รายการงาน/Items & Services')
-    .replace('รายการและราคา', 'รายการงาน/Items & Services')
-    .replace('ข้อมูลบัญชีธนาคาร', 'บัญชีชำระเงิน/Payment Account')
-    .replace('ข้อมูลการโอนเงิน', 'บัญชีชำระเงิน/Payment Account')
-    .replace('กำหนดชำระ', 'ใช้ได้ถึง/Valid Until')
-    .replace('ผู้แจ้งหนี้', 'ผู้เสนอราคา/Proposer')
-    .replace('ผู้รับเอกสาร', 'ผู้ว่าจ้าง/Client')
-    .replace('ผู้อนุมัติจ่าย', 'ผู้ว่าจ้าง/Client')
-    .replace('Due Date', 'Valid Until');
+  // replace ข้อความ
+  var quotHtml = invoiceHtml
+    .replace(/INVOICE · ใบแจ้งหนี้\/Invoice/g, 'QUOTATION · ใบเสนอราคา/Quotation')
+    .replace(/ใบแจ้งหนี้\/Invoice/g, 'ใบเสนอราคา/Quotation')
+    .replace(/ใบแจ้งหนี้/g, 'ใบเสนอราคา')
+    .replace(/INVOICE/g, 'QUOTATION')
+    .replace(/INV-/g, 'QT-')
+    .replace(/ผู้แจ้งหนี้ \(ผู้รับเงิน\)/g, 'ผู้เสนอราคา/Proposer (KOL / INFLUENCER)')
+    .replace(/ผู้จ่ายเงิน/g, 'เสนอให้/Client')
+    .replace(/ข้อมูลผู้รับเงิน/g, 'คู่สัญญา/Parties')
+    .replace(/ข้อมูลคู่สัญญา/g, 'คู่สัญญา/Parties')
+    .replace(/รายการแจ้งหนี้/g, 'รายการงาน/Items & Services')
+    .replace(/รายการและราคา/g, 'รายการงาน/Items & Services')
+    .replace(/ข้อมูลบัญชีธนาคาร/g, 'บัญชีชำระเงิน/Payment Account')
+    .replace(/ข้อมูลการโอนเงิน/g, 'บัญชีชำระเงิน/Payment Account')
+    .replace(/กำหนดชำระ/g, 'ใช้ได้ถึง/Valid Until')
+    .replace(/Due Date/g, 'Valid Until');
+
+  // replace sig row ทั้งก้อน → 2 ช่อง
+  quotHtml = quotHtml.replace(
+    /<div class="sig-row-uni">.*?<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*<\/div>/s,
+    function(m){
+      // เอาแค่ sig-blk ช่องแรก (มี sigImg) แล้วเพิ่มช่องที่ 2 ใหม่
+      var firstBlock = m.match(/<div class="sig-blk-uni">.*?<\/div>\s*<\/div>\s*<\/div>/s);
+      if(!firstBlock) return m;
+      var blk1 = firstBlock[0]
+        .replace(/>ผู้แจ้งหนี้[^<]*</, '>ผู้เสนอราคา/Proposer/Claimant<')
+        .replace(/>ผู้แจ้งหนี้\/[^<]*</, '>ผู้เสนอราคา/Proposer/Claimant<');
+      var blk2 = '<div class="sig-blk-uni"><div class="sig-space"></div><div class="sig-line-uni"><div class="sig-name">&nbsp;</div><div class="sig-role">ผู้อนุมัติ/Approver</div></div></div>';
+      return '<div class="sig-row-uni">' + blk1 + blk2 + '</div>';
+    }
+  );
 
   if(qw){ qw.innerHTML=quotHtml; qw.style.display='block'; }
   if(qd){ qd.style.display='flex'; }
