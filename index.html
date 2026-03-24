@@ -1796,7 +1796,6 @@ function renderInvoice(){
 // ── Quotation Generator ──
 function renderQuotation(c, invoiceHtml){
   if(!c) c=calcTotal();
-  var show = true; // แสดงใบเสนอราคาทุกครั้ง
 
   var qw=document.getElementById('quotationWrap');
   var qd=document.getElementById('quotDividerDesktop');
@@ -1805,140 +1804,37 @@ function renderQuotation(c, invoiceHtml){
   var badge=document.getElementById('quotBadge');
   var cq=document.getElementById('captureQuot');
 
-  if(!show){
+  if(!invoiceHtml){
     if(qw) qw.style.display='none';
     if(qd) qd.style.display='none';
     if(s2qw) s2qw.style.display='none';
     if(s2qd) s2qd.style.display='none';
-    if(badge) badge.classList.remove('show');
-    if(cq) cq.innerHTML='';
     return;
   }
 
-  var iName=v('infName')||'ชื่ออินฟลูเอนเซอร์';
-  var iNick=v('infNick'), iPad=v('infAddr'), iPhone=v('infPhone');
-  var iEmail=v('infEmail'), iCard=v('infCardNo');
-  var proj=v('invProject'), note=v('invNote');
-  var bankSel=v('bankName'), bankOth=v('bankNameOther');
-  var bank=bankSel==='อื่นๆ'?bankOth:bankSel;
-  var bAcc=v('bankAccName'), bNo=v('bankAccNo'), bBr=v('bankBranch');
-  var items=getItems();
-  var coData=getCO();
-  var coAddr=coData.addr.replace(/\n/g,'<br>');
-
-  var quotNo=(v('invNo')||'QT').replace(/^INV/i,'QT').replace(/^inv/i,'QT');
-  if(quotNo==='QT') quotNo='QT-'+new Date().toISOString().slice(0,10).replace(/-/g,'');
-
-  var validDate='';
-  if(v('invDate')){
-    var d2=new Date(v('invDate')); d2.setDate(d2.getDate()+30);
-    validDate=fmtDate(d2.toISOString().split('T')[0]);
-  }
-  var invDateStr=fmtDate(v('invDate'));
-
-  var tRows=items.filter(function(it){return it.desc||it.qty||it.price;}).map(function(it,i){
-    var ln=(it.qty||0)*(it.price||0);
-    return '<tr><td>'+(i+1)+'</td><td>'+(it.desc||'–')+'</td>'+
-      '<td style="text-align:right">'+fmt(it.qty||0)+'</td>'+
-      '<td style="text-align:right">฿'+fmt(it.price||0)+'</td>'+
-      '<td style="text-align:right;font-weight:600">฿'+fmt(ln)+'</td></tr>';
-  }).join('');
-
-  var sumRows='<div class="q-sum-row"><span class="q-sum-lbl">ยอดรวมก่อนหัก</span><span class="q-sum-val">฿'+fmt(c.sub)+'</span></div>';
-  if(c.wht>0) sumRows+='<div class="q-sum-row"><span class="q-sum-lbl">หัก ณ ที่จ่าย ('+c.whtPct+'%)</span><span class="q-sum-val" style="color:#e05050">-฿'+fmt(c.wht)+'</span></div>';
-  if(c.vat>0) sumRows+='<div class="q-sum-row"><span class="q-sum-lbl">VAT ('+c.vatPct+'%)</span><span class="q-sum-val">฿'+fmt(c.vat)+'</span></div>';
-
-  var sigSection='';
-  if(sigData){
-    sigSection='<div class="q-sig-row"><div class="q-sig-box"><img src="'+sigData+'" style="max-height:48px;max-width:160px;object-fit:contain;filter:contrast(1.8) brightness(0.3)"><div class="q-sig-line">'+iName+'<br><span style="font-size:.65rem;color:#8a96a3">ผู้เสนอราคา</span></div></div></div>';
-  } else {
-    sigSection='<div class="q-sig-row"><div class="q-sig-box"><div class="q-sig-line">'+iName+'<br><span style="font-size:.65rem;color:#8a96a3">ผู้เสนอราคา</span></div></div></div>';
-  }
-
-  var html='<div class="quot">'+
-    '<div class="q-top">'+
-      '<div class="q-top-row">'+
-        '<div>'+
-          '<div class="q-doc-sub">QUOTATION · ใบเสนอราคา</div>'+
-          '<div class="q-doc-title">ใบเสนอราคา</div>'+
-          (proj?'<div style="font-size:.7rem;opacity:.75;margin-top:4px">แคมเปญ: '+proj+'</div>':'')+
-        '</div>'+
-        '<div class="q-meta-grid">'+
-          '<span class="qmk">เลขที่:</span><span class="qmv">'+quotNo+'</span>'+
-          '<span class="qmk">วันที่ออก:</span><span class="qmv">'+invDateStr+'</span>'+
-          '<span class="qmk">ใช้ได้ถึง:</span><span class="qmv">'+(validDate||'–')+'</span>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
-    '<div class="q-body">'+
-      '<div>'+
-        '<div class="q-section-head">คู่สัญญา</div>'+
-        '<div class="q-parties">'+
-          '<div class="q-party-box">'+
-            '<div class="q-party-lbl">ผู้เสนอราคา (KOL / Influencer)</div>'+
-            '<div class="q-party-name">'+iName+(iNick?' ('+iNick+')':'')+'</div>'+
-            '<div class="q-party-det">'+(iPad?iPad.replace(/\n/g,'<br>'):'')+(iPhone?'<br>โทร: '+iPhone:'')+(iEmail?'<br>'+iEmail:'')+'</div>'+
-          '</div>'+
-          '<div class="q-party-box">'+
-            '<div class="q-party-lbl">เสนอให้กับ (ผู้ว่าจ้าง)</div>'+
-            '<div class="q-party-name">'+coData.name+'</div>'+
-            '<div class="q-party-det">'+coAddr+'<br>'+coData.taxLabel+': '+coData.tax+'</div>'+
-          '</div>'+
-        '</div>'+
-      '</div>'+
-      '<div>'+
-        '<div class="q-section-head">รายการงาน / บริการที่เสนอราคา</div>'+
-        '<table class="q-table">'+
-          '<thead><tr>'+
-            '<th style="width:32px">#</th>'+
-            '<th>รายการ</th>'+
-            '<th style="width:70px;text-align:right">จำนวน</th>'+
-            '<th style="width:90px;text-align:right">ราคา/หน่วย</th>'+
-            '<th style="width:100px;text-align:right">รวม</th>'+
-          '</tr></thead>'+
-          '<tbody>'+(tRows||'<tr><td colspan="5" style="text-align:center;color:#aaa;padding:20px">ยังไม่มีรายการ</td></tr>')+'</tbody>'+
-        '</table>'+
-      '</div>'+
-      '<div class="q-sum-area">'+
-        '<div class="q-sum-box">'+sumRows+
-          '<div class="q-sum-total">'+
-            '<span class="q-sum-total-lbl">ยอดที่จะได้รับ</span>'+
-            '<span class="q-sum-total-val">฿'+fmt(c.total)+'</span>'+
-          '</div>'+
-        '</div>'+
-      '</div>'+
-      '<div class="q-validity">'+
-        '<strong>เงื่อนไข:</strong> ใบเสนอราคานี้มีผลภายใน 30 วัน นับจากวันที่ออก'+
-        (validDate?' (ถึง '+validDate+')'  :'')+
-        ' ราคาดังกล่าวเป็นค่าบริการรีวิวสินค้าผ่าน Social Media เท่านั้น'+
-      '</div>'+
-      (note?'<div class="q-note-box">หมายเหตุ: '+note+'</div>':'')+
-      '<div>'+
-        '<div class="q-section-head">บัญชีสำหรับชำระเงิน</div>'+
-        '<div style="font-size:.78rem;line-height:2;background:#f8fafc;border-radius:7px;padding:10px 14px;border:1px solid #e8ecf2">'+
-          '<strong>ธนาคาร:</strong> '+(bank||'–')+'&nbsp;&nbsp;|&nbsp;&nbsp;'+
-          '<strong>ชื่อบัญชี:</strong> '+(bAcc||iName)+'&nbsp;&nbsp;|&nbsp;&nbsp;'+
-          '<strong>เลขบัญชี:</strong> '+(bNo||'–')+(bBr?'&nbsp;&nbsp;|&nbsp;&nbsp;<strong>สาขา:</strong> '+bBr:'')+
-        '</div>'+
-      '</div>'+
-      sigSection+
-      '<div style="text-align:center;font-size:.62rem;color:#c0cad4;padding-top:8px;border-top:1px solid #eef1f5;margin-top:auto">'+
-        'เอกสารนี้ออกโดยอัตโนมัติจากระบบ KONVY KOL Invoice System'+
-      '</div>'+
-    '</div>'+
-  '</div>';
-
-  // ใช้ invoiceHtml (template เดียวกับใบแจ้งหนี้) สำหรับ PDF capture
-  // แต่ต้องเปลี่ยน title เป็น "ใบเสนอราคา"
-  // ใช้ content ของ QT เดิม แต่เพิ่ม class template ให้ตรงกับใบแจ้งหนี้
-  var tplClass = currentTpl || 't1';
-  var quotHtml = html.replace('class="quot"', 'class="quot ' + tplClass + '"');
+  // ใช้ HTML เดียวกับใบแจ้งหนี้ เปลี่ยนแค่ title
+    var quotHtml = invoiceHtml
+    .replace('INVOICE · ใบแจ้งหนี้', 'QUOTATION · ใบเสนอราคา')
+    .replace('>ใบแจ้งหนี้<', '>ใบเสนอราคา<')
+    .replace('INV-', 'QT-')
+    .replace('ผู้แจ้งหนี้ (ผู้รับเงิน)', 'ผู้เสนอราคา (KOL / INFLUENCER)')
+    .replace('ผู้จ่ายเงิน', 'เสนอให้ (ผู้ว่าจ้าง)')
+    .replace('ข้อมูลผู้รับเงิน', 'คู่สัญญา')
+    .replace('ข้อมูลคู่สัญญา', 'คู่สัญญา')
+    .replace('รายการแจ้งหนี้', 'รายการงาน / บริการที่เสนอราคา')
+    .replace('รายการและราคา', 'รายการงาน / บริการที่เสนอราคา')
+    .replace('ข้อมูลบัญชีธนาคาร', 'บัญชีสำหรับชำระเงิน')
+    .replace('ข้อมูลการโอนเงิน', 'บัญชีสำหรับชำระเงิน')
+    .replace('กำหนดชำระ', 'ใช้ได้ถึง')
+    .replace('ผู้แจ้งหนี้', 'ผู้เสนอราคา')
+    .replace('ผู้รับเอกสาร', 'ผู้ว่าจ้าง')
+    .replace('ผู้อนุมัติจ่าย', 'ผู้ว่าจ้าง')
+    .replace('เอกสารนี้ออกโดยอัตโนมัติ', 'ใบเสนอราคานี้มีผลภายใน 30 วัน นับจากวันที่ออก ราคาดังกล่าวเป็นค่าบริการรีวิวสินค้าผ่าน Social Media เท่านั้น เอกสารนี้ออกโดยอัตโนมัติ');
 
   if(qw){ qw.innerHTML=quotHtml; qw.style.display='block'; }
   if(qd){ qd.style.display='flex'; }
   if(s2qw){ s2qw.innerHTML=quotHtml; s2qw.style.display='block'; }
   if(s2qd) s2qd.style.display='flex';
-  // badge hidden
   if(cq) cq.innerHTML=quotHtml;
 }
 
@@ -3288,7 +3184,7 @@ function buildPageMap(){
   map.push({label:'ใบแจ้งหนี้',type:'invoice',icon:'🧾'});
   // Add quotation page if total >= 5000
   var c=calcTotal();
-  if(c.sub >= 5000){
+  if(true){
     map.push({label:'ใบเสนอราคา',type:'quotation',icon:'📋'});
   }
   files.id.forEach(function(f,i){
