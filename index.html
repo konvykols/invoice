@@ -62,15 +62,15 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
   <div class="section">
     <div class="section-head">🌐 กรุณาเลือกภาษา · SELECT LANGUAGE</div>
     <div class="lang-btns">
-      <a class="lang-btn lang-btn-th" href="index-th.html">
+      <a class="lang-btn lang-btn-th" href="index-th.html" onclick="return openPage('index-th.html',event)">
         <svg width="24" height="16" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.8)"><rect width="22" height="15" fill="#A51931"/><rect y="2.5" width="22" height="10" fill="#F4F5F8"/><rect y="5" width="22" height="5" fill="#2D2A4A"/></svg>
         ภาษาไทย
       </a>
-      <a class="lang-btn lang-btn-en" href="index-en.html">
+      <a class="lang-btn lang-btn-en" href="index-en.html" onclick="return openPage('index-en.html',event)">
         <svg width="24" height="16" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.8)"><rect width="22" height="15" fill="#B22234"/><rect y="1.15" width="22" height="1.15" fill="#fff"/><rect y="3.46" width="22" height="1.15" fill="#fff"/><rect y="5.77" width="22" height="1.15" fill="#fff"/><rect y="8.07" width="22" height="1.15" fill="#fff"/><rect y="10.38" width="22" height="1.15" fill="#fff"/><rect y="12.69" width="22" height="1.15" fill="#fff"/><rect width="9" height="8.07" fill="#3C3B6E"/></svg>
         English
       </a>
-      <a class="lang-btn lang-btn-zh" href="index-zh.html">
+      <a class="lang-btn lang-btn-zh" href="index-zh.html" onclick="return openPage('index-zh.html',event)">
         <svg width="24" height="16" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.8)"><rect width="22" height="15" fill="#DE2910"/><polygon points="3.5,1.8 4.2,4 6.6,4 4.8,5.3 5.4,7.5 3.5,6.2 1.6,7.5 2.3,5.3 0.4,4 2.8,4" fill="#FFDE00"/></svg>
         中文
       </a>
@@ -84,68 +84,33 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
 </div>
 
 <script>
-var ua=navigator.userAgent;
-var isLine=/Line\//.test(ua);
-var isIOS=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
-var isAndroid=/Android/.test(ua);
-var isCopyOnly=/DingTalk|MicroMessenger/.test(ua);
-var baseUrl='https://konvykols.github.io/invoice/';
+var ua = navigator.userAgent;
+var isLine = /Line\//.test(ua);
+var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+var isAndroid = /Android/.test(ua);
+var base = 'https://konvykols.github.io/invoice/';
 
-function goLang(path,el,e){
-  e=e||window.event;
-  if(e&&e.preventDefault) e.preventDefault();
-  if(e&&e.returnValue!==undefined) e.returnValue=false;
-  // Use absolute URL for LINE browser detection, relative for normal browsers
-  var base=window.location.href.split('/').slice(0,-1).join('/')+'/';
-  var url=base+path;
-  var absUrl=baseUrl+path;
-  if(isCopyOnly){
-    showCopyUI(absUrl);
+function openPage(path, e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  var url = base + path;
+
+  if (isLine) {
+    if (isIOS) {
+      // Open in Safari
+      window.location.href = url.replace('https://', 'x-safari-https://');
+      setTimeout(function(){ window.location.href = url; }, 1500);
+    } else if (isAndroid) {
+      // Open in Chrome
+      window.location.href = 'intent://' + url.replace(/^https?:\/\//, '') +
+        '#Intent;scheme=https;package=com.android.chrome;' +
+        'S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
+    } else {
+      window.location.href = url;
+    }
   } else {
-    setTimeout(function(){
-      if(isAndroid&&isLine){
-        window.location.href='intent://'+absUrl.replace(/^https?:\/\//,'')+
-          '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(absUrl)+';end';
-      } else if(isIOS&&isLine){
-        window.location.href=absUrl.replace('https://','x-safari-https://');
-        setTimeout(function(){window.location.href=absUrl;},1000);
-      } else {
-        window.location.href=path;
-      }
-    },200);
+    window.location.href = url;
   }
   return false;
-}
-
-function showCopyUI(url){
-  var overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
-  overlay.innerHTML=
-    '<div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:340px;text-align:center;font-family:Sarabun,sans-serif">'+
-    '<div style="font-size:1.8rem;margin-bottom:8px">📋</div>'+
-    '<div style="font-weight:700;font-size:1rem;margin-bottom:4px;color:#1a1a2e">กรุณาคัดลอกลิงก์นี้</div>'+
-    '<div style="font-size:.75rem;color:#888;margin-bottom:14px">แล้วเปิดใน Browser ภายนอกค่ะ<br><span style="color:#f73174">Please copy & open in external browser</span></div>'+
-    '<div style="background:#f5f6fa;border-radius:8px;padding:10px 12px;font-size:.72rem;color:#555;word-break:break-all;margin-bottom:14px;text-align:left">'+url+'</div>'+
-    '<button onclick="copyUrl(''+url+'')" style="width:100%;background:#f73174;color:#fff;border:none;border-radius:10px;padding:12px;font-family:Sarabun,sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;margin-bottom:8px" id="copyBtn">📋 คัดลอกลิงก์</button>'+
-    '<button onclick="this.parentElement.parentElement.remove()" style="width:100%;background:none;border:1px solid #ddd;border-radius:10px;padding:10px;font-family:Sarabun,sans-serif;font-size:.85rem;color:#888;cursor:pointer">ปิด</button>'+
-    '</div>';
-  document.body.appendChild(overlay);
-}
-
-function copyUrl(url){
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(url).then(function(){
-      var btn=document.getElementById('copyBtn');
-      if(btn){btn.textContent='✅ คัดลอกแล้ว!';btn.style.background='#2dd393';}
-    });
-  } else {
-    var ta=document.createElement('textarea');
-    ta.value=url;document.body.appendChild(ta);
-    ta.select();document.execCommand('copy');
-    document.body.removeChild(ta);
-    var btn=document.getElementById('copyBtn');
-    if(btn){btn.textContent='✅ คัดลอกแล้ว!';btn.style.background='#2dd393';}
-  }
 }
 </script>
 </body>
