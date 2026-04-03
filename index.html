@@ -27,7 +27,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
 .section-head{display:flex;align-items:center;gap:8px;font-size:.68rem;font-weight:700;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
 .section-head::before,.section-head::after{content:'';flex:1;height:1px;background:#e8e8e8}
 .lang-btns{display:flex;flex-direction:column;gap:9px}
-.lang-btn{display:flex;align-items:center;gap:12px;padding:11px 18px;border-radius:12px;color:#fff;font-family:'Sarabun',sans-serif;text-decoration:none;width:100%;box-shadow:0 3px 12px rgba(0,0,0,.13);transition:transform .15s,box-shadow .15s;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.lang-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 18px;border-radius:12px;color:#fff;font-family:'Sarabun',sans-serif;font-size:1rem;font-weight:700;text-decoration:none;width:100%;box-shadow:0 3px 10px rgba(0,0,0,.13);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .lang-btn:active{transform:scale(.97)}
 .lang-btn-inner{display:flex;flex-direction:column;gap:1px;flex:1}
 .lang-btn-main{font-size:.92rem;font-weight:700;line-height:1.2}
@@ -62,26 +62,17 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
   <div class="section">
     <div class="section-head">🌐 กรุณาเลือกภาษา · SELECT LANGUAGE</div>
     <div class="lang-btns">
-      <a class="lang-btn lang-btn-th" href="#" onclick="return goLang('index-th.html',this,event)">
+      <a class="lang-btn lang-btn-th" href="index-th.html">
         <svg width="24" height="16" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.8)"><rect width="22" height="15" fill="#A51931"/><rect y="2.5" width="22" height="10" fill="#F4F5F8"/><rect y="5" width="22" height="5" fill="#2D2A4A"/></svg>
-        <div class="lang-btn-inner">
-          <div class="lang-btn-main">ภาษาไทย</div>
-          <div class="lang-btn-sub">สำหรับ KOL คนไทย · Thai version</div>
-        </div>
+        ภาษาไทย
       </a>
-      <a class="lang-btn lang-btn-en" href="#" onclick="return goLang('index-en.html',this,event)">
+      <a class="lang-btn lang-btn-en" href="index-en.html">
         <svg width="24" height="16" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.8)"><rect width="22" height="15" fill="#B22234"/><rect y="1.15" width="22" height="1.15" fill="#fff"/><rect y="3.46" width="22" height="1.15" fill="#fff"/><rect y="5.77" width="22" height="1.15" fill="#fff"/><rect y="8.07" width="22" height="1.15" fill="#fff"/><rect y="10.38" width="22" height="1.15" fill="#fff"/><rect y="12.69" width="22" height="1.15" fill="#fff"/><rect width="9" height="8.07" fill="#3C3B6E"/></svg>
-        <div class="lang-btn-inner">
-          <div class="lang-btn-main">English</div>
-          <div class="lang-btn-sub">For international KOL · English version</div>
-        </div>
+        English
       </a>
-      <a class="lang-btn lang-btn-zh" href="#" onclick="return goLang('index-zh.html',this,event)">
+      <a class="lang-btn lang-btn-zh" href="index-zh.html">
         <svg width="24" height="16" viewBox="0 0 22 15" style="border-radius:2px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.8)"><rect width="22" height="15" fill="#DE2910"/><polygon points="3.5,1.8 4.2,4 6.6,4 4.8,5.3 5.4,7.5 3.5,6.2 1.6,7.5 2.3,5.3 0.4,4 2.8,4" fill="#FFDE00"/></svg>
-        <div class="lang-btn-inner">
-          <div class="lang-btn-main">中文</div>
-          <div class="lang-btn-sub">适用于中国KOL · Chinese version</div>
-        </div>
+        中文
       </a>
     </div>
   </div>
