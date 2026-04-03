@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>KONVY KOL Invoice</title>
+<title>KONVY</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&family=Kanit:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -14,20 +14,20 @@ body{font-family:'Sarabun',sans-serif;background:#f5f6fa;min-height:100vh;color:
 header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:#fff;border-bottom:1px solid #f0e8f5;flex-shrink:0}
 .header-badge{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;background:linear-gradient(135deg,#a459f4,#f73174);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700}
 .content{flex:1;display:flex;flex-direction:column}
-.hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:28px 20px 22px;background:linear-gradient(135deg,#fff0f5 0%,#fdf4ff 50%,#f0faff 100%);position:relative;overflow:hidden;flex-shrink:0}
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px 20px 16px;background:linear-gradient(135deg,#fff0f5 0%,#fdf4ff 50%,#f0faff 100%);position:relative;overflow:hidden;flex-shrink:0}
 .hero::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,#f7317422 0%,transparent 70%);pointer-events:none}
 .hero::after{content:'';position:absolute;bottom:-40px;left:-40px;width:150px;height:150px;background:radial-gradient(circle,#a459f422 0%,transparent 70%);pointer-events:none}
-.hero-sub{font-size:.68rem;color:#a459f4;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;position:relative;z-index:1}
-.hero-title{font-family:'Kanit',sans-serif;font-size:clamp(1.9rem,8vw,2.8rem);font-weight:900;line-height:1.1;margin-bottom:6px;position:relative;z-index:1}
+.hero-sub{font-size:.65rem;color:#a459f4;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;position:relative;z-index:1}
+.hero-title{font-family:'Kanit',sans-serif;font-size:clamp(1.8rem,8vw,2.6rem);font-weight:900;line-height:1.1;margin-bottom:4px;position:relative;z-index:1}
 .hero-title span{color:#f73174}
-.hero-desc{font-size:.85rem;color:#555;line-height:1.7;margin-bottom:3px;position:relative;z-index:1}
-.hero-desc-en{font-size:.72rem;color:#888;margin-bottom:2px;position:relative;z-index:1}
-.hero-desc-zh{font-size:.68rem;color:#aaa;position:relative;z-index:1}
-.section{padding:18px 20px;max-width:440px;margin:0 auto;width:100%}
-.section-head{display:flex;align-items:center;gap:8px;font-size:.7rem;font-weight:700;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+.hero-desc{font-size:.82rem;color:#555;line-height:1.6;margin-bottom:2px;position:relative;z-index:1}
+.hero-desc-en{font-size:.68rem;color:#888;margin-bottom:1px;position:relative;z-index:1}
+.hero-desc-zh{font-size:.65rem;color:#aaa;position:relative;z-index:1}
+.section{padding:14px 18px;max-width:440px;margin:0 auto;width:100%}
+.section-head{display:flex;align-items:center;gap:8px;font-size:.68rem;font-weight:700;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
 .section-head::before,.section-head::after{content:'';flex:1;height:1px;background:#e8e8e8}
-.lang-btns{display:flex;flex-direction:column;gap:11px}
-.lang-btn{display:flex;align-items:center;gap:12px;padding:13px 20px;border-radius:13px;color:#fff;font-family:'Sarabun',sans-serif;text-decoration:none;width:100%;box-shadow:0 4px 14px rgba(0,0,0,.14);transition:transform .15s,box-shadow .15s;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.lang-btns{display:flex;flex-direction:column;gap:9px}
+.lang-btn{display:flex;align-items:center;gap:12px;padding:11px 18px;border-radius:12px;color:#fff;font-family:'Sarabun',sans-serif;text-decoration:none;width:100%;box-shadow:0 3px 12px rgba(0,0,0,.13);transition:transform .15s,box-shadow .15s;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .lang-btn:active{transform:scale(.97)}
 .lang-btn-inner{display:flex;flex-direction:column;gap:1px;flex:1}
 .lang-btn-main{font-size:.92rem;font-weight:700;line-height:1.2}
@@ -104,19 +104,22 @@ function goLang(path,el,e){
   e=e||window.event;
   if(e&&e.preventDefault) e.preventDefault();
   if(e&&e.returnValue!==undefined) e.returnValue=false;
-  var url=baseUrl+path;
+  // Use absolute URL for LINE browser detection, relative for normal browsers
+  var base=window.location.href.split('/').slice(0,-1).join('/')+'/';
+  var url=base+path;
+  var absUrl=baseUrl+path;
   if(isCopyOnly){
-    showCopyUI(url);
+    showCopyUI(absUrl);
   } else {
     setTimeout(function(){
       if(isAndroid&&isLine){
-        window.location.href='intent://'+url.replace(/^https?:\/\//,'')+
-          '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(url)+';end';
+        window.location.href='intent://'+absUrl.replace(/^https?:\/\//,'')+
+          '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(absUrl)+';end';
       } else if(isIOS&&isLine){
-        window.location.href=url.replace('https://','x-safari-https://');
-        setTimeout(function(){window.location.href=url;},1000);
+        window.location.href=absUrl.replace('https://','x-safari-https://');
+        setTimeout(function(){window.location.href=absUrl;},1000);
       } else {
-        window.location.href=url;
+        window.location.href=path;
       }
     },200);
   }
