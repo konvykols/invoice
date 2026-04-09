@@ -2404,7 +2404,7 @@ function handleFiles(input, key){
               var newIdx=files[k].length;
               files[k].push({name:fileObj.name,size:fileObj.size,type:fileObj.type,data:ev.target.result,originalData:ev.target.result,certified:false});
               renderChips(k);
-              openCropModal(k, newIdx, ev.target.result);
+              if(k !== 'credit'){   openCropModal(k, newIdx, ev.target.result); }
             };
             reader2.readAsDataURL(fileObj);
           })(f, key);
