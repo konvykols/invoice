@@ -321,20 +321,24 @@ function openInExternalBrowser(url) {
   const ua = navigator.userAgent;
   const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
   const isAndroid = /Android/.test(ua);
+  const isLine = /Line\//i.test(ua);
+
+  // LINE in-app browser supports ?openExternalBrowser=1 — works on both iOS & Android
+  if (isLine) {
+    const sep = url.includes("?") ? "&" : "?";
+    window.location.href = url + sep + "openExternalBrowser=1";
+    return;
+  }
 
   if (isAndroid) {
     // intent:// scheme — Android opens link in Chrome regardless of current app
     const cleanUrl = url.replace(/^https?:\/\//, "");
     const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
     window.location.href = intentUrl;
-    // Fallback: if Chrome not installed, fall back to default browser after 1.5s
-    setTimeout(() => { window.location.href = url; }, 1500);
   } else if (isIOS) {
-    // x-safari-https:// scheme — iOS opens link in Safari (works from in-app browsers)
+    // x-safari-https:// scheme — iOS opens link in Safari from in-app browsers
     const safariUrl = url.replace(/^https:\/\//, "x-safari-https://");
     window.location.href = safariUrl;
-    // Fallback: if user is already in Safari, this does nothing — open normally after delay
-    setTimeout(() => { window.location.href = url; }, 1500);
   } else {
     // Desktop — just navigate normally
     window.location.href = url;
@@ -345,9 +349,10 @@ document.getElementById("t-cta").addEventListener("click", () => {
   if (!currentDoc) return;
   // Map language code to filename suffix (CN → zh)
   const langFile = { th: "th", en: "en", cn: "zh" }[currentLang];
-  // Build full absolute URL so external browser can open it
-  const baseUrl = window.location.href.split("?")[0].replace(/index\.html$|\/$/, "/");
-  const targetUrl = baseUrl + `${currentDoc}-${langFile}.html`;
+  const targetFile = `${currentDoc}-${langFile}.html`;
+  // Use URL constructor for robust absolute URL building
+  // Resolves 'quotation-th.html' against current page URL → handles trailing slash correctly
+  const targetUrl = new URL(targetFile, window.location.href).href;
   openInExternalBrowser(targetUrl);
 });
 </script>
