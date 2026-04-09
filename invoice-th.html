@@ -800,13 +800,15 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 @keyframes sp{to{transform:rotate(360deg)}}
 .done-screen{
   display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,.6);
-  z-index:9999;
+  background:rgba(15,25,35,.78);
+  -webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
+  z-index:99999;
   align-items:flex-end;
   justify-content:center;
   padding:0;
 }
-.done-screen.show{display:flex}
+.done-screen.show{display:flex !important}
 .done-box{
   background:#fff;
   border-radius:20px 20px 0 0;
@@ -814,11 +816,19 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
   width:100%;
   max-width:480px;
   text-align:center;
-  box-shadow:0 -4px 30px rgba(0,0,0,.15);
+  box-shadow:0 -4px 30px rgba(0,0,0,.2);
 }
-@media(min-width:500px){
-  .done-screen{align-items:center}
-  .done-box{border-radius:16px;padding:28px 24px;max-width:380px;margin:20px}
+@media(min-width:600px){
+  .done-screen{align-items:center !important;padding:24px}
+  .done-box{
+    border-radius:18px !important;
+    padding:32px 28px !important;
+    max-width:420px !important;
+    width:auto !important;
+    min-width:340px !important;
+    margin:0 !important;
+    box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.05) !important;
+  }
 }
 .done-btn{
   display:flex;align-items:center;justify-content:center;gap:8px;
@@ -1419,7 +1429,6 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
       ⬇️ ดาวน์โหลด PDF
     </button>
     <!-- QT → INV link box (แสดงเฉพาะตอน quot) -->
-    </div>
     <button class="done-btn"
       onclick="document.getElementById('doneScreen').classList.remove('show')"
       style="background:#f4f6f8;color:#666;border:1.5px solid #e0e4ea;margin-bottom:0;font-family:Sarabun,sans-serif">
@@ -1719,6 +1728,8 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
         
       </div>
       <div class="inv-wrap" id="step2QuotationInner" style="width:794px;margin:0 auto;display:none !important"></div>
+      <!-- Attachment preview pages — แสดงรูป + เอกสารที่อัพโหลดทั้งหมด -->
+      <div id="step2AttachPreview" style="width:794px;margin:0 auto"></div>
     </div>
   </div>
 </div>
@@ -1751,13 +1762,9 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
       <div class="fc-head" style="background:#f73174;color:#fff"><span>👤 ข้อมูลผู้รับเงิน</span></div>
       <div class="fc-body">
         <div class="field"><label>ชื่อ-นามสกุล <span class="req">*</span></label><input id="infName" placeholder="ตามบัตรประชาชน" oninput="renderInvoice()"></div>
-        <div class="fr">
-          <div class="field"><label>ชื่อเล่น</label><input id="infNick" placeholder="ชื่อเล่น" oninput="renderInvoice()"></div>
-          <div class="field"><label>แพลตฟอร์ม</label>
-            <select id="infPlatform" onchange="handleOtherSelect('infPlatform','infPlatformOther');renderInvoice()"><option value="">เลือก</option><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Facebook</option><option>X (Twitter)</option><option>Lemon8</option><option>Shopee Live</option><option>Lazada Live</option><option>Konvy Community</option><option value="อื่นๆ">อื่นๆ</option></select>
-            <input id="infPlatformOther" placeholder="ระบุแพลตฟอร์ม..." style="display:none;margin-top:5px;border:1.5px solid #dde3ea;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none" oninput="renderInvoice()">
-          </div>
-        </div>
+        <div class="field"><label>ชื่อเล่น</label><input id="infNick" placeholder="ชื่อเล่น" oninput="renderInvoice()"></div>
+        <input type="hidden" id="infPlatform" value="">
+        <input type="hidden" id="infPlatformOther" value="">
         <div class="fr">
           <div class="field"><label>เบอร์โทร</label><input id="infPhone" placeholder="0xx-xxx-xxxx" oninput="renderInvoice()"></div>
           <div class="field"><label>อีเมล</label><input id="infEmail" placeholder="email@" oninput="renderInvoice()"></div>
@@ -3491,12 +3498,21 @@ function savePDF(opts){
         return new Promise(function(res){
           var img=new Image(); img.src=f.data;
           img.onload=function(){
-            // ใช้ PNG ถ้าเป็น PNG/WebP เพื่อคุณภาพสูงสุด ไม่ compress
             var fmt=f.type==='image/png'?'PNG':'JPEG';
             var imgData=f.data;
-            // ถ้าเป็น JPEG ให้แปลงผ่าน canvas เพื่อเพิ่ม resolution
-            var imgH=Math.min((img.height/img.width)*(W-M*2),267);
-            pdf.addImage(imgData,fmt,M,M+16,W-M*2,imgH,undefined,fmt==='JPEG'?'FAST':'NONE');
+            // ขนาด 4×6 นิ้ว = 101.6 × 152.4 mm — fit ตามอัตราส่วนรูป (ประหยัดหมึก)
+            var maxW=101.6, maxH=152.4;
+            var ratio=img.width/img.height;
+            var w, h;
+            if(ratio >= maxW/maxH){
+              w = maxW; h = w/ratio;
+            } else {
+              h = maxH; w = h*ratio;
+            }
+            // วางตรงกลางแนวนอน + เริ่มใต้ header
+            var x = (W-w)/2;
+            var y = M+22;
+            pdf.addImage(imgData,fmt,x,y,w,h,undefined,fmt==='JPEG'?'FAST':'NONE');
             res();
           };
         });
@@ -3992,12 +4008,8 @@ function saveCertified(){
 // ── PDF Modal & Page Map ──
 function buildPageMap(){
   var map=[];
+  // Invoice file: หน้า 1 = ใบแจ้งหนี้เสมอ (locked)
   map.push({label:'ใบแจ้งหนี้',type:'invoice',icon:'🧾'});
-  // Add quotation page if total >= 5000
-  var c=calcTotal();
-  if(true){
-    map.push({label:'ใบเสนอราคา',type:'quotation',icon:'📋'});
-  }
   files.id.forEach(function(f,i){
     map.push({label:'บัตรประชาชน'+(files.id.length>1?' '+(i+1):''),type:'id',icon:'🪪',file:f});
   });
@@ -4116,9 +4128,10 @@ function renderUploadSummary(){
   var grid=document.getElementById('usSummaryGrid');
   if(!panel||!grid) return;
 
-  // QUOT ไม่แสดง upload summary
+  // QUOT ไม่แสดง upload summary panel แต่ต้อง render attachment preview
   if(typeof currentDocType!=='undefined' && currentDocType==='quot'){
     panel.classList.remove('show');
+    renderStep2Attachments();
     return;
   }
 
@@ -4202,6 +4215,53 @@ function renderUploadSummary(){
 
   // Show panel only when on step 2
   panel.classList.add('show');
+
+  // Render attachment preview pages (รูปบัตร, bookbank, credit, post)
+  renderStep2Attachments();
+}
+
+function renderStep2Attachments(){
+  var wrap=document.getElementById('step2AttachPreview');
+  if(!wrap) return;
+
+  // เก็บเอกสารทั้งหมด
+  var attachments=[];
+  files.id.forEach(function(f,i){
+    if(f.type.indexOf('image/')===0){
+      attachments.push({label:'บัตรประชาชน'+(files.id.length>1?' '+(i+1):''),icon:'🪪',data:f.data,name:f.name});
+    }
+  });
+  files.book.forEach(function(f,i){
+    if(f.type.indexOf('image/')===0){
+      attachments.push({label:'Book Bank'+(files.book.length>1?' '+(i+1):''),icon:'🏦',data:f.data,name:f.name});
+    }
+  });
+  if(files.credit){
+    files.credit.forEach(function(f,i){
+      if(f.type.indexOf('image/')===0){
+        attachments.push({label:'KONVY Credit Member'+(files.credit.length>1?' '+(i+1):''),icon:'🎁',data:f.data,name:f.name});
+      }
+    });
+  }
+
+  if(attachments.length===0){
+    wrap.innerHTML='';
+    return;
+  }
+
+  // สร้าง sheet สำหรับแต่ละเอกสาร — เลียนแบบหน้า A4 PDF
+  var html='';
+  attachments.forEach(function(att){
+    html+='<div style="width:794px;min-height:600px;background:#fff;margin:16px auto 0;border-radius:4px;box-shadow:0 6px 40px rgba(0,0,0,.18);padding:38px 38px 50px;box-sizing:border-box">'+
+      '<div style="font-size:1rem;font-weight:700;color:#1a1a2e;margin-bottom:4px">Attachment: '+att.icon+' '+att.label+'</div>'+
+      '<div style="font-size:.78rem;color:#888;margin-bottom:10px">'+att.name+'</div>'+
+      '<div style="border-top:1px solid #ddd;margin-bottom:30px"></div>'+
+      '<div style="display:flex;justify-content:center;align-items:flex-start">'+
+        '<img src="'+att.data+'" style="max-width:380px;max-height:570px;object-fit:contain;display:block">'+
+      '</div>'+
+    '</div>';
+  });
+  wrap.innerHTML=html;
 }
 
 
