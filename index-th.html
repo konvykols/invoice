@@ -2526,7 +2526,7 @@ function confirmCrop(){
       files[_cropKey][_cropIdx].data=grayData;
       files[_cropKey][_cropIdx].originalData=grayData; // เก็บต้นฉบับหลัง crop+grayscale
       files[_cropKey][_cropIdx].certified=false;
-      autoStamp(_cropKey, _cropIdx, function(){ renderChips(_cropKey); });
+      if(_cropKey === 'credit'){   renderChips(_cropKey); } else {   autoStamp(_cropKey, _cropIdx, function(){ renderChips(_cropKey); }); }
     }
   });
 }
