@@ -316,13 +316,39 @@ document.querySelectorAll(".lang-btn").forEach(b => {
 document.querySelectorAll(".doc-card").forEach(c => {
   c.addEventListener("click", () => selectDoc(c.dataset.doc));
 });
+// Open URL in external browser (Safari/Chrome) — kicks out of LINE/WeChat/FB/IG in-app browsers
+function openInExternalBrowser(url) {
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  const isAndroid = /Android/.test(ua);
+
+  if (isAndroid) {
+    // intent:// scheme — Android opens link in Chrome regardless of current app
+    const cleanUrl = url.replace(/^https?:\/\//, "");
+    const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+    window.location.href = intentUrl;
+    // Fallback: if Chrome not installed, fall back to default browser after 1.5s
+    setTimeout(() => { window.location.href = url; }, 1500);
+  } else if (isIOS) {
+    // x-safari-https:// scheme — iOS opens link in Safari (works from in-app browsers)
+    const safariUrl = url.replace(/^https:\/\//, "x-safari-https://");
+    window.location.href = safariUrl;
+    // Fallback: if user is already in Safari, this does nothing — open normally after delay
+    setTimeout(() => { window.location.href = url; }, 1500);
+  } else {
+    // Desktop — just navigate normally
+    window.location.href = url;
+  }
+}
+
 document.getElementById("t-cta").addEventListener("click", () => {
   if (!currentDoc) return;
   // Map language code to filename suffix (CN → zh)
   const langFile = { th: "th", en: "en", cn: "zh" }[currentLang];
-  // Redirect to the correct doc-type + language file
-  // e.g. quotation-th.html, invoice-en.html, quotation-zh.html
-  window.location.href = `${currentDoc}-${langFile}.html`;
+  // Build full absolute URL so external browser can open it
+  const baseUrl = window.location.href.split("?")[0].replace(/index\.html$|\/$/, "/");
+  const targetUrl = baseUrl + `${currentDoc}-${langFile}.html`;
+  openInExternalBrowser(targetUrl);
 });
 </script>
 
