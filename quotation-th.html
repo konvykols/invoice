@@ -1400,6 +1400,64 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 .t20 thead th{background:#a561ef !important;color:#fff !important}
 .t20 .sum-r.tot{background:#a561ef !important;color:#fff !important}
 
+
+/* ══════════════════════════════════════════
+   HEADER PURPLE THEME OVERRIDE
+   Match landing page friendly purple
+   ══════════════════════════════════════════ */
+
+/* Header bar — purple gradient like landing */
+.picker-bar{
+  background:linear-gradient(135deg,#a561ef 0%,#8a3fd9 100%) !important;
+  box-shadow:0 4px 20px rgba(165,97,239,.3) !important;
+}
+
+/* Logo text stays white, subtitle light lavender */
+.picker-logo{color:#fff !important}
+.picker-logo span{color:rgba(255,255,255,.75) !important}
+
+/* "ถัดไป: พรีวิว →" button — white on purple for contrast */
+#btnNextToTemplate{
+  background:#fff !important;
+  color:#8a3fd9 !important;
+  border:none !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.12) !important;
+}
+#btnNextToTemplate:hover{
+  background:#f8f0fe !important;
+  transform:translateY(-1px);
+}
+
+/* Save PDF button — keep light but adapted */
+.btn-save{
+  background:#fff !important;
+  color:#8a3fd9 !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.12) !important;
+}
+.btn-save:hover{background:#f8f0fe !important}
+
+/* Reset / Back buttons on header */
+.btn-reset,#btnBackTop{
+  background:rgba(255,255,255,.18) !important;
+  color:#fff !important;
+  border:1px solid rgba(255,255,255,.35) !important;
+}
+.btn-reset:hover,#btnBackTop:hover{background:rgba(255,255,255,.28) !important}
+
+/* Mobile bottom nav — match purple */
+.mob-nav{
+  background:linear-gradient(135deg,#a561ef 0%,#8a3fd9 100%) !important;
+  box-shadow:0 -4px 20px rgba(165,97,239,.3) !important;
+}
+.mob-nav-next{background:#fff !important;color:#8a3fd9 !important}
+.mob-nav-next:active{background:#f0e4fd !important}
+.mob-nav-back{background:rgba(255,255,255,.2) !important;color:#fff !important;border:1px solid rgba(255,255,255,.35) !important}
+.mob-nav-save{background:#fff !important;color:#8a3fd9 !important}
+.mob-nav-save:active{background:#f0e4fd !important}
+
+/* Spinner on purple background */
+.spinner{border-top-color:#a561ef !important}
+
 </style>
 </head>
 <body>
@@ -1662,7 +1720,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 <div class="picker-bar">
   <div class="picker-inner">
     <div class="picker-top">
-      <div class="picker-logo">🧾 KONVY KOL <span>กรอกข้อมูล &#8594; พรีวิว &#8594; บันทึก PDF</span></div>
+      <div class="picker-logo">📋 สร้างใบเสนอราคา <span>กรอกข้อมูล &#8594; พรีวิว &#8594; บันทึก PDF</span></div>
       <div class="picker-actions" id="topActions">
         <div class="tc-accepted-badge" id="tcBadge" style="margin-right:4px">
           <span>✅</span><span style="font-size:.68rem">ยอมรับ T&C แล้ว</span>
@@ -1672,8 +1730,8 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
       </div>
     </div>
     <div id="stepBar" style="display:flex;align-items:center;gap:8px;margin-top:8px">
-      <div id="step1ind" style="display:flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:#f0c040">
-        <div style="width:22px;height:22px;border-radius:50%;background:#f0c040;color:#1a1a2e;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700">1</div>
+      <div id="step1ind" style="display:flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:#fff">
+        <div style="width:22px;height:22px;border-radius:50%;background:#fff;color:#8a3fd9;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700">1</div>
         กรอกข้อมูล
       </div>
       <div style="color:rgba(255,255,255,.3);font-size:.7rem">›</div>
@@ -3313,7 +3371,7 @@ function goToStep(n){
     var editTCBtn2 = document.getElementById('btnEditTC');
     if(editTCBtn2) editTCBtn2.style.display='none';
     if(mobNav) mobNav.innerHTML='<button class="mob-nav-btn mob-nav-next" onclick="goToStep(2)">'+'ถัดไป: พรีวิว →'+'</button>';
-    if(s1){ s1.style.color='#f0c040'; s1.querySelector('div').style.background='#f0c040'; s1.querySelector('div').style.color='#1a1a2e'; }
+    if(s1){ s1.style.color='#fff'; s1.querySelector('div').style.background='#fff'; s1.querySelector('div').style.color='#8a3fd9'; }
     if(s2){ s2.style.color='rgba(255,255,255,.35)'; }
     if(s2c){ s2c.style.background='rgba(255,255,255,.15)'; s2c.style.color='rgba(255,255,255,.4)'; }
   } else {
@@ -3345,8 +3403,8 @@ function goToStep(n){
     }
     if(mobNav) mobNav.innerHTML='<button class="mob-nav-btn mob-nav-back" onclick="goToStep(1)">'+'← แก้ไข'+'</button><button class="mob-nav-btn mob-nav-save" onclick="openPdfModal()">'+'⬇️ บันทึก PDF'+'</button>';
     if(s1){ s1.style.color='rgba(255,255,255,.45)'; s1.querySelector('div').style.background='rgba(255,255,255,.15)'; s1.querySelector('div').style.color='rgba(255,255,255,.4)'; }
-    if(s2){ s2.style.color='#f0c040'; }
-    if(s2c){ s2c.style.background='#f0c040'; s2c.style.color='#1a1a2e'; }
+    if(s2){ s2.style.color='#fff'; }
+    if(s2c){ s2c.style.background='#fff'; s2c.style.color='#8a3fd9'; }
     // แสดงปุ่มแก้ไข T&C เฉพาะ quot
     var editTCBtn = document.getElementById('btnEditTC');
     if(editTCBtn) editTCBtn.style.display = (currentDocType==='quot') ? 'inline-flex' : 'none';
@@ -3626,11 +3684,13 @@ function savePDF(opts){
       if(lineWarn){ lineWarn.style.display='block'; lbwDrawQR(); }
       if(doneMsg) doneMsg.textContent='WeChat / DingTalk ไม่รองรับการดาวน์โหลด กรุณาเปิดใน Safari หรือ Chrome ค่ะ';
     } else if(isIOS||isAndroid){
-      // Mobile — popup share sheet ทันที
-      if(shareBtn) shareBtn.style.display='block';
-      if(dlBtn){ dlBtn.style.display='block'; dlBtn.textContent=isIOS?'📂 เปิด PDF':'⬇️ ดาวน์โหลด'; }
-      if(doneMsg) doneMsg.textContent='กำลังเปิด share sheet...';
-      setTimeout(function(){ doShare(); }, 300);
+      // Mobile — แสดงปุ่ม share ให้ user กด (ต้องเป็น user gesture ถึงจะใช้ navigator.share บน Android ได้)
+      if(shareBtn){
+        shareBtn.style.display='block';
+        shareBtn.textContent='📤 แชร์ไปที่ LINE / อีเมล / บันทึก';
+      }
+      if(dlBtn){ dlBtn.style.display='block'; dlBtn.textContent=isIOS?'📂 เปิด PDF':'⬇️ ดาวน์โหลด PDF'; }
+      if(doneMsg) doneMsg.textContent='กดปุ่มแชร์ด้านล่างเพื่อส่งไฟล์';
     } else {
       // Desktop — download อัตโนมัติ
       pdf.save(fileName);
@@ -3678,28 +3738,55 @@ function openInBrowser(){
   }
 }
 
-// ปุ่ม 📤 แชร์ — กดครั้งเดียว share sheet ขึ้นพร้อม PDF ทันที
+// ปุ่ม 📤 แชร์ — ต้องถูกเรียกจาก user click เท่านั้น (ไม่ใช่ setTimeout/Promise)
 function doShare(){
   var blob=window._lastPdfBlob;
   var name=window._lastPdfName||'invoice.pdf';
   if(!blob){ alert('ไม่พบไฟล์ PDF กรุณาสร้างใหม่'); return; }
 
-  if(!navigator.share){ downloadPDF(); return; }
+  // ตรวจสอบ Web Share API support
+  if(!navigator.share){
+    // Browser เก่า — download แทน
+    downloadPDF();
+    return;
+  }
 
-  // สร้าง File object จาก blob — ทั้ง iOS Safari 15.1+ และ Android Chrome รองรับ
-  var file=new File([blob], name, {type:'application/pdf'});
+  // สร้าง File object
+  var file;
+  try{
+    file=new File([blob], name, {type:'application/pdf'});
+  } catch(e){
+    // Android เก่าบางรุ่นไม่รองรับ File constructor — download แทน
+    downloadPDF();
+    return;
+  }
 
-  // share พร้อมไฟล์ตรงๆ — share sheet ขึ้น เลือก LINE ได้เลย
-  navigator.share({
-    title: 'ใบแจ้งหนี้ KONVY KOL',
-    files: [file]
+  var shareData={
+    title:'KONVY KOL Document',
+    text:name,
+    files:[file]
+  };
+
+  // ตรวจสอบว่า browser แชร์ไฟล์แบบนี้ได้มั้ย (สำคัญสำหรับ Android)
+  if(navigator.canShare && !navigator.canShare(shareData)){
+    // Browser ไม่รองรับการแชร์ PDF — fallback เป็น download
+    alert('เบราว์เซอร์ของคุณไม่รองรับการแชร์ไฟล์ กำลังดาวน์โหลดแทนค่ะ');
+    downloadPDF();
+    return;
+  }
+
+  // เรียก share — ต้องอยู่ใน user gesture context
+  navigator.share(shareData).then(function(){
+    // สำเร็จ — user เลือก app ไปแล้ว
   }).catch(function(err){
-    if(err.name==='AbortError') return; // user กด cancel เอง
-    // ถ้า share ไฟล์ไม่ได้ (เช่น browser เก่า) — เปิด PDF viewer แทน
+    if(err.name==='AbortError') return; // user กด cancel — ไม่ต้องทำอะไร
+    // error อื่นๆ — บอก user แล้ว fallback
+    console.warn('Share failed:', err);
     var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
     if(isIOS && window._lastPdfDataUri){
       openPDFiOS(window._lastPdfDataUri, name);
     } else {
+      // Android fallback → download
       downloadPDF();
     }
   });
