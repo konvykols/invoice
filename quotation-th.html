@@ -1751,13 +1751,9 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
       <div class="fc-head" style="background:#f73174;color:#fff"><span>👤 ข้อมูลผู้รับเงิน</span></div>
       <div class="fc-body">
         <div class="field"><label>ชื่อ-นามสกุล <span class="req">*</span></label><input id="infName" placeholder="ตามบัตรประชาชน" oninput="renderInvoice()"></div>
-        <div class="fr">
-          <div class="field"><label>ชื่อเล่น</label><input id="infNick" placeholder="ชื่อเล่น" oninput="renderInvoice()"></div>
-          <div class="field"><label>แพลตฟอร์ม</label>
-            <select id="infPlatform" onchange="handleOtherSelect('infPlatform','infPlatformOther');renderInvoice()"><option value="">เลือก</option><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Facebook</option><option>X (Twitter)</option><option>Lemon8</option><option>Shopee Live</option><option>Lazada Live</option><option>Konvy Community</option><option value="อื่นๆ">อื่นๆ</option></select>
-            <input id="infPlatformOther" placeholder="ระบุแพลตฟอร์ม..." style="display:none;margin-top:5px;border:1.5px solid #dde3ea;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none" oninput="renderInvoice()">
-          </div>
-        </div>
+        <div class="field"><label>ชื่อเล่น</label><input id="infNick" placeholder="ชื่อเล่น" oninput="renderInvoice()"></div>
+        <input type="hidden" id="infPlatform" value="">
+        <input type="hidden" id="infPlatformOther" value="">
         <div class="fr">
           <div class="field"><label>เบอร์โทร</label><input id="infPhone" placeholder="0xx-xxx-xxxx" oninput="renderInvoice()"></div>
           <div class="field"><label>อีเมล</label><input id="infEmail" placeholder="email@" oninput="renderInvoice()"></div>
@@ -3475,9 +3471,9 @@ function savePDF(opts){
     });
   }
 
-  // ── 2. Attachment pages (id card + book bank) ──
+  // ── 2. Attachment pages (id card + book bank + credit screenshot) ──
   pagesToRender.forEach(function(pg){
-    if(pg.type!=='id' && pg.type!=='book') return;
+    if(pg.type!=='id' && pg.type!=='book' && pg.type!=='credit') return;
     var f=pg.file;
     chain=chain.then(function(){
       if(!firstPage) pdf.addPage();
@@ -3992,11 +3988,13 @@ function saveCertified(){
 // ── PDF Modal & Page Map ──
 function buildPageMap(){
   var map=[];
-  map.push({label:'ใบแจ้งหนี้',type:'invoice',icon:'🧾'});
-  // Add quotation page if total >= 5000
-  var c=calcTotal();
-  if(true){
-    map.push({label:'ใบเสนอราคา',type:'quotation',icon:'📋'});
+  // Quotation file: หน้า 1 = ใบเสนอราคาเสมอ (locked)
+  map.push({label:'ใบเสนอราคา',type:'invoice',icon:'📋'});
+  // KONVY Credit screenshot
+  if(files.credit && files.credit.length){
+    files.credit.forEach(function(f,i){
+      map.push({label:'KONVY Credit'+(files.credit.length>1?' '+(i+1):''),type:'credit',icon:'🎁',file:f});
+    });
   }
   files.id.forEach(function(f,i){
     map.push({label:'บัตรประชาชน'+(files.id.length>1?' '+(i+1):''),type:'id',icon:'🪪',file:f});
