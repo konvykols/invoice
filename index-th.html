@@ -1535,12 +1535,12 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
           </div>
           <div class="field">
             <label>Member ID <span class="req">*</span></label>
-            <input id="creditMemberId" placeholder="เช่น pangyen0112" oninput="renderInvoice()"
+            <input id="creditMemberId" placeholder="เช่น pangyen0112" oninput="updateCreditSummary();renderInvoice()""
               style="border:1.5px solid #f7c0d8;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none;box-sizing:border-box">
           </div>
           <div class="field" style="margin-top:6px">
             <label>มูลค่า Credit (บาท) <span class="req">*</span></label>
-            <input id="creditValue" type="number" placeholder="0.00" oninput="renderInvoice()"
+            <input id="creditValue" type="number" placeholder="0.00" oninput="updateCreditSummary();renderInvoice()"
               style="border:1.5px solid #f7c0d8;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none;box-sizing:border-box">
           </div>
           <div class="field" style="margin-top:6px">
@@ -4712,7 +4712,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 <div class="mob-nav" id="mobNav">
-  <button class="mob-nav-btn mob-nav-next" onclick="goToStep(2)">ถัดไป: เลือกแบบ →</button>
+  <button class="mob-nav-btn mob-nav-next" nclick="openTC()">ถัดไป: พรีวิว →</button>
 </div>
 
 <!-- iOS PDF Viewer Overlay -->
