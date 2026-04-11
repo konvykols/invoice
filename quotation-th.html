@@ -1458,6 +1458,15 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 /* Spinner on purple background */
 .spinner{border-top-color:#a561ef !important}
 
+
+/* QT: hide all bank info (no bank needed for quotation) */
+.bank-box,.section-title:has(+ .section-content .bank-grid),
+.lbl:has(~ .bank-grid){display:none !important}
+.bank-grid,.bank-grid + *{display:none !important}
+/* Hide bank fields in form */
+#bankName,#bankNameOther,#bankAccName,#bankAccNo,#bankBranch{display:none !important}
+.fc:has(#bankName){display:none !important}
+
 </style>
 </head>
 <body>
@@ -1868,7 +1877,9 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
               style="border:1.5px solid #f7c0d8;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none;box-sizing:border-box;margin-bottom:6px">
           </div>
           <div class="field">
-            <label>Member ID <span class="req">*</span></label>
+            <label style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">Member ID <span class="req">*</span>
+              <button type="button" onclick="document.getElementById('memberIdModal').style.display='flex'" style="background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;border:none;border-radius:12px;padding:3px 10px;font-size:.68rem;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif;box-shadow:0 2px 6px rgba(138,63,217,.3)">❓ วิธีเช็ค Member ID</button>
+            </label>
             <input id="creditMemberId" placeholder="เช่น pangyen0112" oninput="updateCreditSummary();renderInvoice()""
               style="border:1.5px solid #f7c0d8;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none;box-sizing:border-box">
           </div>
@@ -5241,5 +5252,32 @@ document.addEventListener('DOMContentLoaded', function(){
   pointer-events:none;z-index:-1;
 "></div>
 
+<!-- Member ID How-To Modal -->
+<div id="memberIdModal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(20,10,40,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:99999;align-items:center;justify-content:center;padding:20px;font-family:Sarabun,sans-serif">
+  <div style="background:#fff;border-radius:22px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(138,63,217,.45);border:2px solid rgba(165,97,239,.3)">
+    <div style="background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;padding:20px 24px;border-radius:20px 20px 0 0">
+      <div style="font-size:1.05rem;font-weight:800;margin-bottom:4px">💳 วิธีเช็ค KONVY Member ID</div>
+      <div style="font-size:.75rem;opacity:.92">ทำตาม 2 ขั้นตอนในแอป KONVY</div>
+    </div>
+    <div style="padding:22px 24px">
+      <div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.82rem;flex-shrink:0">1</div>
+          <div style="font-size:.85rem;font-weight:700;color:#4a2580">เปิดแอป → กด "บัญชี" → กด QR มุมขวาบน</div>
+        </div>
+        <img src="https://konvykols.github.io/invoice/assets/member-step1.png" style="width:100%;border-radius:12px;border:1.5px solid #e8d6f7;display:block" alt="Step 1">
+      </div>
+      <div style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.82rem;flex-shrink:0">2</div>
+          <div style="font-size:.85rem;font-weight:700;color:#4a2580">ชื่อตัวหนาใต้โลโก้ = Member ID</div>
+        </div>
+        <img src="https://konvykols.github.io/invoice/assets/member-step2.jpg" style="width:100%;border-radius:12px;border:1.5px solid #e8d6f7;display:block" alt="Step 2">
+        <div style="margin-top:10px;background:#f5ebff;border-left:3px solid #8a3fd9;padding:9px 12px;border-radius:6px;font-size:.75rem;color:#4a2580">💡 ตัวอย่าง: <b>Konnie coco</b> คือ Member ID</div>
+      </div>
+      <button onclick="document.getElementById('memberIdModal').style.display='none'" style="width:100%;background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;border:none;border-radius:12px;padding:13px;font-size:.92rem;font-weight:800;cursor:pointer;font-family:Sarabun,sans-serif;box-shadow:0 6px 16px rgba(138,63,217,.35)">เข้าใจแล้ว ✓</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
