@@ -1465,6 +1465,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 .bank-grid,.bank-grid + *{display:none !important}
 /* Hide bank fields in form */
 #bankName,#bankNameOther,#bankAccName,#bankAccNo,#bankBranch{display:none !important}
+.fc:has(#fcBankHead){display:none !important}
 .fc:has(#bankName){display:none !important}
 
 </style>
@@ -1815,7 +1816,21 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
     <div class="fc">
       <div class="fc-head" style="background:#f73174;color:#fff"><span>📋 เลขที่ &amp; วันที่</span></div>
       <div class="fc-body">
-        <div class="field"><label id="invNoLabel">เลขที่ใบเสนอราคา</label><input id="invNo" placeholder="เช่น QT-001 / INV-001" oninput="renderInvoice()"></div>
+        <div class="field"><label id="invNoLabel">เลขที่ใบเสนอราคา</label><input id="invNo" placeholder="KVQT-00XXXXXXX" oninput="renderInvoice()">
+<datalist id="itemSuggest">
+  <option value="รีวิวแบบ (วิดีโอ) สินค้า">
+  <option value="รีวิวแบบ (อัลบั้ม) สินค้า">
+  <option value="ค่าบริการ Live">
+</datalist>
+<script>
+(function(){
+  function gen(){var t=(Date.now()%10000).toString().padStart(4,'0');var r=Math.floor(Math.random()*1000).toString().padStart(3,'0');return 'KVQT-00'+t+r;}
+  function init(){var el=document.getElementById('invNo');if(el&&!el.value){el.value=gen();if(typeof renderInvoice==='function')renderInvoice();}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  setTimeout(init,80);
+})();
+</script>
+</div>
         <div class="field"><label>วันที่ออก</label><input type="date" id="invDate" onchange="updateDue();renderInvoice()"></div>
         <div id="invDue" style="display:none">–</div>
         <div class="field"><label>ชื่อแคมเปญ</label><input id="invProject" placeholder="ชื่อแคมเปญ" oninput="renderInvoice()"></div>
@@ -1906,7 +1921,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
       </div>
     </div>
     <div class="fc" id="fcBankGroup">
-      <div class="fc-head" style="background:#f73174;color:#fff"><span>💳 บัญชีธนาคาร</span></div>
+      <div class="fc-head" id="fcBankHead" style="background:#f73174;color:#fff;display:none"><span>💳 บัญชีธนาคาร</span></div>
       <div class="fc-body">
         <div class="field"><label>ธนาคาร <span class="req">*</span></label>
           <select id="bankName" onchange="handleOtherSelect('bankName','bankNameOther');renderInvoice()"><option value="">-- เลือก --</option><option>KBANK - ธนาคารกสิกรไทย</option><option>SCB - ธนาคารไทยพาณิชย์</option><option>BBL - ธนาคารกรุงเทพ</option><option>KTB - ธนาคารกรุงไทย</option><option>BAY - ธนาคารกรุงศรีอยุธยา</option><option>TTB - ธนาคารทหารไทยธนชาต</option><option>GSB - ธนาคารออมสิน</option><option>UOBT - ธนาคารยูโอบี</option><option>KKP - ธนาคารเกียรตินาคินภัทร</option><option>CIMBT - ธนาคารซีไอเอ็มบี ไทย</option><option>TISCOB - ธนาคารทิสโก้</option><option>LH BANK - ธนาคารแลนด์ แอนด์ เฮ้าส์</option><option>SCBT - ธนาคารสแตนดาร์ดชาร์เตอร์ด (ไทย)</option><option>CITI - ธนาคารซิตี้แบงก์</option><option>HSBC - ธนาคารฮ่องกงและเซี่ยงไฮ้</option><option value="อื่นๆ">อื่นๆ</option></select>
@@ -2107,7 +2122,8 @@ function addRow(){
   num.style.cssText='font-size:.72rem;color:#bbb;flex-shrink:0;width:16px';
   num.textContent=tb.children.length+1;
   var inpD=document.createElement('input');
-  inpD.placeholder='รายการ';
+  inpD.placeholder='รายการ (กดเพื่อเลือก)';
+  inpD.setAttribute('list','itemSuggest');
   inpD.style.cssText='flex:1;border:1.5px solid #dde3ea;border-radius:6px;padding:8px 10px;font-family:Sarabun,sans-serif;font-size:.9rem;outline:none;background:#fff';
   inpD.addEventListener('input',renderInvoice);
   var btnDel=document.createElement('button');
@@ -4824,7 +4840,7 @@ function loadFromUrl(){
             row.id = 'row' + it.id;
             // สร้าง elements แยกกัน หลีกเลี่ยง quote conflict
             var rn  = document.createElement('span'); rn.className='rn';
-            var rd  = document.createElement('input'); rd.className='rd'; rd.placeholder='รายการ...'; rd.value=it.desc||''; rd.oninput=function(){calcTotal();renderInvoice();};
+            var rd  = document.createElement('input'); rd.className='rd'; rd.placeholder='รายการ...'; rd.setAttribute('list','itemSuggest'); rd.value=it.desc||''; rd.oninput=function(){calcTotal();renderInvoice();};
             var rq  = document.createElement('input'); rq.className='rq'; rq.type='number'; rq.min='1'; rq.value=it.qty||1; rq.oninput=function(){calcTotal();renderInvoice();};
             var rp  = document.createElement('input'); rp.className='rp'; rp.type='number'; rp.min='0'; rp.step='0.01'; rp.value=it.price||0; rp.oninput=function(){calcTotal();renderInvoice();};
             var rtv = document.createElement('span'); rtv.className='rtv'; rtv.id='rtv'+it.id; rtv.textContent='฿0.00';
