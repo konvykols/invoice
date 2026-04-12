@@ -1465,7 +1465,6 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 .bank-grid,.bank-grid + *{display:none !important}
 /* Hide bank fields in form */
 #bankName,#bankNameOther,#bankAccName,#bankAccNo,#bankBranch{display:none !important}
-.fc:has(#fcBankHead){display:none !important}
 .fc:has(#bankName){display:none !important}
 
 </style>
@@ -1921,7 +1920,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
       </div>
     </div>
     <div class="fc" id="fcBankGroup">
-      <div class="fc-head" id="fcBankHead" style="background:#f73174;color:#fff;display:none"><span>💳 บัญชีธนาคาร</span></div>
+      <div class="fc-head" style="background:#f73174;color:#fff"><span>💳 บัญชีธนาคาร</span></div>
       <div class="fc-body">
         <div class="field"><label>ธนาคาร <span class="req">*</span></label>
           <select id="bankName" onchange="handleOtherSelect('bankName','bankNameOther');renderInvoice()"><option value="">-- เลือก --</option><option>KBANK - ธนาคารกสิกรไทย</option><option>SCB - ธนาคารไทยพาณิชย์</option><option>BBL - ธนาคารกรุงเทพ</option><option>KTB - ธนาคารกรุงไทย</option><option>BAY - ธนาคารกรุงศรีอยุธยา</option><option>TTB - ธนาคารทหารไทยธนชาต</option><option>GSB - ธนาคารออมสิน</option><option>UOBT - ธนาคารยูโอบี</option><option>KKP - ธนาคารเกียรตินาคินภัทร</option><option>CIMBT - ธนาคารซีไอเอ็มบี ไทย</option><option>TISCOB - ธนาคารทิสโก้</option><option>LH BANK - ธนาคารแลนด์ แอนด์ เฮ้าส์</option><option>SCBT - ธนาคารสแตนดาร์ดชาร์เตอร์ด (ไทย)</option><option>CITI - ธนาคารซิตี้แบงก์</option><option>HSBC - ธนาคารฮ่องกงและเซี่ยงไฮ้</option><option value="อื่นๆ">อื่นๆ</option></select>
@@ -2654,6 +2653,27 @@ function renderInvoice(){
     html = html.replace('<div class="sig-row-uni">', tcBlock + '<div class="sig-row-uni">');
   }
 
+  // ลบ section บัญชีธนาคารทั้งหมดจากใบเสนอราคา
+  if(isQuot){
+    try{
+      var _tmp=document.createElement('div');_tmp.innerHTML=html;
+      _tmp.querySelectorAll('.bank-box').forEach(function(el){el.remove();});
+      _tmp.querySelectorAll('.info-cell').forEach(function(el){
+        var lbl=el.querySelector('.ic-lbl');
+        if(lbl && lbl.textContent.indexOf('บัญชี')>-1)el.remove();
+      });
+      _tmp.querySelectorAll('.section-box').forEach(function(el){
+        var h=el.querySelector('.section-box-head');
+        if(h && h.textContent.indexOf('บัญชี')>-1)el.remove();
+      });
+      _tmp.querySelectorAll('.section-title').forEach(function(el){
+        if(el.textContent.indexOf('บัญชี')>-1){
+          var p=el.parentElement; if(p)p.remove(); else el.remove();
+        }
+      });
+      html=_tmp.innerHTML;
+    }catch(e){}
+  }
   document.getElementById('invoiceWrap').innerHTML=html;
   var s2p=document.getElementById('step2PreviewInner');
   if(s2p) s2p.innerHTML=html;
