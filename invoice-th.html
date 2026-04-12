@@ -6,6 +6,13 @@
 <title>KONVY KOL — ใบแจ้งหนี้ (Invoice)</title>
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Sarabun:wght@300;400;500;600;700&family=Playfair+Display:wght@700;900&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script>
+// Fallback: ถ้า jsdelivr ไม่โหลด → ลอง unpkg
+if(typeof window.jsQR === 'undefined'){
+  document.write('<script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"><\/script>');
+}
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 
@@ -1806,7 +1813,32 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
     <div class="fc">
       <div class="fc-head" style="background:#f73174;color:#fff"><span>📋 เลขที่ &amp; วันที่</span></div>
       <div class="fc-body">
-        <div class="field"><label id="invNoLabel">เลขที่ใบเสนอราคา</label><input id="invNo" placeholder="เช่น QT-001 / INV-001" oninput="renderInvoice()"></div>
+        <div class="field"><label id="invNoLabel">เลขที่ใบแจ้งหนี้</label><input id="invNo" placeholder="KVIN-00XXXXXXX" oninput="renderInvoice()">
+          <div id="refQtBox" style="display:none;margin-top:6px;padding:9px 12px;background:linear-gradient(135deg,#fff5f9,#ffe6f0);border:1.5px dashed #f73174;border-radius:10px;font-size:.75rem;color:#8a2f5a;font-family:Sarabun,sans-serif;line-height:1.6">
+            <div>📎 อ้างอิงใบเสนอราคา: <b id="refQtNumber">-</b></div>
+            <div id="refQtCampaignRow" style="display:none;margin-top:2px">📦 แคมเปญ: <b id="refQtCampaign">-</b></div>
+          </div>
+        </div>
+<script>
+(function(){
+  // 🎯 Auto-random KVIN (รูปแบบเดียวกับ KVQT)
+  function genKVIN(){
+    var t=(Date.now()%10000).toString().padStart(4,'0');
+    var r=Math.floor(Math.random()*1000).toString().padStart(3,'0');
+    return 'KVIN-00'+t+r;
+  }
+  function init(){
+    var el=document.getElementById('invNo');
+    if(el && !el.value){
+      el.value = genKVIN();
+      if(typeof renderInvoice==='function') renderInvoice();
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+  else init();
+  setTimeout(init, 80);
+})();
+</script>
         <div class="fr">
           <div class="field"><label>วันที่ออก</label><input type="date" id="invDate" onchange="updateDue();renderInvoice()"></div>
           <div class="field"><label>กำหนดชำระ (+60 วัน)</label>
@@ -1816,6 +1848,34 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
         <div class="field"><label>ชื่อแคมเปญ</label><input id="invProject" placeholder="ชื่อแคมเปญ" oninput="renderInvoice()"></div>
       </div>
     </div>
+
+    <!-- 🎯 QR Scanner — โหลดข้อมูลจากใบเสนอราคาเดิม -->
+    <div class="fc" id="qrScannerCard" style="background:linear-gradient(135deg,#fff5f9,#ffe6f0);border:2px dashed #f73174;border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div style="padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:1.3rem">⚡</span>
+          <span style="font-weight:800;color:#c91f5e;font-size:.92rem">กรอกเร็วขึ้น 10 เท่า!</span>
+        </div>
+        <div style="font-size:.78rem;color:#666;line-height:1.6;margin-bottom:12px">
+          💡 <b>วิธีเร็วที่สุด:</b> เปิดไฟล์ <b>QR_xxx.png</b> ที่ได้จากใบเสนอราคา → <b>สแกนด้วยกล้อง/LINE</b> → เด้งเปิดหน้านี้พร้อมข้อมูลเลย ✨
+          <br><br>
+          หรือถ้ามาถึงหน้านี้แล้ว อัปโหลดไฟล์ QR เพื่อโหลดข้อมูลได้ค่ะ 👇
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label style="flex:1;min-width:120px;background:linear-gradient(135deg,#f73174,#c91f5e);color:#fff;border:none;border-radius:10px;padding:11px 14px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif;text-align:center;box-shadow:0 3px 8px rgba(247,49,116,.3)">
+            📎 อัปโหลดไฟล์ QR
+            <input type="file" accept="image/*" onchange="handleQRFileUpload(this)" style="display:none">
+          </label>
+          <label style="flex:1;min-width:120px;background:#fff;color:#c91f5e;border:2px solid #f73174;border-radius:10px;padding:9px 14px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif;text-align:center">
+            📷 สแกนในเว็บ
+            <input type="file" accept="image/*" capture="environment" onchange="handleQRFileUpload(this)" style="display:none">
+          </label>
+          <button type="button" onclick="document.getElementById('qrHelpModal').style.display='flex'" style="background:#fff;color:#888;border:1.5px solid #dde3ea;border-radius:10px;padding:9px 12px;font-size:.78rem;cursor:pointer;font-family:Sarabun,sans-serif">❓</button>
+        </div>
+        <div id="qrScanResult" style="display:none;margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.8rem;font-family:Sarabun,sans-serif"></div>
+      </div>
+    </div>
+
     <div class="fc">
       <div class="fc-head" style="background:#f73174;color:#fff"><span>👤 ข้อมูลผู้รับเงิน</span></div>
       <div class="fc-body">
@@ -2258,6 +2318,8 @@ function renderInvoice(){
   var iEmail=v('infEmail'), iCard=v('infCardNo');
   var proj=v('invProject'), note=v('invNote');
   var bank=v('bankName')==='อื่นๆ'?v('bankNameOther'):v('bankName'), bAcc=v('bankAccName'), bNo=v('bankAccNo'), bBr=v('bankBranch');
+  // DEBUG: trace bank values
+  if(window._debugBank){ console.log('[bankGrid]', {bank:bank, bAcc:bAcc, bNo:bNo, bBr:bBr, isQuot:(currentDocType==='quot')}); }
   var invNo=v('invNo')||'–', invDate=fmtDate(v('invDate')), invDue=fmtDate(window._invDueRaw||'');
   var _dtype = (typeof currentDocType!=='undefined') ? currentDocType : 'quot';
   var isQuot = (_dtype === 'quot');
@@ -5240,5 +5302,323 @@ document.addEventListener('DOMContentLoaded', function(){
   pointer-events:none;z-index:-1;
 "></div>
 
+<!-- QR Help Modal -->
+<div id="qrHelpModal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(40,10,25,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:99999;align-items:center;justify-content:center;padding:20px;font-family:Sarabun,sans-serif">
+  <div style="background:#fff;border-radius:22px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(247,49,116,.4);border:2px solid rgba(247,49,116,.25);-webkit-overflow-scrolling:touch">
+    <div style="background:linear-gradient(135deg,#f73174,#c91f5e);color:#fff;padding:20px 24px;border-radius:20px 20px 0 0">
+      <div style="font-size:1.05rem;font-weight:800;margin-bottom:4px">💡 วิธีใช้ QR Code</div>
+      <div style="font-size:.75rem;opacity:.92">สแกน QR จากใบเสนอราคา → ไม่ต้องกรอกซ้ำ</div>
+    </div>
+    <div style="padding:20px 22px">
+      <div style="margin-bottom:16px">
+        <div style="font-weight:800;color:#c91f5e;font-size:.85rem;margin-bottom:8px">📱 QR Code มาจากไหน?</div>
+        <div style="font-size:.78rem;color:#555;line-height:1.7;padding-left:10px">
+          ตอนทำ<b>ใบเสนอราคา (QT)</b> ระบบจะดาวน์โหลดไฟล์ <b>QR_ชื่อ_โปรเจกต์.png</b> ให้คุณเก็บไว้อัตโนมัติค่ะ
+        </div>
+      </div>
+      <div style="margin-bottom:16px;padding:12px 14px;background:#fff5f9;border-radius:10px">
+        <div style="font-weight:800;color:#c91f5e;font-size:.85rem;margin-bottom:8px">✨ วิธีใช้ (2 ตัวเลือก)</div>
+        <div style="font-size:.78rem;color:#555;line-height:1.7">
+          <div style="margin-bottom:8px"><b>📎 อัปโหลดไฟล์ QR</b> — เลือกไฟล์ PNG จากมือถือ/คอมฯ</div>
+          <div><b>📷 สแกนกล้อง</b> — เปิด QR ในเครื่องอื่น แล้วใช้กล้องมือถือสแกน</div>
+        </div>
+      </div>
+      <div style="margin-bottom:16px;padding:12px 14px;background:#e8f8f0;border-radius:10px;border-left:3px solid #06c755">
+        <div style="font-size:.78rem;color:#0a6640;line-height:1.7">
+          ✅ หลังโหลดสำเร็จ → ฟอร์มจะเติมข้อมูลให้เลย<br>
+          📝 คุณกรอกเพิ่มแค่: <b>บัญชีธนาคาร + บัตร + bookbank + หลักฐานโพสต์</b>
+        </div>
+      </div>
+      <div style="padding:10px 12px;background:#fff8e1;border-radius:10px;margin-bottom:16px">
+        <div style="font-size:.72rem;color:#7a5c00;line-height:1.6">
+          ⚠️ <b>ถ้าไม่มีไฟล์ QR</b> — กรอกข้อมูลในฟอร์มด้านล่างปกติได้ค่ะ
+        </div>
+      </div>
+      <button onclick="document.getElementById('qrHelpModal').style.display='none'" style="width:100%;background:linear-gradient(135deg,#f73174,#c91f5e);color:#fff;border:none;border-radius:12px;padding:13px;font-size:.92rem;font-weight:800;cursor:pointer;font-family:Sarabun,sans-serif;box-shadow:0 6px 16px rgba(247,49,116,.35)">เข้าใจแล้ว ✓</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 🎯 QR Scanner: อ่าน QR จากใบเสนอราคา → auto-fill ฟอร์ม INV ──
+// ── 🎯 QR Scanner: อ่าน QR จากใบเสนอราคา → auto-fill ฟอร์ม INV ──
+// ย้าย QR scanner card ไปบนสุดของ sidebar ตอนโหลดหน้า (ทำครั้งเดียว)
+(function(){
+  function reorderSidebar(){
+    var sidebar = document.querySelector('.sidebar');
+    if(!sidebar) return;
+
+    // 1. ย้าย QR scanner card ไปบนสุด
+    var qrCard = document.getElementById('qrScannerCard');
+    if(qrCard && sidebar.firstElementChild !== qrCard){
+      sidebar.insertBefore(qrCard, sidebar.firstElementChild);
+    }
+
+    // 2. ย้าย bank card ลงหลัง items card (ให้ KOL เห็นรายการมาครบก่อน ค่อยกรอกบัญชี)
+    var itemsHead = document.getElementById('fcItemsHead');
+    var itemsCard = itemsHead ? itemsHead.closest('.fc') : null;
+    // หา bank card: fc ที่มี fc-head ชื่อ "บัญชีธนาคาร"
+    var bankCard = null;
+    var fcs = sidebar.querySelectorAll('.fc');
+    for(var i=0; i<fcs.length; i++){
+      var head = fcs[i].querySelector('.fc-head');
+      if(head && head.textContent.indexOf('บัญชีธนาคาร') > -1){
+        bankCard = fcs[i]; break;
+      }
+    }
+    if(bankCard && itemsCard && itemsCard.nextElementSibling !== bankCard){
+      // ย้าย bankCard ไปหลัง itemsCard
+      itemsCard.parentNode.insertBefore(bankCard, itemsCard.nextElementSibling);
+    }
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', reorderSidebar);
+  } else {
+    reorderSidebar();
+  }
+})();
+
+function showQRResult(msg, type){
+  var el = document.getElementById('qrScanResult');
+  if(!el) return;
+  el.style.display = 'block';
+  if(type === 'success'){
+    el.style.background = '#e8f8f0';
+    el.style.border = '1.5px solid #06c755';
+    el.style.color = '#0a6640';
+  } else if(type === 'error'){
+    el.style.background = '#fff0f0';
+    el.style.border = '1.5px solid #e74c3c';
+    el.style.color = '#c0392b';
+  } else {
+    el.style.background = '#fff8e1';
+    el.style.border = '1.5px solid #ffc107';
+    el.style.color = '#7a5c00';
+  }
+  el.innerHTML = msg;
+}
+
+function handleQRFileUpload(input){
+  var file = input.files && input.files[0];
+  if(!file){ return; }
+  showQRResult('🔍 กำลังอ่าน QR Code...', 'loading');
+
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      try {
+        var cv = document.createElement('canvas');
+        cv.width = img.width; cv.height = img.height;
+        var ctx = cv.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        var imgData = ctx.getImageData(0, 0, img.width, img.height);
+        if(!window.jsQR){
+          showQRResult('❌ Library ยังไม่โหลด กรุณา refresh หน้าใหม่', 'error');
+          return;
+        }
+        var code = window.jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
+        if(!code){
+          showQRResult('😔 อ่าน QR ไม่ได้<br><small>ลองใช้รูปที่ชัดกว่านี้ หรือกรอกข้อมูลเองด้านล่าง</small>', 'error');
+          input.value = '';
+          return;
+        }
+        decodeAndFillFromQR(code.data);
+      } catch(err){
+        console.error(err);
+        showQRResult('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
+      }
+      input.value = ''; // reset เพื่อให้เลือกไฟล์เดิมซ้ำได้
+    };
+    img.onerror = function(){ showQRResult('❌ อ่านรูปไม่ได้', 'error'); input.value = ''; };
+    img.src = e.target.result;
+  };
+  reader.onerror = function(){ showQRResult('❌ อ่านไฟล์ไม่ได้', 'error'); };
+  reader.readAsDataURL(file);
+}
+
+function decodeAndFillFromQR(raw){
+  try {
+    var b64 = null;
+    // รองรับ 2 format:
+    // 1. URL format: https://.../invoice-th.html#d=xxx  ← รุ่นใหม่
+    // 2. Raw format: KVQR:xxx                           ← รุ่นเก่า
+    if(raw && raw.indexOf('#d=') > -1){
+      b64 = raw.split('#d=')[1].split('&')[0];
+      // แปลง URL-safe base64 กลับเป็น standard
+      b64 = b64.replace(/-/g,'+').replace(/_/g,'/');
+      // pad '=' กลับ
+      while(b64.length % 4) b64 += '=';
+    } else if(raw && raw.indexOf('KVQR:') === 0){
+      b64 = raw.substring(5);
+    } else {
+      showQRResult('⚠️ QR นี้ไม่ใช่ของระบบ KONVY<br><small>กรุณาใช้ QR จากไฟล์ QR_xxx.png ที่ดาวน์โหลดตอนทำใบเสนอราคา</small>', 'error');
+      return;
+    }
+
+    var json = decodeURIComponent(escape(atob(b64)));
+    var compact = JSON.parse(json);
+
+    // 🎯 แสดง reference QT number + campaign ใน banner (ไม่เขียนทับ KVIN ใหม่)
+    if(compact.qn){
+      var refBox = document.getElementById('refQtBox');
+      var refNum = document.getElementById('refQtNumber');
+      if(refBox && refNum){
+        refNum.textContent = compact.qn;
+        // แสดงชื่อแคมเปญถ้ามี
+        if(compact.pr){
+          var refCamp = document.getElementById('refQtCampaign');
+          var refCampRow = document.getElementById('refQtCampaignRow');
+          if(refCamp) refCamp.textContent = compact.pr;
+          if(refCampRow) refCampRow.style.display = 'block';
+        }
+        refBox.style.display = 'block';
+      }
+      // เก็บ reference ไว้ใน global + data-attribute ของ invNo
+      window._refQtNo = compact.qn;
+      window._refCampaign = compact.pr || '';
+      var invNoEl = document.getElementById('invNo');
+      if(invNoEl) invNoEl.setAttribute('data-ref-qt', compact.qn);
+    }
+
+    // map compact keys → full form fields (ยกเว้น invNo ที่ต้อง keep เลข KVIN เดิม)
+    function setVal(id, val){ var el=document.getElementById(id); if(el && val!==undefined && val!==null && val!=='') el.value=val; }
+    setVal('infName',     compact.n);
+    setVal('infNick',     compact.nk);
+    setVal('infPlatform', compact.pt);
+    setVal('infPhone',    compact.ph);
+    setVal('infEmail',    compact.em);
+    setVal('infCardNo',   compact.id);
+    setVal('infAddr',     compact.ad);
+    setVal('invProject',  compact.pr);
+    setVal('invNote',     compact.nt);
+    setVal('vatSel',      compact.vt);
+    setVal('quotPostDate',     compact.qd);
+    setVal('quotPostTime',     compact.qtm);
+    setVal('quotPostPlatform', compact.qpl);
+
+    // 🎯 รายการสินค้า (items) — rebuild DOM
+    if(Array.isArray(compact.it) && compact.it.length){
+      // เก็บ window.items ทันที
+      window.items = compact.it.map(function(arr){
+        return { id: Date.now()+Math.random(), desc: arr[0]||'', qty: +arr[1]||1, price: +arr[2]||0 };
+      });
+      // Retry rebuild — รอให้ addRow พร้อม (สูงสุด 2 วินาที)
+      var retryCount = 0;
+      var maxRetry = 20;
+      function tryRebuildItems(){
+        var addRowFn = (typeof addRow === 'function') ? addRow : window.addRow;
+        var body = document.getElementById('itemsBody');
+        if(!body || typeof addRowFn !== 'function'){
+          if(retryCount++ < maxRetry){
+            console.log('waiting for addRow... retry', retryCount);
+            return setTimeout(tryRebuildItems, 100);
+          }
+          console.warn('❌ addRow not available after '+maxRetry+' retries');
+          return;
+        }
+        try {
+          body.innerHTML = '';
+          if(typeof rowCount !== 'undefined') rowCount = 0;
+          if(typeof window.rowCount !== 'undefined') window.rowCount = 0;
+          compact.it.forEach(function(arr){
+            addRowFn();
+            var rows = body.children;
+            var row = rows[rows.length - 1];
+            if(!row) return;
+            var inputs = row.querySelectorAll('input');
+            if(inputs[0]){ inputs[0].value = arr[0]||''; inputs[0].dispatchEvent(new Event('input',{bubbles:true})); }
+            if(inputs[1]){ inputs[1].value = +arr[1]||1; inputs[1].dispatchEvent(new Event('input',{bubbles:true})); }
+            if(inputs[2]){ inputs[2].value = +arr[2]||0; inputs[2].dispatchEvent(new Event('input',{bubbles:true})); }
+          });
+          // recalc
+          if(typeof calcTotal === 'function') calcTotal();
+          else if(typeof window.calcTotal === 'function') window.calcTotal();
+          if(typeof renderInvoice === 'function') renderInvoice();
+          console.log('✅ Items rebuilt:', body.children.length, 'rows');
+        } catch(e){ console.error('rebuild items failed:', e); }
+      }
+      tryRebuildItems();
+    }
+
+    // trigger re-render
+    if(typeof renderInvoice === 'function') renderInvoice();
+
+    // 🎯 บังคับ setDocType เป็น 'inv' เสมอ — QR ที่มาจาก QT ไม่ควรเปลี่ยน INV กลับเป็น QT
+    // (ป้องกัน bankGrid ว่างเพราะ isQuot = true)
+    if(typeof setDocType === 'function'){
+      try { setDocType('inv'); } catch(e){ console.warn('setDocType failed:', e); }
+    }
+    window.currentDocType = 'inv';
+    if(typeof currentDocType !== 'undefined'){ try{ currentDocType = 'inv'; } catch(e){} }
+
+    // re-render อีกรอบหลัง setDocType
+    setTimeout(function(){
+      if(typeof renderInvoice === 'function') renderInvoice();
+    }, 100);
+
+    // success
+    var who = compact.n || 'KOL';
+    var proj = compact.pr ? ' · ' + compact.pr : '';
+    var refTxt = compact.qn ? '<br><small>📎 อ้างอิง: ' + compact.qn + '</small>' : '';
+    showQRResult('✅ <b>โหลดข้อมูลของ ' + who + proj + ' สำเร็จ!</b>' + refTxt + '<br><small>กรุณากรอกเพิ่ม: บัญชีธนาคาร · บัตรประชาชน · Bookbank · หลักฐานโพสต์</small>', 'success');
+
+    // scroll ลงฟอร์มให้ KOL กรอกเพิ่ม
+    setTimeout(function(){
+      var bankCard = document.querySelector('[id*="bankName"]') || document.getElementById('infName');
+      if(bankCard) bankCard.scrollIntoView({ behavior:'smooth', block:'center' });
+    }, 600);
+    return true;
+  } catch(err){
+    console.error('decodeAndFillFromQR error:', err);
+    showQRResult('❌ อ่านข้อมูลใน QR ไม่สำเร็จ<br><small>ไฟล์อาจเสียหาย — ลองใช้ไฟล์ QR อันอื่น หรือกรอกเอง</small>', 'error');
+    return false;
+  }
+}
+
+// ── 🌐 Auto-load: ถ้าเปิดมาด้วย URL ที่มี #d=xxx → เติมข้อมูลทันที ──
+function autoLoadFromQRHash(){
+  try {
+    var hash = window.location.hash || '';
+    if(hash.indexOf('#d=') !== 0 && hash.indexOf('d=') === -1) return false;
+    // decode โดยใช้ logic เดียวกัน
+    var fullUrl = window.location.href;
+    var ok = decodeAndFillFromQR(fullUrl);
+    if(ok){
+      // ซ่อน QR scanner card เพราะโหลดแล้ว
+      var card = document.getElementById('qrScannerCard');
+      if(card) card.style.display = 'none';
+      // แสดง success banner เด่นๆ ที่บนสุด
+      showTopSuccessBanner();
+    }
+    return ok;
+  } catch(e){ console.warn('autoLoadFromQRHash failed:', e); return false; }
+}
+
+function showTopSuccessBanner(){
+  var banner = document.createElement('div');
+  banner.id = 'qrAutoLoadBanner';
+  banner.style.cssText = 'position:sticky;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#06c755,#04a348);color:#fff;padding:12px 16px;font-family:Sarabun,sans-serif;font-size:.85rem;font-weight:700;text-align:center;box-shadow:0 3px 10px rgba(6,199,85,.3);animation:slideDown .4s ease-out';
+  banner.innerHTML = '✨ โหลดข้อมูลจากใบเสนอราคาเรียบร้อย — กรุณากรอกเพิ่มแค่บัญชีและหลักฐาน';
+  document.body.insertBefore(banner, document.body.firstChild);
+  // เพิ่ม animation
+  var style = document.createElement('style');
+  style.textContent = '@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}';
+  document.head.appendChild(style);
+  // auto-hide 6 วินาที
+  setTimeout(function(){
+    banner.style.transition = 'opacity .5s';
+    banner.style.opacity = '0';
+    setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 500);
+  }, 6000);
+}
+
+// รันตอน DOM พร้อม (delay นานพอให้ฟอร์มและ items rendered ก่อน)
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(autoLoadFromQRHash, 800); });
+} else {
+  setTimeout(autoLoadFromQRHash, 800);
+}
+</script>
 </body>
 </html>

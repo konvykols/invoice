@@ -6,6 +6,7 @@
 <title>KONVY KOL — ใบเสนอราคา (Quotation)</title>
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Sarabun:wght@300;400;500;600;700&family=Playfair+Display:wght@700;900&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 
@@ -817,6 +818,9 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
   max-width:480px;
   text-align:center;
   box-shadow:0 -4px 30px rgba(0,0,0,.2);
+  max-height:90vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
 }
 @media(min-width:600px){
   .done-screen{align-items:center !important;padding:24px}
@@ -1494,6 +1498,33 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
     <button class="done-btn" id="doneDownloadBtn" onclick="downloadPDF()"
       style="display:none;background:#4a90d9;color:#fff;font-family:Sarabun,sans-serif">
       ⬇️ ดาวน์โหลด PDF
+    </button>
+
+    <!-- 🎯 QR Info Card — เด่นๆ อธิบายชัดเจน mobile-friendly -->
+    <div id="qrInfoCard" style="background:linear-gradient(135deg,#fff5f9,#ffe6f0);border:2px dashed #f73174;border-radius:14px;padding:14px;margin:14px 0 10px;text-align:left;font-family:Sarabun,sans-serif">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-size:1.4rem">💡</span>
+        <span style="font-weight:800;color:#c91f5e;font-size:.92rem">ได้รับ 2 ไฟล์</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:8px 10px;background:#fff;border-radius:10px">
+        <span style="font-size:1.3rem;flex-shrink:0">📄</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.8rem;font-weight:700;color:#333;margin-bottom:2px">PDF ใบเสนอราคา</div>
+          <div style="font-size:.72rem;color:#666;line-height:1.5">ส่งให้ Konvy ผ่านไลน์</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:#fff;border-radius:10px;border:2px solid #f7a9c8">
+        <span style="font-size:1.3rem;flex-shrink:0">📱</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.8rem;font-weight:700;color:#c91f5e;margin-bottom:2px">QR Code (.png) <span style="background:#f73174;color:#fff;font-size:.6rem;padding:1px 6px;border-radius:8px;margin-left:4px">สำคัญ!</span></div>
+          <div style="font-size:.72rem;color:#666;line-height:1.5">⚠️ <b>เก็บไว้ห้ามลบ!</b><br>ใช้สแกนตอนทำใบแจ้งหนี้<br>→ ไม่ต้องกรอกข้อมูลซ้ำ ✨</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="done-btn" id="doneQRBtn" onclick="downloadQRImage()"
+      style="background:linear-gradient(135deg,#f73174,#c91f5e);color:#fff;font-family:Sarabun,sans-serif;font-weight:700">
+      📱 ดาวน์โหลด QR (.png)
     </button>
     <!-- QT → INV link box (แสดงเฉพาะตอน quot) -->
     <button class="done-btn"
@@ -3460,6 +3491,258 @@ function goToStep(n){
   }
 }
 
+// ── 🎯 QR Code Bridge (ใบเสนอราคา → ใบแจ้งหนี้) ──
+// สร้าง QR Code เป็นไฟล์ PNG แยก ให้ KOL เก็บไว้สแกนตอนทำใบแจ้งหนี้
+// 🌐 URL ของหน้าใบแจ้งหนี้ (ปรับให้ตรงกับ deploy จริง)
+var KONVY_INV_URL = 'https://konvykols.github.io/invoice/invoice-th.html';
+
+function buildQRPayload(){
+  try {
+    var data = collectFormData();
+    // 🎯 อ่าน items จาก DOM ตรงๆ เพราะ window.items อาจว่างในโหมดเงินสด
+    var itemsFromDOM = [];
+    try {
+      if(typeof getItems === 'function'){
+        itemsFromDOM = getItems();
+      } else {
+        // fallback: อ่าน itemsBody โดยตรง
+        var cards = document.getElementById('itemsBody');
+        if(cards){
+          for(var i=0; i<cards.children.length; i++){
+            var inps = cards.children[i].querySelectorAll('input');
+            itemsFromDOM.push({
+              desc:  inps[0] ? inps[0].value||'' : '',
+              qty:   inps[1] ? parseFloat(inps[1].value)||0 : 0,
+              price: inps[2] ? parseFloat(inps[2].value)||0 : 0
+            });
+          }
+        }
+      }
+    } catch(e){ console.warn('getItems failed:', e); }
+    // ถ้าไม่เจอใน DOM ให้ fallback ใช้ data.items
+    var finalItems = (itemsFromDOM && itemsFromDOM.length) ? itemsFromDOM : (data.items || []);
+    console.log('QR items source:', itemsFromDOM.length ? 'DOM' : 'window.items', 'count:', finalItems.length);
+
+    // compact: ย่อ key เพื่อให้ QR เล็กลง สแกนง่าย
+    var compact = {
+      v:'1', t:data.dtype||'qt',
+      qn:data.invNo, // 🎯 เลขที่ใบเสนอราคา (เพื่ออ้างอิงใน INV)
+      n:data.infName, nk:data.infNick, pt:data.infPlatform,
+      ph:data.infPhone, em:data.infEmail, id:data.infCardNo, ad:data.infAddr,
+      pr:data.invProject, nt:data.invNote,
+      it:finalItems.map(function(x){return [x.desc||'', +x.qty||0, +x.price||0];}),
+      vt:data.vatSel,
+      py:data.payType, bi:data.barterItem, bv:data.barterValue,
+      cm:data.creditMemberId, cv:data.creditValue,
+      qd:data.quotPostDate, qtm:data.quotPostTime, qpl:data.quotPostPlatform
+    };
+    var json = JSON.stringify(compact);
+    console.log('QR payload preview:', compact.it.length, 'items,', json.length, 'chars');
+    // URL-safe Base64
+    var b64 = btoa(unescape(encodeURIComponent(json)))
+      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    return KONVY_INV_URL + '#d=' + b64;
+  } catch(e){ console.warn('buildQRPayload failed:', e); return null; }
+}
+
+// สร้าง QR Code image พร้อม header/footer/info สวยๆ
+// รองรับ 2 library: qrcodejs (cdnjs) และ qrcode.js (jsdelivr)
+function qrToDataURL(text){
+  return new Promise(function(resolve, reject){
+    // Option A: qrcode npm lib (มี .toDataURL)
+    if(window.QRCode && typeof window.QRCode.toDataURL === 'function'){
+      window.QRCode.toDataURL(text, {
+        errorCorrectionLevel:'M', margin:2, width:600,
+        color:{ dark:'#8a2f5a', light:'#ffffff' }
+      }, function(err, url){
+        if(err) reject(err); else resolve(url);
+      });
+      return;
+    }
+    // Option B: qrcodejs library (render to DOM element, then extract canvas)
+    if(window.QRCode){
+      try {
+        var tmp = document.createElement('div');
+        tmp.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+        document.body.appendChild(tmp);
+        var qr = new window.QRCode(tmp, {
+          text: text,
+          width: 600,
+          height: 600,
+          colorDark: '#8a2f5a',
+          colorLight: '#ffffff',
+          correctLevel: window.QRCode.CorrectLevel ? window.QRCode.CorrectLevel.M : 0
+        });
+        // รอ render (qrcodejs ใช้ setTimeout ในตัว)
+        setTimeout(function(){
+          var canvas = tmp.querySelector('canvas');
+          var img = tmp.querySelector('img');
+          var url = null;
+          if(canvas){ url = canvas.toDataURL('image/png'); }
+          else if(img){ url = img.src; }
+          document.body.removeChild(tmp);
+          if(url) resolve(url);
+          else reject(new Error('QR render failed'));
+        }, 100);
+        return;
+      } catch(e){ reject(e); return; }
+    }
+    reject(new Error('QRCode library not loaded'));
+  });
+}
+
+function generateQRImage(){
+  return new Promise(function(resolve, reject){
+    var payload = buildQRPayload();
+    if(!payload){ return reject(new Error('Cannot build payload')); }
+
+    qrToDataURL(payload).then(function(qrUrl){
+      try {
+        // วาด canvas สไตล์ใบเสร็จ/สลิปโอนเงิน — สะอาด เรียบร้อย
+        var cv = document.createElement('canvas');
+        var W = 700, H = 900;
+        cv.width = W; cv.height = H;
+        var ctx = cv.getContext('2d');
+
+        // พื้นหลังขาวล้วน
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+
+        // Header: KONVY โลโก้ + ชื่อ (กึ่งกลาง)
+        ctx.fillStyle = '#c91f5e';
+        ctx.font = 'bold 36px Sarabun, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('💜 KONVY', W/2, 65);
+
+        // Title หลัก
+        ctx.fillStyle = '#1a1a2e';
+        ctx.font = 'bold 26px Sarabun, sans-serif';
+        ctx.fillText('สแกนเพื่อทำใบแจ้งหนี้', W/2, 110);
+
+        // Subtitle
+        ctx.fillStyle = '#8a96a3';
+        ctx.font = '15px Sarabun, sans-serif';
+        ctx.fillText('QR นี้มีข้อมูลใบเสนอราคา สำหรับใช้ตอนทำใบแจ้งหนี้', W/2, 138);
+        ctx.fillText('ไม่ต้องกรอกข้อมูลซ้ำอีกครั้ง', W/2, 158);
+
+        // Badge "KONVY QR" (คล้าย PromptPay badge)
+        var badgeW = 140, badgeH = 40;
+        var badgeX = (W - badgeW) / 2;
+        var badgeY = 190;
+        ctx.fillStyle = '#fff5f9';
+        ctx.strokeStyle = '#f73174';
+        ctx.lineWidth = 2;
+        ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
+        ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
+        ctx.fillStyle = '#c91f5e';
+        ctx.font = 'bold 16px Sarabun, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('KONVY QR', W/2, badgeY + badgeH/2);
+        ctx.textBaseline = 'alphabetic';
+
+        var qrImg = new Image();
+        qrImg.onload = function(){
+          // QR ตรงกลาง (ไม่ใหญ่เกินไป)
+          var qrSize = 340;
+          var qrX = (W - qrSize) / 2;
+          var qrY = 260;
+          // วาด QR บนพื้นขาว (ไม่มีกรอบ)
+          ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+          // เส้นคั่นจางๆ ใต้ QR
+          var divY = qrY + qrSize + 30;
+          ctx.strokeStyle = '#e8ecf2';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath();
+          ctx.moveTo(80, divY);
+          ctx.lineTo(W - 80, divY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // ข้อมูลสรุปใต้ QR (เหมือนสลิปโอนเงิน)
+          var data = collectFormData();
+          var infoY = divY + 32;
+          var labelCol = 100;
+          var valueCol = W - 100;
+
+          ctx.font = '16px Sarabun, sans-serif';
+
+          // เลขที่ใบเสนอราคา
+          ctx.fillStyle = '#8a96a3';
+          ctx.textAlign = 'left';
+          ctx.fillText('เลขที่ใบเสนอราคา', labelCol, infoY);
+          ctx.fillStyle = '#1a1a2e';
+          ctx.font = 'bold 16px Sarabun, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(data.invNo || '-', valueCol, infoY);
+
+          // ชื่อ KOL
+          ctx.font = '16px Sarabun, sans-serif';
+          ctx.fillStyle = '#8a96a3';
+          ctx.textAlign = 'left';
+          ctx.fillText('ชื่อ KOL', labelCol, infoY + 32);
+          ctx.fillStyle = '#1a1a2e';
+          ctx.font = 'bold 16px Sarabun, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(data.infName || '-', valueCol, infoY + 32);
+
+          // แคมเปญ (ถ้ามี)
+          if(data.invProject){
+            ctx.font = '16px Sarabun, sans-serif';
+            ctx.fillStyle = '#8a96a3';
+            ctx.textAlign = 'left';
+            ctx.fillText('แคมเปญ', labelCol, infoY + 64);
+            ctx.fillStyle = '#1a1a2e';
+            ctx.font = 'bold 16px Sarabun, sans-serif';
+            ctx.textAlign = 'right';
+            // ตัดข้อความถ้ายาวเกิน
+            var projText = data.invProject;
+            var maxProjW = W - 280;
+            if(ctx.measureText(projText).width > maxProjW){
+              while(ctx.measureText(projText + '...').width > maxProjW && projText.length > 0){
+                projText = projText.slice(0, -1);
+              }
+              projText += '...';
+            }
+            ctx.fillText(projText, valueCol, infoY + 64);
+          }
+
+          // Footer note (เล็กลง สะอาด)
+          ctx.fillStyle = '#b0b8c4';
+          ctx.font = '13px Sarabun, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('* เก็บไฟล์นี้ไว้ สแกนตอนทำใบแจ้งหนี้', W/2, H - 40);
+
+          resolve(cv.toDataURL('image/png'));
+        };
+        qrImg.onerror = function(){ reject(new Error('QR image load failed')); };
+        qrImg.src = qrUrl;
+      } catch(e){ reject(e); }
+    }).catch(reject);
+  });
+}
+
+// ดาวน์โหลด QR เป็นไฟล์ PNG
+function downloadQRImage(){
+  if(!v('infName')){ alert('กรุณากรอกชื่อ-นามสกุลก่อนค่ะ'); return; }
+  generateQRImage().then(function(dataUrl){
+    var data = collectFormData();
+    var name = (data.infName || 'KOL').replace(/\s+/g,'-');
+    var camp = (data.invProject || 'quotation').replace(/\s+/g,'_');
+    var fileName = 'QR_' + name + '_' + camp + '_' + new Date().toISOString().slice(0,10) + '.png';
+    var a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }).catch(function(err){
+    alert('ไม่สามารถสร้าง QR ได้: ' + err.message);
+  });
+}
+
 function savePDF(opts){
   if(!opts) opts={pages:null,pageMap:null};
   if(!v('infName')){ alert('กรุณากรอกชื่อ-นามสกุลก่อนค่ะ'); return; }
@@ -3740,9 +4023,27 @@ function savePDF(opts){
       if(doneMsg) doneMsg.textContent='กดปุ่มแชร์ด้านล่างเพื่อส่งไฟล์';
     } else {
       // Desktop — download อัตโนมัติ
+      // Desktop — download อัตโนมัติ
       pdf.save(fileName);
+      // 🎯 ดาวน์โหลด QR PNG ต่อจาก PDF — เฉพาะกรณีเงินสด (มี INV ตามมา)
+      var _pt = (document.getElementById('payType')||{}).value||'cash';
+      if(_pt === 'cash'){
+        setTimeout(function(){ try { downloadQRImage(); } catch(e){ console.warn('QR download failed:', e); } }, 500);
+      }
       if(dlBtn) dlBtn.style.display='block';
       if(doneMsg) doneMsg.textContent='ดาวน์โหลดไฟล์เรียบร้อยค่ะ';
+    }
+
+    // 🎯 แสดง/ซ่อน QR card + ปุ่ม ตาม payType (QR ใช้เฉพาะเงินสด)
+    var _pt2 = (document.getElementById('payType')||{}).value||'cash';
+    var _qrCard = document.getElementById('qrInfoCard');
+    var _qrBtn = document.getElementById('doneQRBtn');
+    if(_pt2 === 'cash'){
+      if(_qrCard) _qrCard.style.display='block';
+      if(_qrBtn) _qrBtn.style.display='flex';
+    } else {
+      if(_qrCard) _qrCard.style.display='none';
+      if(_qrBtn) _qrBtn.style.display='none';
     }
 
     document.getElementById('doneScreen').classList.add('show');
