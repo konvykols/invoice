@@ -1459,6 +1459,14 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 .spinner{border-top-color:#a561ef !important}
 
 </style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script>
+if(typeof window.jsQR === 'undefined'){
+  document.write('<script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"><\/script>');
+}
+</script>
 </head>
 <body>
 <div class="ov" id="ov"><div class="spin"></div><div style="font-size:.9rem;font-weight:600" id="ovMsg">正在创建PDF...</div></div>
@@ -1803,16 +1811,49 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 
 <div class="main-wrap">
   <div class="sidebar">
+
+    <!-- 🎯 QR Scanner -->
+    <div class="fc" id="qrScannerCard" style="background:#fff;border:1.5px solid #ffd6e3;border-radius:14px;margin-bottom:14px;overflow:hidden;box-shadow:0 2px 8px rgba(247,49,116,.06)">
+      <div style="padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#fff5f9;border-radius:8px;font-size:.95rem;flex-shrink:0">⚡</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:800;color:#1a1a2e;font-size:.92rem;line-height:1.2">从QR加载数据</div>
+            <div style="font-size:.7rem;color:#8a96a3;line-height:1.3;margin-top:2px">节省90%时间,无需重复输入</div>
+          </div>
+          <button type="button" onclick="document.getElementById('qrHelpModal') && (document.getElementById('qrHelpModal').style.display='flex')" style="background:#fafbfc;color:#8a96a3;border:1.5px solid #e8ecf2;border-radius:8px;padding:5px 10px;font-size:.72rem;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif;flex-shrink:0;display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
+            ? 使用方法
+          </button>
+        </div>
+        <div style="font-size:.74rem;color:#666;line-height:1.55;margin-bottom:12px;padding:9px 11px;background:#fafbfc;border-radius:8px;border-left:3px solid #f73174">
+          有报价单的 <b style="color:#c91f5e">QR_xxx.png</b> 文件? → 上传以自动填写数据
+        </div>
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <label style="flex:1;background:linear-gradient(135deg,#f73174,#c91f5e);color:#fff;border:none;border-radius:10px;padding:11px 12px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif;text-align:center;box-shadow:0 3px 8px rgba(247,49,116,.25);display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap">
+            <span style="font-size:.95rem">📎</span> 上传QR
+            <input type="file" accept="image/*" onchange="handleQRFileUpload(this)" style="display:none">
+          </label>
+          <label style="flex:1;background:#fff;color:#c91f5e;border:1.5px solid #f7a9c8;border-radius:10px;padding:9px 12px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap">
+            <span style="font-size:.95rem">📷</span> 拍摄QR
+            <input type="file" accept="image/*" capture="environment" onchange="handleQRFileUpload(this)" style="display:none">
+          </label>
+        </div>
+        <div id="qrScanResult" style="display:none;margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.8rem;font-family:Sarabun,sans-serif"></div>
+      </div>
+    </div>
+
     <div class="fc">
       <div class="fc-head" style="background:#f73174;color:#fff"><span>📋 编号 &amp; 日期</span></div>
       <div class="fc-body">
-        <div class="field"><label id="invNoLabel">报价单编号<span style="display:block;font-size:.65rem;color:#999;font-weight:400;margin-top:1px">Quotation / Invoice No.</span></label><input id="invNo" placeholder="例: QT-001 / INV-001" oninput="renderInvoice()"></div>
-        <div class="fr">
-          <div class="field"><label>开具日期<span style="display:block;font-size:.65rem;color:#999;font-weight:400;margin-top:1px">Issue Date</span></label><input type="date" id="invDate" onchange="updateDue();renderInvoice()"></div>
-          <div class="field"><label>付款期限(+60天)<span style="display:block;font-size:.65rem;color:#999;font-weight:400;margin-top:1px">Due Date (+60 days)</span></label>
+        <div class="field"><label id="invNoLabel">发票编号<span style="display:block;font-size:.65rem;color:#999;font-weight:400;margin-top:1px">Invoice No.</span></label><input id="invNo" placeholder="KVIN-00XXXXXXX" oninput="renderInvoice()">
+<div id="refQtBox" style="display:none;margin-top:6px;padding:9px 12px;background:linear-gradient(135deg,#fff5f9,#ffe6f0);border:1.5px dashed #f73174;border-radius:10px;font-size:.75rem;color:#8a2f5a;font-family:Sarabun,sans-serif;line-height:1.6">
+  <div>📎 参考报价单: <b id="refQtNumber">-</b></div>
+  <div id="refQtCampaignRow" style="display:none;margin-top:2px">📦 活动: <b id="refQtCampaign">-</b></div>
+</div></div>
+        <div class="field"><label>开具日期<span style="display:block;font-size:.65rem;color:#999;font-weight:400;margin-top:1px">Issue Date</span></label><input type="date" id="invDate" onchange="updateDue();renderInvoice()"></div>
+        <div class="field"><label>付款期限(+60天)<span style="display:block;font-size:.65rem;color:#999;font-weight:400;margin-top:1px">Due Date (+60 days)</span></label>
             <div id="invDue" style="border:1.5px solid #e0e4ea;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;color:#1a1a2e;background:#f4f6f8;min-height:36px;pointer-events:none;user-select:none">–</div>
           </div>
-        </div>
         <div class="field"><label>活动名称<span style="display:block;font-size:.65rem;color:#999;font-weight:400;margin-top:1px">Campaign Name</span></label><input id="invProject" placeholder="活动名称" oninput="renderInvoice()"></div>
       </div>
     </div>
@@ -1872,7 +1913,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
               style="border:1.5px solid #f7c0d8;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none;box-sizing:border-box;margin-bottom:6px">
           </div>
           <div class="field">
-            <label>Member ID <span class="req">*</span><span style="display:block;font-size:.65rem;color:#999;font-weight:400;margin-top:1px">Konvy Member ID</span></label>
+            <label>Member ID <span class="req">*</span><button type="button" onclick="document.getElementById('memberIdModal').style.display='flex'" style="background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;border:none;border-radius:12px;padding:3px 10px;font-size:.68rem;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif;box-shadow:0 2px 6px rgba(138,63,217,.3);margin-left:6px;vertical-align:middle">❓ 如何查找会员ID</button><span style="display:block;font-size:.65rem;color:#999;font-weight:400;margin-top:1px">Konvy Member ID</span></label>
             <input id="creditMemberId" placeholder="例如: pangyen0112" oninput="renderInvoice()"
               style="border:1.5px solid #f7c0d8;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none;box-sizing:border-box">
           </div>
@@ -5274,5 +5315,210 @@ document.addEventListener('DOMContentLoaded', function(){
   pointer-events:none;z-index:-1;
 "></div>
 
+
+<script>
+// ── 🎯 QR Code Bridge for INV ──
+var KONVY_INV_URL = 'https://konvykols.github.io/invoice/invoice-zh.html';
+
+function showQRResult(msg, type){
+  var el = document.getElementById('qrScanResult');
+  if(!el) return;
+  el.style.display = 'block';
+  el.style.background = type==='success' ? '#e6f9ed' : type==='error' ? '#ffebee' : '#fff3cd';
+  el.style.color = type==='success' ? '#0a7d3a' : type==='error' ? '#c62828' : '#9a6030';
+  el.innerHTML = msg;
+}
+
+function handleQRFileUpload(input){
+  var file = input.files && input.files[0];
+  if(!file) return;
+  if(typeof jsQR === 'undefined'){
+    showQRResult('⚠️ Library not loaded, please refresh', 'error');
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var cv = document.createElement('canvas');
+      cv.width = img.width; cv.height = img.height;
+      var ctx = cv.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      var imgData = ctx.getImageData(0, 0, cv.width, cv.height);
+      var code = jsQR(imgData.data, imgData.width, imgData.height);
+      if(code && code.data){
+        decodeAndFillFromQR(code.data);
+      } else {
+        showQRResult('❌ 无法读取QR数据', 'error');
+      }
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function decodeAndFillFromQR(raw){
+  try {
+    var b64 = null;
+    if(raw && raw.indexOf('#d=') > -1){
+      b64 = raw.split('#d=')[1].split('&')[0].replace(/-/g,'+').replace(/_/g,'/');
+      while(b64.length % 4) b64 += '=';
+    } else if(raw && raw.indexOf('KVQR:') === 0){
+      b64 = raw.substring(5);
+    } else {
+      showQRResult('⚠️ 此QR不是KONVY系统的', 'error');
+      return;
+    }
+    var json = decodeURIComponent(escape(atob(b64)));
+    var compact = JSON.parse(json);
+
+    if(compact.qn){
+      var refBox = document.getElementById('refQtBox');
+      var refNum = document.getElementById('refQtNumber');
+      if(refBox && refNum){
+        refNum.textContent = compact.qn;
+        if(compact.pr){
+          var refCamp = document.getElementById('refQtCampaign');
+          var refCampRow = document.getElementById('refQtCampaignRow');
+          if(refCamp) refCamp.textContent = compact.pr;
+          if(refCampRow) refCampRow.style.display = 'block';
+        }
+        refBox.style.display = 'block';
+      }
+      window._refQtNo = compact.qn;
+      var invNoEl = document.getElementById('invNo');
+      if(invNoEl) invNoEl.setAttribute('data-ref-qt', compact.qn);
+    }
+
+    function setVal(id, val){ var el=document.getElementById(id); if(el && val!==undefined && val!==null && val!=='') el.value=val; }
+    setVal('infName', compact.n); setVal('infNick', compact.nk); setVal('infPlatform', compact.pt);
+    setVal('infPhone', compact.ph); setVal('infEmail', compact.em); setVal('infCardNo', compact.id);
+    setVal('infAddr', compact.ad); setVal('invProject', compact.pr); setVal('invNote', compact.nt);
+    setVal('vatSel', compact.vt);
+
+    if(Array.isArray(compact.it) && compact.it.length){
+      window.items = compact.it.map(function(arr){
+        return { id: Date.now()+Math.random(), desc: arr[0]||'', qty: +arr[1]||1, price: +arr[2]||0 };
+      });
+      var retryCount = 0;
+      function tryRebuild(){
+        var addRowFn = (typeof addRow === 'function') ? addRow : window.addRow;
+        var body = document.getElementById('itemsBody');
+        if(!body || typeof addRowFn !== 'function'){
+          if(retryCount++ < 20) return setTimeout(tryRebuild, 100);
+          return;
+        }
+        body.innerHTML = '';
+        if(typeof rowCount !== 'undefined') rowCount = 0;
+        if(typeof window.rowCount !== 'undefined') window.rowCount = 0;
+        compact.it.forEach(function(arr){
+          addRowFn();
+          var rows = body.children;
+          var row = rows[rows.length - 1];
+          if(!row) return;
+          var inputs = row.querySelectorAll('input');
+          if(inputs[0]){ inputs[0].value = arr[0]||''; inputs[0].dispatchEvent(new Event('input',{bubbles:true})); }
+          if(inputs[1]){ inputs[1].value = +arr[1]||1; inputs[1].dispatchEvent(new Event('input',{bubbles:true})); }
+          if(inputs[2]){ inputs[2].value = +arr[2]||0; inputs[2].dispatchEvent(new Event('input',{bubbles:true})); }
+        });
+        if(typeof calcTotal === 'function') calcTotal();
+        if(typeof renderInvoice === 'function') renderInvoice();
+      }
+      tryRebuild();
+    }
+
+    if(typeof renderInvoice === 'function') renderInvoice();
+    if(typeof setDocType === 'function'){
+      try { setDocType('inv'); } catch(e){}
+    }
+    window.currentDocType = 'inv';
+    if(typeof currentDocType !== 'undefined'){ try{ currentDocType = 'inv'; } catch(e){} }
+    setTimeout(function(){ if(typeof renderInvoice === 'function') renderInvoice(); }, 100);
+
+    var who = compact.n || 'KOL';
+    showQRResult('✅ 已加载数据 <b>' + who + '</b>', 'success');
+    return true;
+  } catch(err){
+    console.error('decode error:', err);
+    showQRResult('❌ 无法读取QR数据', 'error');
+    return false;
+  }
+}
+
+function autoLoadFromQRHash(){
+  try {
+    var hash = window.location.hash || '';
+    if(hash.indexOf('d=') === -1) return false;
+    return decodeAndFillFromQR(window.location.href);
+  } catch(e){ return false; }
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(autoLoadFromQRHash, 800); });
+} else {
+  setTimeout(autoLoadFromQRHash, 800);
+}
+
+// Reorder: QR scanner top + bank below items
+(function(){
+  function reorderSidebar(){
+    var sidebar = document.querySelector('.sidebar');
+    if(!sidebar) return;
+    var qrCard = document.getElementById('qrScannerCard');
+    if(qrCard && sidebar.firstElementChild !== qrCard){
+      sidebar.insertBefore(qrCard, sidebar.firstElementChild);
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', reorderSidebar);
+  else reorderSidebar();
+})();
+
+// Auto-gen KVIN
+(function(){
+  function genKVIN(){
+    var t=(Date.now()%10000).toString().padStart(4,'0');
+    var r=Math.floor(Math.random()*1000).toString().padStart(3,'0');
+    return 'KVIN-00'+t+r;
+  }
+  function init(){
+    var el=document.getElementById('invNo');
+    if(el && !el.value){
+      el.value = genKVIN();
+      if(typeof renderInvoice==='function') renderInvoice();
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+  else init();
+  setTimeout(init, 80);
+})();
+</script>
+
+<div id="memberIdModal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(20,10,40,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:99999;align-items:center;justify-content:center;padding:20px;font-family:Sarabun,sans-serif">
+  <div style="background:#fff;border-radius:22px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(138,63,217,.45);border:2px solid rgba(165,97,239,.3)">
+    <div style="background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;padding:20px 24px;border-radius:20px 20px 0 0">
+      <div style="font-size:1.05rem;font-weight:800;margin-bottom:4px">💳 如何查找KONVY会员ID</div>
+      <div style="font-size:.75rem;opacity:.92">在KONVY应用中按2步操作</div>
+    </div>
+    <div style="padding:22px 24px">
+      <div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.82rem;flex-shrink:0">1</div>
+          <div style="font-size:.85rem;font-weight:700;color:#4a2580">打开应用 → 点击"账户" → 点击右上角的QR码</div>
+        </div>
+        <img src="https://konvykols.github.io/invoice/assets/member-step5.png" style="width:100%;border-radius:12px;border:1.5px solid #e8d6f7;display:block" alt="Step 1">
+      </div>
+      <div style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.82rem;flex-shrink:0">2</div>
+          <div style="font-size:.85rem;font-weight:700;color:#4a2580">徽标下方的粗体名称 = 会员ID</div>
+        </div>
+        <img src="https://konvykols.github.io/invoice/assets/member-step6.png" style="width:100%;border-radius:12px;border:1.5px solid #e8d6f7;display:block" alt="Step 2">
+        <div style="margin-top:10px;background:#f5ebff;border-left:3px solid #8a3fd9;padding:9px 12px;border-radius:6px;font-size:.75rem;color:#4a2580">💡 示例: <b>Konnie coco</b> 即为会员ID</div>
+      </div>
+      <button onclick="document.getElementById('memberIdModal').style.display='none'" style="width:100%;background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;border:none;border-radius:12px;padding:13px;font-size:.92rem;font-weight:800;cursor:pointer;font-family:Sarabun,sans-serif;box-shadow:0 6px 16px rgba(138,63,217,.35)">我知道了 ✓</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
