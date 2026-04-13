@@ -1727,7 +1727,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 <div class="picker-bar">
   <div class="picker-inner">
     <div class="picker-top">
-      <div class="picker-logo">🧾 สร้างใบแจ้งหนี้ <span>กรอกข้อมูล &#8594; พรีวิว &#8594; บันทึก PDF</span></div>
+      <div class="picker-logo">🧾 สร้างใบแจ้งหนี้ <span>กรอกข้อมูล → ตรวจสอบ → บันทึก PDF</span></div>
       <div class="picker-actions" id="topActions">
         <div class="tc-accepted-badge" id="tcBadge" style="margin-right:4px">
           <span>✅</span><span style="font-size:.68rem">ยอมรับ T&C แล้ว</span>
@@ -1744,7 +1744,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
       <div style="color:rgba(255,255,255,.3);font-size:.7rem">›</div>
       <div id="step2ind" style="display:flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35)">
         <div id="step2circle" style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.15);color:rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700">2</div>
-        เลือกแบบ
+        ตรวจสอบ
       </div>
       <div style="color:rgba(255,255,255,.3);font-size:.7rem">›</div>
       <div id="step3ind" style="display:flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35)">
@@ -1839,38 +1839,39 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
   setTimeout(init, 80);
 })();
 </script>
-        <div class="fr">
-          <div class="field"><label>วันที่ออก</label><input type="date" id="invDate" onchange="updateDue();renderInvoice()"></div>
-          <div class="field"><label>กำหนดชำระ (+60 วัน)</label>
-            <div id="invDue" style="border:1.5px solid #e0e4ea;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;color:#1a1a2e;background:#f4f6f8;min-height:36px;pointer-events:none;user-select:none">–</div>
-          </div>
+        <div class="field"><label>วันที่ออก</label><input type="date" id="invDate" onchange="updateDue();renderInvoice()"></div>
+        <div class="field"><label>กำหนดชำระ <span style="color:#8a96a3;font-weight:400;font-size:.7rem">(วันที่ออก + 60 วัน)</span></label>
+          <div id="invDue" style="border:1.5px solid #e0e4ea;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;color:#1a1a2e;background:#f4f6f8;min-height:36px;pointer-events:none;user-select:none">–</div>
         </div>
         <div class="field"><label>ชื่อแคมเปญ</label><input id="invProject" placeholder="ชื่อแคมเปญ" oninput="renderInvoice()"></div>
       </div>
     </div>
 
     <!-- 🎯 QR Scanner — โหลดข้อมูลจากใบเสนอราคาเดิม -->
-    <div class="fc" id="qrScannerCard" style="background:linear-gradient(135deg,#fff5f9,#ffe6f0);border:2px dashed #f73174;border-radius:14px;margin-bottom:14px;overflow:hidden">
+    <div class="fc" id="qrScannerCard" style="background:#fff;border:1.5px solid #ffd6e3;border-radius:14px;margin-bottom:14px;overflow:hidden;box-shadow:0 2px 8px rgba(247,49,116,.06)">
       <div style="padding:14px 16px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <span style="font-size:1.3rem">⚡</span>
-          <span style="font-weight:800;color:#c91f5e;font-size:.92rem">กรอกเร็วขึ้น 10 เท่า!</span>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#fff5f9;border-radius:8px;font-size:.95rem;flex-shrink:0">⚡</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:800;color:#1a1a2e;font-size:.92rem;line-height:1.2">โหลดข้อมูลจาก QR</div>
+            <div style="font-size:.7rem;color:#8a96a3;line-height:1.3;margin-top:2px">ไม่ต้องกรอกข้อมูลซ้ำ ประหยัดเวลา 90%</div>
+          </div>
+          <button type="button" onclick="document.getElementById('qrHelpModal').style.display='flex'" title="วิธีใช้ QR Code" style="background:#fafbfc;color:#8a96a3;border:1.5px solid #e8ecf2;border-radius:8px;padding:5px 10px;font-size:.72rem;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif;flex-shrink:0;display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
+            <span style="font-size:.85rem">?</span> วิธีใช้ QR Code
+          </button>
         </div>
-        <div style="font-size:.78rem;color:#666;line-height:1.6;margin-bottom:12px">
-          💡 <b>วิธีเร็วที่สุด:</b> เปิดไฟล์ <b>QR_xxx.png</b> ที่ได้จากใบเสนอราคา → <b>สแกนด้วยกล้อง/LINE</b> → เด้งเปิดหน้านี้พร้อมข้อมูลเลย ✨
-          <br><br>
-          หรือถ้ามาถึงหน้านี้แล้ว อัปโหลดไฟล์ QR เพื่อโหลดข้อมูลได้ค่ะ 👇
+        <div style="font-size:.74rem;color:#666;line-height:1.55;margin-bottom:12px;padding:9px 11px;background:#fafbfc;border-radius:8px;border-left:3px solid #f73174">
+          มีไฟล์ <b style="color:#c91f5e">QR_xxx.png</b> ที่ได้จากใบเสนอราคาแล้ว → อัปโหลดไฟล์ด้านล่างเพื่อโหลดข้อมูลอัตโนมัติ
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <label style="flex:1;min-width:120px;background:linear-gradient(135deg,#f73174,#c91f5e);color:#fff;border:none;border-radius:10px;padding:11px 14px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif;text-align:center;box-shadow:0 3px 8px rgba(247,49,116,.3)">
-            📎 อัปโหลดไฟล์ QR
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <label style="flex:1;background:linear-gradient(135deg,#f73174,#c91f5e);color:#fff;border:none;border-radius:10px;padding:11px 12px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif;text-align:center;box-shadow:0 3px 8px rgba(247,49,116,.25);display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap">
+            <span style="font-size:.95rem">📎</span> อัปโหลด QR
             <input type="file" accept="image/*" onchange="handleQRFileUpload(this)" style="display:none">
           </label>
-          <label style="flex:1;min-width:120px;background:#fff;color:#c91f5e;border:2px solid #f73174;border-radius:10px;padding:9px 14px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif;text-align:center">
-            📷 สแกนในเว็บ
+          <label style="flex:1;background:#fff;color:#c91f5e;border:1.5px solid #f7a9c8;border-radius:10px;padding:9px 12px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap">
+            <span style="font-size:.95rem">📷</span> ถ่ายภาพ QR
             <input type="file" accept="image/*" capture="environment" onchange="handleQRFileUpload(this)" style="display:none">
           </label>
-          <button type="button" onclick="document.getElementById('qrHelpModal').style.display='flex'" style="background:#fff;color:#888;border:1.5px solid #dde3ea;border-radius:10px;padding:9px 12px;font-size:.78rem;cursor:pointer;font-family:Sarabun,sans-serif">❓</button>
         </div>
         <div id="qrScanResult" style="display:none;margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.8rem;font-family:Sarabun,sans-serif"></div>
       </div>
@@ -3237,24 +3238,24 @@ function renderPostEvidences(){
 
     // Platform select
     var platLabel=document.createElement('label');
-    platLabel.style.cssText='font-size:.66rem;font-weight:700;color:#8a96a3;letter-spacing:.04em;text-transform:uppercase;display:block;margin-bottom:3px';
+    platLabel.style.cssText='font-size:.72rem;font-weight:700;color:#1a1a2e;display:block;margin-bottom:5px';
     platLabel.id='labelPlatformDyn'; platLabel.textContent='แพลตฟอร์ม';
     box.appendChild(platLabel);
     var platSel=document.createElement('select');
-    platSel.style.cssText='border:1.5px solid #dde3ea;border-radius:6px;padding:7px 10px;font-size:.82rem;font-family:Sarabun,sans-serif;width:100%;margin-bottom:6px;outline:none';
+    platSel.style.cssText='border:1.5px solid #c9d4dc;border-radius:8px;padding:10px 12px;font-size:.88rem;font-family:Sarabun,sans-serif;width:100%;margin-bottom:8px;outline:none;background:#fff;color:#1a1a2e;cursor:pointer;-webkit-appearance:menulist;appearance:menulist';
     var platOptions=['','Instagram','TikTok','YouTube','Facebook','X (Twitter)','Lemon8','Shopee Live','Lazada Live','Konvy Community','อื่นๆ'];
     var knownPlatforms=['','Instagram','TikTok','YouTube','Facebook','X (Twitter)','Lemon8','Shopee Live','Lazada Live','Konvy Community','อื่นๆ'];
     var isOther = p.platform && knownPlatforms.indexOf(p.platform)===-1;
     platOptions.forEach(function(pl){
       var opt=document.createElement('option');
-      opt.value=pl; opt.textContent=pl||'เลือก';
+      opt.value=pl; opt.textContent=pl||'-- เลือกแพลตฟอร์ม --';
       if(isOther ? pl==='อื่นๆ' : p.platform===pl) opt.selected=true;
       platSel.appendChild(opt);
     });
     // Other input
     var platOtherInp=document.createElement('input');
     platOtherInp.type='text'; platOtherInp.placeholder='ระบุแพลตฟอร์ม...';
-    platOtherInp.style.cssText='border:1.5px solid #dde3ea;border-radius:6px;padding:7px 10px;font-size:.82rem;font-family:Sarabun,sans-serif;width:100%;margin-bottom:6px;outline:none;display:'+(isOther?'block':'none');
+    platOtherInp.style.cssText='border:1.5px solid #c9d4dc;border-radius:8px;padding:10px 12px;font-size:.88rem;font-family:Sarabun,sans-serif;width:100%;margin-bottom:8px;outline:none;background:#fff;color:#1a1a2e;display:'+(isOther?'block':'none');
     platOtherInp.value=isOther?p.platform:'';
     platOtherInp.oninput=(function(idx){return function(){ postEvidences[idx].platform=this.value; };})(i);
     platSel.onchange=(function(idx, otherInp){return function(){
@@ -3273,23 +3274,23 @@ function renderPostEvidences(){
 
     // Date
     var dtLabel=document.createElement('label');
-    dtLabel.style.cssText='font-size:.66rem;font-weight:700;color:#8a96a3;letter-spacing:.04em;text-transform:uppercase;display:block;margin-bottom:3px';
+    dtLabel.style.cssText='font-size:.72rem;font-weight:700;color:#1a1a2e;display:block;margin-bottom:5px';
     dtLabel.textContent='วันที่โพสต์';
     box.appendChild(dtLabel);
     var dtInp=document.createElement('input');
     dtInp.type='date'; dtInp.value=p.date||'';
-    dtInp.style.cssText='border:1.5px solid #dde3ea;border-radius:6px;padding:7px 10px;font-size:.82rem;font-family:Sarabun,sans-serif;width:100%;margin-bottom:6px;outline:none';
+    dtInp.style.cssText='border:1.5px solid #c9d4dc;border-radius:8px;padding:10px 12px;font-size:.88rem;font-family:Sarabun,sans-serif;width:100%;margin-bottom:8px;outline:none;background:#fff;color:#1a1a2e;cursor:pointer';
     dtInp.onchange=(function(idx){return function(){ postEvidences[idx].date=this.value; };})(i);
     box.appendChild(dtInp);
 
     // Link
     var lkLabel=document.createElement('label');
-    lkLabel.style.cssText='font-size:.66rem;font-weight:700;color:#8a96a3;letter-spacing:.04em;text-transform:uppercase;display:block;margin-bottom:3px';
+    lkLabel.style.cssText='font-size:.72rem;font-weight:700;color:#1a1a2e;display:block;margin-bottom:5px';
     lkLabel.textContent='ลิงก์โพสต์';
     box.appendChild(lkLabel);
     var lkInp=document.createElement('input');
     lkInp.type='url'; lkInp.value=p.link||''; lkInp.placeholder='https://...';
-    lkInp.style.cssText='border:1.5px solid #dde3ea;border-radius:6px;padding:7px 10px;font-size:.82rem;font-family:Sarabun,sans-serif;width:100%;outline:none';
+    lkInp.style.cssText='border:1.5px solid #c9d4dc;border-radius:8px;padding:10px 12px;font-size:.88rem;font-family:Sarabun,sans-serif;width:100%;outline:none;background:#fff;color:#1a1a2e';
     lkInp.onchange=(function(idx){return function(){ postEvidences[idx].link=this.value; };})(i);
     box.appendChild(lkInp);
 

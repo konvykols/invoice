@@ -1759,7 +1759,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 <div class="picker-bar">
   <div class="picker-inner">
     <div class="picker-top">
-      <div class="picker-logo">📋 สร้างใบเสนอราคา <span>กรอกข้อมูล &#8594; พรีวิว &#8594; บันทึก PDF</span></div>
+      <div class="picker-logo">📋 สร้างใบเสนอราคา <span>กรอกข้อมูล → ตรวจสอบ → บันทึก PDF</span></div>
       <div class="picker-actions" id="topActions">
         <div class="tc-accepted-badge" id="tcBadge" style="margin-right:4px">
           <span>✅</span><span style="font-size:.68rem">ยอมรับ T&C แล้ว</span>
@@ -1776,7 +1776,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
       <div style="color:rgba(255,255,255,.3);font-size:.7rem">›</div>
       <div id="step2ind" style="display:flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35)">
         <div id="step2circle" style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.15);color:rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700">2</div>
-        เลือกแบบ
+        ตรวจสอบ
       </div>
       <div style="color:rgba(255,255,255,.3);font-size:.7rem">›</div>
       <div id="step3ind" style="display:flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35)">
@@ -3598,24 +3598,28 @@ function generateQRImage(){
         cv.width = W; cv.height = H;
         var ctx = cv.getContext('2d');
 
-        // Background: สีชมพู Konvy
-        var bgGrad = ctx.createLinearGradient(0, 0, W, H);
-        bgGrad.addColorStop(0, '#ff3d8f');
-        bgGrad.addColorStop(1, '#ff1f7a');
-        ctx.fillStyle = bgGrad;
+        // 🎨 KONVY Brand Colors
+        var KONVY_PINK   = '#ff2266';
+        var KONVY_PURPLE = '#a458f5';
+        var KONVY_BLUE   = '#56e3fd';
+        var KONVY_GREEN  = '#2dd393';
+        var KONVY_YELLOW = '#fbd91f';
+
+        // Background: สีชมพู Konvy ล้วน
+        ctx.fillStyle = KONVY_PINK;
         ctx.fillRect(0, 0, W, H);
 
-        // Blob ตกแต่ง 4 มุม (เหมือนบัตรสมาชิก)
+        // Blob ตกแต่ง 4 มุม (ใช้ brand colors เท่านั้น)
         function blob(x, y, r, color){
           ctx.fillStyle = color;
           ctx.beginPath();
           ctx.arc(x, y, r, 0, Math.PI*2);
           ctx.fill();
         }
-        blob(60, 60, 70, '#f9d71c');     // เหลือง ซ้ายบน
-        blob(540, 50, 60, '#7ed957');    // เขียว ขวาบน
-        blob(560, 740, 75, '#a85cf5');   // ม่วง ขวาล่าง
-        blob(40, 720, 50, '#ff6b3d');    // ส้ม ซ้ายล่าง
+        blob(60, 60, 70, KONVY_YELLOW);   // เหลือง ซ้ายบน
+        blob(540, 50, 60, KONVY_GREEN);   // เขียว ขวาบน
+        blob(560, 740, 75, KONVY_PURPLE); // ม่วง ขวาล่าง
+        blob(40, 720, 50, KONVY_BLUE);    // ฟ้า ซ้ายล่าง
 
         // การ์ดขาว (ตรงกลาง)
         var cardX = 40, cardY = 80, cardW = W - 80, cardH = H - 160;
@@ -3643,27 +3647,22 @@ function generateQRImage(){
         var data = collectFormData();
         var cx = cardX + cardW/2;
 
-        // Konvy logo (วงกลม) + ชื่อ KOL ข้างๆ
+        // 🎨 Konvy logo + Header text "KONVY Detail Code For Invoice"
         var logoY = cardY + 55;
         var logoR = 22;
-        // วัด text เพื่อ center ทั้ง logo + ชื่อ
-        ctx.font = 'bold 20px Sarabun, sans-serif';
-        var kolName = data.infName || 'KOL';
-        if(ctx.measureText(kolName).width > 240){
-          while(ctx.measureText(kolName + '...').width > 240 && kolName.length > 0){
-            kolName = kolName.slice(0, -1);
-          }
-          kolName += '...';
-        }
-        var nameW = ctx.measureText(kolName).width;
-        var totalW = logoR*2 + 10 + nameW;
+        var headerText = 'KONVY Detail Code For Invoice';
+        ctx.font = 'bold 18px Sarabun, sans-serif';
+        var textW = ctx.measureText(headerText).width;
+        var totalW = logoR*2 + 10 + textW;
         var startX = cx - totalW/2;
         var logoX = startX + logoR;
 
+        // โลโก้ konvy: วงกลม gradient จาก brand colors
         var logoGrad = ctx.createLinearGradient(logoX-logoR, logoY-logoR, logoX+logoR, logoY+logoR);
-        logoGrad.addColorStop(0, '#ff3d8f');
-        logoGrad.addColorStop(0.5, '#f9d71c');
-        logoGrad.addColorStop(1, '#7ed957');
+        logoGrad.addColorStop(0,    KONVY_PINK);
+        logoGrad.addColorStop(0.33, KONVY_YELLOW);
+        logoGrad.addColorStop(0.66, KONVY_GREEN);
+        logoGrad.addColorStop(1,    KONVY_BLUE);
         ctx.fillStyle = logoGrad;
         ctx.beginPath();
         ctx.arc(logoX, logoY, logoR, 0, Math.PI*2);
@@ -3678,12 +3677,12 @@ function generateQRImage(){
         ctx.textBaseline = 'middle';
         ctx.fillText('konvy', logoX, logoY);
 
-        // ชื่อ KOL
+        // Header text
         ctx.fillStyle = '#1a1a2e';
-        ctx.font = 'bold 20px Sarabun, sans-serif';
+        ctx.font = 'bold 18px Sarabun, sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        ctx.fillText(kolName, startX + logoR*2 + 10, logoY);
+        ctx.fillText(headerText, startX + logoR*2 + 10, logoY);
 
         // Subtitle "ใช้สแกนสำหรับทำใบแจ้งหนี้"
         ctx.fillStyle = '#8a96a3';
@@ -3694,7 +3693,6 @@ function generateQRImage(){
 
         var qrImg = new Image();
         qrImg.onload = function(){
-          // QR ตรงกลาง (compact)
           var qrSize = 280;
           var qrX = cardX + (cardW - qrSize) / 2;
           var qrY = logoY + 65;
@@ -3711,7 +3709,7 @@ function generateQRImage(){
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // ข้อมูลสรุป — เลขที่ใบเสนอราคา / ชื่อ / แคมเปญ
+          // ข้อมูลสรุป
           var infoY = divY + 24;
           var rowGap = 22;
 
@@ -3760,7 +3758,7 @@ function generateQRImage(){
           }
           ctx.fillText(proj, cardX + cardW - 30, infoY + rowGap*2);
 
-          // Footer (บนพื้นชมพู)
+          // Footer
           ctx.fillStyle = '#ffffff';
           ctx.font = '12px Sarabun, sans-serif';
           ctx.textAlign = 'center';
