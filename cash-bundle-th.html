@@ -4404,43 +4404,53 @@ function renderStep2Attachments(){
   var wrap=document.getElementById('step2AttachPreview');
   if(!wrap) return;
 
-  // เก็บเอกสารทั้งหมด
-  var attachments=[];
-  files.id.forEach(function(f,i){
-    if(f.type.indexOf('image/')===0){
-      attachments.push({label:'บัตรประชาชน'+(files.id.length>1?' '+(i+1):''),icon:'🪪',data:f.data,name:f.name});
-    }
-  });
-  files.book.forEach(function(f,i){
-    if(f.type.indexOf('image/')===0){
-      attachments.push({label:'Book Bank'+(files.book.length>1?' '+(i+1):''),icon:'🏦',data:f.data,name:f.name});
-    }
-  });
-  if(files.credit){
-    files.credit.forEach(function(f,i){
-      if(f.type.indexOf('image/')===0){
-        attachments.push({label:'KONVY Credit Member'+(files.credit.length>1?' '+(i+1):''),icon:'🎁',data:f.data,name:f.name});
-      }
-    });
-  }
+  // รวม ID + Book Bank ใน sheet เดียว (ครึ่งบน / ครึ่งล่าง)
+  var idFiles = files.id.filter(function(f){ return f.type.indexOf('image/')===0; });
+  var bookFiles = files.book.filter(function(f){ return f.type.indexOf('image/')===0; });
+  var creditFiles = files.credit ? files.credit.filter(function(f){ return f.type.indexOf('image/')===0; }) : [];
 
-  if(attachments.length===0){
+  if(!idFiles.length && !bookFiles.length && !creditFiles.length){
     wrap.innerHTML='';
     return;
   }
 
-  // สร้าง sheet สำหรับแต่ละเอกสาร — เลียนแบบหน้า A4 PDF
-  var html='';
-  attachments.forEach(function(att){
-    html+='<div style="width:794px;min-height:600px;background:#fff;margin:16px auto 0;border-radius:4px;box-shadow:0 6px 40px rgba(0,0,0,.18);padding:38px 38px 50px;box-sizing:border-box">'+
-      '<div style="font-size:1rem;font-weight:700;color:#1a1a2e;margin-bottom:4px">Attachment: '+att.icon+' '+att.label+'</div>'+
-      '<div style="font-size:.78rem;color:#888;margin-bottom:10px">'+att.name+'</div>'+
-      '<div style="border-top:1px solid #ddd;margin-bottom:30px"></div>'+
-      '<div style="display:flex;justify-content:center;align-items:flex-start">'+
-        '<img src="'+att.data+'" style="max-width:380px;max-height:570px;object-fit:contain;display:block">'+
-      '</div>'+
+  // Helper: สร้าง half section
+  function halfSection(title, icon, file){
+    if(!file){
+      return '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:.85rem">ไม่มีไฟล์</div>';
+    }
+    return '<div style="flex:1;display:flex;flex-direction:column;min-height:0">' +
+      '<div style="font-size:.9rem;font-weight:700;color:#1a1a2e;margin-bottom:4px">'+icon+' '+title+'</div>' +
+      '<div style="font-size:.72rem;color:#888;margin-bottom:10px">'+file.name+'</div>' +
+      '<div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:0">' +
+        '<img src="'+file.data+'" style="max-width:100%;max-height:100%;object-fit:contain;display:block">' +
+      '</div>' +
     '</div>';
-  });
+  }
+
+  var html='';
+
+  // Sheet 1: บัตร (ครึ่งบน) + Book Bank (ครึ่งล่าง)
+  html += '<div style="width:794px;height:1123px;background:#fff;margin:16px auto 0;border-radius:4px;box-shadow:0 6px 40px rgba(0,0,0,.18);padding:38px 38px 50px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px">' +
+    halfSection('บัตรประชาชน (ID Card)', '🪪', idFiles[0]) +
+    '<div style="border-top:2px dashed #ddd;margin:0"></div>' +
+    halfSection('สมุดบัญชี (Book Bank)', '🏦', bookFiles[0]) +
+  '</div>';
+
+  // เพิ่มรูปสำรอง (ถ้ามี > 1)
+  var extraId = idFiles.slice(1);
+  var extraBook = bookFiles.slice(1);
+  var extras = extraId.concat(extraBook).concat(creditFiles);
+  // จับคู่เต็มหน้า (2 ต่อแผ่น)
+  for(var i=0; i<extras.length; i+=2){
+    var top = extras[i];
+    var bottom = extras[i+1];
+    html += '<div style="width:794px;height:1123px;background:#fff;margin:16px auto 0;border-radius:4px;box-shadow:0 6px 40px rgba(0,0,0,.18);padding:38px 38px 50px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px">' +
+      halfSection(top.name || 'เอกสารแนบเพิ่มเติม', '📄', top) +
+      (bottom ? '<div style="border-top:2px dashed #ddd;margin:0"></div>' + halfSection(bottom.name || 'เอกสารแนบเพิ่มเติม', '📄', bottom) : '') +
+    '</div>';
+  }
+
   wrap.innerHTML=html;
 }
 
