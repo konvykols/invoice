@@ -5803,9 +5803,28 @@ function generateDocumentPack(){
             setProgress(50, 'หน้า 3-4/5: บัตร + Book Bank...');
             if(typeof renderStep2Attachments === 'function') renderStep2Attachments();
 
+            // Force step2PreviewWrap visible for html2canvas
+            var prevWrap = document.getElementById('step2PreviewWrap');
+            var origDisp = prevWrap ? prevWrap.style.display : '';
+            if(prevWrap){
+              prevWrap.style.position = 'fixed';
+              prevWrap.style.left = '-10000px';
+              prevWrap.style.top = '0';
+              prevWrap.style.display = 'block';
+              prevWrap.style.visibility = 'visible';
+            }
+
             setTimeout(function(){
               var attachEl = document.getElementById('step2AttachPreview');
               if(!attachEl || !attachEl.children.length){
+                // Restore before finish
+                if(prevWrap){
+                  prevWrap.style.position = '';
+                  prevWrap.style.left = '';
+                  prevWrap.style.top = '';
+                  prevWrap.style.display = origDisp;
+                  prevWrap.style.visibility = '';
+                }
                 return finishReport();
               }
               var sheets = Array.prototype.slice.call(attachEl.children);
@@ -5818,8 +5837,28 @@ function generateDocumentPack(){
                   });
                 });
               });
-              sheetChain.then(finishReport).catch(function(err){ console.error(err); finishReport(); });
-            }, 300);
+              sheetChain.then(function(){
+                // Restore step2PreviewWrap
+                if(prevWrap){
+                  prevWrap.style.position = '';
+                  prevWrap.style.left = '';
+                  prevWrap.style.top = '';
+                  prevWrap.style.display = origDisp;
+                  prevWrap.style.visibility = '';
+                }
+                finishReport();
+              }).catch(function(err){
+                console.error(err);
+                if(prevWrap){
+                  prevWrap.style.position = '';
+                  prevWrap.style.left = '';
+                  prevWrap.style.top = '';
+                  prevWrap.style.display = origDisp;
+                  prevWrap.style.visibility = '';
+                }
+                finishReport();
+              });
+            }, 400);
 
             function finishReport(){
               setProgress(85, 'หน้า 5/5: หลักฐานโพสต์...');
