@@ -5817,7 +5817,6 @@ function generateDocumentPack(){
             setTimeout(function(){
               var attachEl = document.getElementById('step2AttachPreview');
               if(!attachEl || !attachEl.children.length){
-                // Restore before finish
                 if(prevWrap){
                   prevWrap.style.position = '';
                   prevWrap.style.left = '';
@@ -5827,36 +5826,51 @@ function generateDocumentPack(){
                 }
                 return finishReport();
               }
-              var sheets = Array.prototype.slice.call(attachEl.children);
-              var sheetChain = Promise.resolve();
-              sheets.forEach(function(sheet, idx){
-                sheetChain = sheetChain.then(function(){
-                  return captureElement(sheet).then(function(c){
-                    addCanvasAsPage(c, false);
-                    setProgress(50 + (idx+1) * 10, 'เอกสารแนบ ' + (idx+1) + '/' + sheets.length);
+
+              // ── รอให้ <img> ในทุก sheet โหลดก่อน capture ──
+              var allImgs = attachEl.querySelectorAll('img');
+              var imgPromises = [];
+              allImgs.forEach(function(img){
+                if(img.complete && img.naturalWidth > 0) return;
+                imgPromises.push(new Promise(function(resolve){
+                  img.onload = resolve;
+                  img.onerror = resolve;
+                  // timeout กันค้าง
+                  setTimeout(resolve, 3000);
+                }));
+              });
+
+              Promise.all(imgPromises).then(function(){
+                var sheets = Array.prototype.slice.call(attachEl.children);
+                var sheetChain = Promise.resolve();
+                sheets.forEach(function(sheet, idx){
+                  sheetChain = sheetChain.then(function(){
+                    return captureElement(sheet).then(function(c){
+                      addCanvasAsPage(c, false);
+                      setProgress(50 + (idx+1) * 10, 'เอกสารแนบ ' + (idx+1) + '/' + sheets.length);
+                    });
                   });
                 });
-              });
-              sheetChain.then(function(){
-                // Restore step2PreviewWrap
-                if(prevWrap){
-                  prevWrap.style.position = '';
-                  prevWrap.style.left = '';
-                  prevWrap.style.top = '';
-                  prevWrap.style.display = origDisp;
-                  prevWrap.style.visibility = '';
-                }
-                finishReport();
-              }).catch(function(err){
-                console.error(err);
-                if(prevWrap){
-                  prevWrap.style.position = '';
-                  prevWrap.style.left = '';
-                  prevWrap.style.top = '';
-                  prevWrap.style.display = origDisp;
-                  prevWrap.style.visibility = '';
-                }
-                finishReport();
+                sheetChain.then(function(){
+                  if(prevWrap){
+                    prevWrap.style.position = '';
+                    prevWrap.style.left = '';
+                    prevWrap.style.top = '';
+                    prevWrap.style.display = origDisp;
+                    prevWrap.style.visibility = '';
+                  }
+                  finishReport();
+                }).catch(function(err){
+                  console.error(err);
+                  if(prevWrap){
+                    prevWrap.style.position = '';
+                    prevWrap.style.left = '';
+                    prevWrap.style.top = '';
+                    prevWrap.style.display = origDisp;
+                    prevWrap.style.visibility = '';
+                  }
+                  finishReport();
+                });
               });
             }, 400);
 
