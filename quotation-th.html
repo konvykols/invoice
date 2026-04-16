@@ -8,6 +8,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Thailand Address Auto-Complete -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dependencies/JQL.min.js"></script>
+<script src="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dependencies/typeahead.bundle.js"></script>
+<link rel="stylesheet" href="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dist/jquery.Thailand.min.css">
+<script src="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dist/jquery.Thailand.min.js"></script>
 <style>
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1873,7 +1879,22 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
           <div class="field"><label>อีเมล</label><input id="infEmail" placeholder="email@" oninput="renderInvoice()"></div>
         </div>
         <div class="field"><label>เลขบัตรประชาชน</label><input id="infCardNo" placeholder="x-xxxx-xxxxx-xx-x" oninput="calcTotal();renderInvoice()"></div>
-        <div class="field"><label>ที่อยู่</label><textarea id="infAddr" rows="2" placeholder="ที่อยู่ตามบัตรประชาชน" oninput="renderInvoice()"></textarea></div>
+        <!-- ที่อยู่ (Auto-Complete) -->
+        <div class="field">
+          <label>ที่อยู่ (บ้านเลขที่ / หมู่ / ซอย / ถนน)</label>
+          <input id="addrLine1" placeholder="เช่น 123/45 หมู่ 6 ซอยลาดพร้าว 10 ถ.ลาดพร้าว" oninput="combineAddress()">
+        </div>
+        <div class="field">
+          <label>🔍 ค้นหาตำบล / อำเภอ / จังหวัด / รหัสไปรษณีย์</label>
+          <input id="addrSearch" placeholder="เช่น บางใหญ่ หรือ 11140 หรือ นนทบุรี" autocomplete="off">
+          <div id="addrPreview" style="display:none;margin-top:6px;padding:8px 12px;background:#fef2f6;border:1.5px solid #f73174;border-radius:8px;font-size:.78rem;color:#7a0f3f;line-height:1.5"></div>
+        </div>
+        <!-- ช่องซ่อน - เก็บข้อมูล -->
+        <input type="hidden" id="addrDistrict">
+        <input type="hidden" id="addrAmphoe">
+        <input type="hidden" id="addrProvince">
+        <input type="hidden" id="addrZipcode">
+        <textarea id="infAddr" rows="2" style="display:none"></textarea>
       </div>
     </div>
     <div class="fc" id="fcPaymentGroup" style="display:none">
@@ -4863,6 +4884,14 @@ function randomTemplate(){
 var tcAccepted = false;
 
 function openTC(){
+  // ── VALIDATION: เช็คข้อมูลบังคับก่อนไป Step 2 ──
+  if(typeof validateBeforeNext === 'function'){
+    var errors = validateBeforeNext();
+    if(errors.length > 0){
+      showValidationErrors(errors);
+      return;
+    }
+  }
   if(currentDocType === 'inv'){
     goToStep(2); return;
   }
@@ -5720,5 +5749,317 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
   </div>
 </div>
+
+<!-- ========== Validation Before Next Step ========== -->
+<script>
+/**
+ * เช็คข้อมูลบังคับก่อนกด "ถัดไป: พรีวิว" (QUOTATION)
+ * ไม่เช็คบัญชีธนาคาร (ใบเสนอราคาไม่เก็บ) — จะกรอกตอนทำใบแจ้งหนี้
+ * รายการค่าตอบแทนเช็คตาม payType (cash / credit / barter)
+ */
+function validateBeforeNext(){
+  var errors = [];
+  var v = function(id){ var el=document.getElementById(id); return el ? (el.value||'').trim() : ''; };
+
+  // ── 1. ข้อมูลผู้รับเงิน ──
+  if(!v('infName'))   errors.push({field:'infName',    label:'ชื่อ-นามสกุล'});
+  if(!v('infNick'))   errors.push({field:'infNick',    label:'ชื่อเล่น'});
+  if(!v('infPhone'))  errors.push({field:'infPhone',   label:'เบอร์โทร'});
+  if(!v('infEmail'))  errors.push({field:'infEmail',   label:'อีเมล'});
+  if(!v('infCardNo')) errors.push({field:'infCardNo',  label:'เลขบัตรประชาชน'});
+  if(!v('addrLine1')) errors.push({field:'addrLine1',  label:'ที่อยู่ (บ้านเลขที่/ซอย/ถนน)'});
+  if(!v('addrProvince') || !v('addrDistrict') || !v('addrZipcode')){
+    errors.push({field:'addrSearch', label:'ตำบล/อำเภอ/จังหวัด/รหัสไปรษณีย์ (ค้นหาที่อยู่)'});
+  }
+
+  // ── 2. รายการค่าตอบแทน (เช็คตาม payType) ──
+  var payType = v('payType') || 'cash';
+
+  if(payType === 'credit'){
+    // KONVY Credit: ต้องมี JobDesc + MemberId + Value
+    if(!v('creditJobDesc'))   errors.push({field:'creditJobDesc',   label:'รายละเอียดงาน (KONVY Credit)'});
+    if(!v('creditMemberId'))  errors.push({field:'creditMemberId',  label:'KONVY Member ID'});
+    var cVal = Number(v('creditValue'));
+    if(!cVal || cVal <= 0)    errors.push({field:'creditValue',     label:'มูลค่า KONVY Credit (ต้องมากกว่า 0)'});
+
+  } else if(payType === 'barter'){
+    // Barter: ต้องมี JobDesc + Item + Value
+    if(!v('barterJobDesc'))   errors.push({field:'barterJobDesc',   label:'รายละเอียดงาน (Barter)'});
+    if(!v('barterItem'))      errors.push({field:'barterItem',      label:'ชื่อสินค้า Barter'});
+    var bVal = Number(v('barterValue'));
+    if(!bVal || bVal <= 0)    errors.push({field:'barterValue',     label:'มูลค่าสินค้า Barter (ต้องมากกว่า 0)'});
+
+  } else {
+    // Cash/Transfer: ต้องมีอย่างน้อย 1 แถวในตารางที่มีข้อมูลครบ
+    var itemsBody = document.getElementById('itemsBody');
+    if(itemsBody){
+      var rows = itemsBody.children;
+      var hasValidRow = false;
+      for(var i=0; i<rows.length; i++){
+        var inputs = rows[i].querySelectorAll('input');
+        var desc='', qty='', price='';
+        for(var j=0; j<inputs.length; j++){
+          if(inputs[j].type === 'number'){
+            if(!qty) qty = inputs[j].value;
+            else if(!price) price = inputs[j].value;
+          } else if(inputs[j].type !== 'hidden' && !inputs[j].readOnly){
+            if(!desc) desc = inputs[j].value;
+          }
+        }
+        if(desc.trim() && Number(qty) > 0 && Number(price) > 0){
+          hasValidRow = true; break;
+        }
+      }
+      if(!hasValidRow){
+        errors.push({field:'itemsBody', label:'รายการค่าตอบแทน (ต้องมีอย่างน้อย 1 รายการ: ชื่อ + จำนวน + ราคา)'});
+      }
+    }
+  }
+
+  // ── 3. กำหนดการโพสต์ ──
+  if(!v('quotPostDate')) errors.push({field:'quotPostDate', label:'วันที่กำหนดโพสต์'});
+  var plat = v('quotPostPlatform');
+  if(!plat){
+    errors.push({field:'quotPostPlatform', label:'แพลตฟอร์มที่จะโพสต์'});
+  } else if(plat === 'อื่นๆ' && !v('quotPostPlatformOther')){
+    errors.push({field:'quotPostPlatformOther', label:'แพลตฟอร์ม (ระบุ)'});
+  }
+
+  // ── 4. ลายเซ็น ──
+  if(typeof sigData === 'undefined' || !sigData){
+    errors.push({field:'sigCanvas', label:'ลายเซ็น (วาด หรืออัปโหลดรูป)'});
+  }
+
+  return errors;
+}
+
+function showValidationErrors(errors){
+  var modal = document.getElementById('validationModal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'validationModal';
+    modal.innerHTML = '<div class="vm-overlay" onclick="closeValidationModal()"></div>'+
+      '<div class="vm-box">'+
+        '<div class="vm-head">'+
+          '<div class="vm-icon">⚠️</div>'+
+          '<div>'+
+            '<div class="vm-title">กรุณากรอกข้อมูลให้ครบก่อนค่ะ</div>'+
+            '<div class="vm-sub">ยังขาดข้อมูลต่อไปนี้:</div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="vm-list" id="vmList"></div>'+
+        '<button class="vm-btn" onclick="closeValidationModal()">เข้าใจแล้ว ไปกรอกต่อ</button>'+
+      '</div>';
+    document.body.appendChild(modal);
+  }
+
+  var list = document.getElementById('vmList');
+  list.innerHTML = errors.map(function(e,i){
+    return '<div class="vm-item" data-field="'+e.field+'">'+
+      '<span class="vm-num">'+(i+1)+'</span>'+
+      '<span class="vm-label">'+e.label+'</span>'+
+    '</div>';
+  }).join('');
+
+  list.querySelectorAll('.vm-item').forEach(function(item){
+    item.addEventListener('click', function(){
+      var fieldId = this.getAttribute('data-field');
+      closeValidationModal();
+      setTimeout(function(){
+        var el = document.getElementById(fieldId);
+        if(el){
+          el.scrollIntoView({behavior:'smooth', block:'center'});
+          try{ el.focus(); }catch(e){}
+          var orig = el.style.boxShadow;
+          el.style.transition = 'box-shadow .3s';
+          el.style.boxShadow = '0 0 0 3px #f73174';
+          setTimeout(function(){ el.style.boxShadow = orig; }, 1500);
+        }
+      }, 200);
+    });
+  });
+
+  modal.classList.add('show');
+}
+
+function closeValidationModal(){
+  var m = document.getElementById('validationModal');
+  if(m) m.classList.remove('show');
+}
+</script>
+
+<style>
+#validationModal{
+  position:fixed;inset:0;z-index:100000;display:none;
+  align-items:center;justify-content:center;padding:20px
+}
+#validationModal.show{display:flex}
+#validationModal .vm-overlay{
+  position:absolute;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px)
+}
+#validationModal .vm-box{
+  position:relative;background:#fff;border-radius:16px;
+  max-width:440px;width:100%;max-height:85vh;overflow:hidden;
+  display:flex;flex-direction:column;
+  box-shadow:0 24px 64px rgba(0,0,0,.4);
+  animation:vmSlideIn .25s ease-out
+}
+@keyframes vmSlideIn{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+#validationModal .vm-head{
+  padding:20px 22px 14px;background:linear-gradient(135deg,#fef2f6,#fff);
+  border-bottom:1px solid #f3f4f6;display:flex;gap:14px;align-items:flex-start
+}
+#validationModal .vm-icon{font-size:2rem;flex-shrink:0;line-height:1}
+#validationModal .vm-title{font-weight:700;font-size:1rem;color:#1a1a2e;margin-bottom:3px}
+#validationModal .vm-sub{font-size:.78rem;color:#6b7280}
+#validationModal .vm-list{padding:12px 16px;overflow-y:auto;flex:1}
+#validationModal .vm-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;
+  background:#fef2f6;border:1.5px solid #fecdd3;border-radius:8px;
+  cursor:pointer;transition:all .15s;font-size:.85rem
+}
+#validationModal .vm-item:hover{
+  background:#fce7ec;border-color:#f73174;transform:translateX(2px)
+}
+#validationModal .vm-num{
+  flex-shrink:0;width:22px;height:22px;border-radius:50%;
+  background:#f73174;color:#fff;font-weight:700;font-size:.72rem;
+  display:flex;align-items:center;justify-content:center
+}
+#validationModal .vm-label{color:#7a0f3f;font-weight:500}
+#validationModal .vm-btn{
+  margin:4px 16px 16px;padding:12px;border:none;border-radius:10px;
+  background:linear-gradient(135deg,#f73174,#c9265b);color:#fff;
+  font-family:Sarabun,sans-serif;font-size:.88rem;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 12px rgba(247,49,116,.3)
+}
+#validationModal .vm-btn:hover{filter:brightness(1.05)}
+
+/* Typeahead styles - ลอยแบบ FIXED ทับทุกอย่าง */
+.twitter-typeahead{width:100%!important;display:block!important;position:static!important}
+.tt-menu{
+  position:fixed!important;
+  background:#fff;border:1.5px solid #f73174;border-radius:10px;
+  box-shadow:0 12px 32px rgba(0,0,0,.25);max-height:260px;
+  overflow-y:auto;font-size:.82rem;z-index:2147483647
+}
+.tt-suggestion{
+  padding:9px 14px;cursor:pointer;border-bottom:1px solid #f3f4f6;
+  white-space:nowrap;line-height:1.4
+}
+.tt-suggestion:last-child{border-bottom:none}
+.tt-suggestion:hover,.tt-cursor{background:#fef2f6;color:#f73174}
+.tt-suggestion strong{color:#f73174;font-weight:700}
+@media (max-width:640px){
+  .tt-menu{left:8px!important;right:8px!important;width:auto!important;max-width:none!important;font-size:.85rem}
+  .tt-suggestion{padding:11px 14px}
+}
+</style>
+
+<!-- ========== Thailand Address Auto-Complete ========== -->
+<script>
+// รวมที่อยู่ทั้งหมดเข้า textarea เดิม (infAddr) เพื่อให้ระบบ render/PDF ทำงานเหมือนเดิม
+function combineAddress(){
+  var line1    = (document.getElementById('addrLine1')    || {}).value || '';
+  var district = (document.getElementById('addrDistrict') || {}).value || '';
+  var amphoe   = (document.getElementById('addrAmphoe')   || {}).value || '';
+  var province = (document.getElementById('addrProvince') || {}).value || '';
+  var zipcode  = (document.getElementById('addrZipcode')  || {}).value || '';
+
+  var parts = [];
+  if(line1.trim())    parts.push(line1.trim());
+  var isBkk = (province.indexOf('กรุงเทพ') !== -1);
+  if(district.trim()) parts.push((isBkk ? 'แขวง' : 'ต.') + district.trim());
+  if(amphoe.trim())   parts.push((isBkk ? 'เขต'  : 'อ.') + amphoe.trim());
+  if(province.trim()) parts.push((isBkk ? ''     : 'จ.') + province.trim());
+  if(zipcode.trim())  parts.push(zipcode.trim());
+
+  var full = parts.join(' ');
+  var ta = document.getElementById('infAddr');
+  if(ta){
+    ta.value = full;
+    if(typeof renderInvoice === 'function') renderInvoice();
+  }
+
+  // แสดง preview ใต้ช่องค้นหา
+  var pv = document.getElementById('addrPreview');
+  if(pv){
+    if(district || amphoe || province || zipcode){
+      var previewParts = [];
+      if(district) previewParts.push((isBkk?'แขวง':'ต.') + district);
+      if(amphoe)   previewParts.push((isBkk?'เขต':'อ.') + amphoe);
+      if(province) previewParts.push((isBkk?'':'จ.') + province);
+      if(zipcode)  previewParts.push(zipcode);
+      pv.innerHTML = '✓ ' + previewParts.join(' ');
+      pv.style.display = 'block';
+    } else {
+      pv.style.display = 'none';
+    }
+  }
+}
+
+(function initThailandAutocomplete(){
+  function tryInit(){
+    if(typeof $ === 'undefined' || typeof $.Thailand !== 'function'){
+      return setTimeout(tryInit, 200);
+    }
+    try{
+      $.Thailand({
+        database_type: 'json',
+        database: 'https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/database/db.json',
+        $search: $('#addrSearch'),
+        onDataFill: function(data){
+          $('#addrDistrict').val(data.district);
+          $('#addrAmphoe').val(data.amphoe);
+          $('#addrProvince').val(data.province);
+          $('#addrZipcode').val(data.zipcode);
+          setTimeout(combineAddress, 50);
+        }
+      });
+      var line1El = document.getElementById('addrLine1');
+      if(line1El){
+        line1El.addEventListener('input', combineAddress);
+      }
+
+      // ── Position sync: จัดตำแหน่ง tt-menu (fixed) ให้อยู่ใต้ช่อง addrSearch ──
+      var searchEl = document.getElementById('addrSearch');
+      if(searchEl){
+        function positionMenu(){
+          var menu = document.querySelector('.twitter-typeahead .tt-menu');
+          if(!menu) return;
+          var r = searchEl.getBoundingClientRect();
+          var isMobile = window.innerWidth <= 640;
+          if(!isMobile){
+            menu.style.left  = r.left + 'px';
+            menu.style.top   = (r.bottom + 4) + 'px';
+            menu.style.width = Math.max(r.width, 280) + 'px';
+            menu.style.minWidth = r.width + 'px';
+          } else {
+            menu.style.top = (r.bottom + 4) + 'px';
+          }
+        }
+        ['focus','input','keyup','click'].forEach(function(ev){
+          searchEl.addEventListener(ev, function(){ setTimeout(positionMenu, 0); });
+        });
+        window.addEventListener('scroll', positionMenu, true);
+        window.addEventListener('resize', positionMenu);
+        var observer = new MutationObserver(positionMenu);
+        setTimeout(function(){
+          var menu = document.querySelector('.twitter-typeahead .tt-menu');
+          if(menu) observer.observe(menu, {attributes:true, attributeFilter:['style','class']});
+        }, 500);
+      }
+    }catch(e){
+      console.warn('Thailand autocomplete init failed:', e);
+    }
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', tryInit);
+  } else {
+    tryInit();
+  }
+})();
+</script>
+
 </body>
 </html>
