@@ -3488,7 +3488,7 @@ function goToStep(n){
     if(existBack) existBack.style.display='none';
     var editTCBtn2 = document.getElementById('btnEditTC');
     if(editTCBtn2) editTCBtn2.style.display='none';
-    if(mobNav) mobNav.innerHTML='<button class="mob-nav-btn mob-nav-next" onclick="openTC()">'+'ถัดไป: พรีวิว →'+'</button>';
+    if(mobNav) mobNav.innerHTML='<button class="mob-nav-btn mob-nav-next" id="mobNavNextBtn" onclick="if(typeof bundleNextStep===\'function\')bundleNextStep();else openTC();">'+'ถัดไป: ยอมรับ T&C →'+'</button>';
     if(s1){ s1.style.color='#fff'; s1.querySelector('div').style.background='#fff'; s1.querySelector('div').style.color='#8a3fd9'; }
     if(s2){ s2.style.color='rgba(255,255,255,.35)'; }
     if(s2c){ s2c.style.background='rgba(255,255,255,.15)'; s2c.style.color='rgba(255,255,255,.4)'; }
@@ -5290,7 +5290,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 <div class="mob-nav" id="mobNav">
-  <button class="mob-nav-btn mob-nav-next" onclick="openTC()">ถัดไป: พรีวิว →</button>
+  <button class="mob-nav-btn mob-nav-next" id="mobNavNextBtn" onclick="if(typeof bundleNextStep==='function')bundleNextStep();else openTC();">ถัดไป: ยอมรับ T&C →</button>
 </div>
 
 <!-- iOS PDF Viewer Overlay -->
@@ -6151,6 +6151,10 @@ function showDocPackResult(pdf, blob, fileName){
         '<div style="font-size:.65rem;color:rgba(255,255,255,.8);margin-top:2px">' + label + '</div>' +
       '</div>' +
       '<button onclick="bundleNextStep()" style="background:#fff;color:#8a3fd9;border:none;border-radius:8px;padding:8px 14px;font-size:.75rem;font-weight:800;cursor:pointer;font-family:Sarabun,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.2);flex-shrink:0;white-space:nowrap">' + btnLabel + '</button>';
+
+    // 🔄 Sync ปุ่มล่าง (mobile) ให้ text ตรงกัน
+    var mobBtn = document.getElementById('mobNavNextBtn');
+    if(mobBtn) mobBtn.textContent = btnLabel;
   }
 
   function injectBundleNavBar(){
@@ -6685,9 +6689,35 @@ function closeValidationModal(){
     font-weight:800!important;letter-spacing:.01em
   }
 
+  /* ============ HEADER (cash-bundle) — ย่อ + จัดเรียงใหม่ ============ */
+  .picker-bar{padding:8px 12px!important}
+  .picker-inner{display:block!important}
+  .picker-top{
+    display:flex!important;flex-direction:column!important;
+    align-items:stretch!important;gap:6px!important
+  }
+  .picker-logo{font-size:.78rem!important;line-height:1.2;text-align:left}
+  .picker-logo span{font-size:.55rem!important;margin-top:1px}
+  .picker-actions{margin:0!important;width:100%}
+  /* bundleNavBar (กล่องม่วง+ปุ่มขาว) — บนมือถือ ย่อให้พอดี */
+  #bundleNavBar{
+    min-width:0!important;width:100%!important;
+    padding:6px 9px!important;gap:7px!important;
+    border-radius:9px!important
+  }
+  #bundleNavBar > div{min-width:0!important}
+  #bundleNavBar > div > div:first-child{font-size:.66rem!important}
+  #bundleNavBar > div > div:last-child{font-size:.58rem!important}
+  #bundleNavBar > button{
+    padding:6px 10px!important;font-size:.66rem!important;
+    border-radius:6px!important
+  }
+  /* ซ่อน badge "ยอมรับ T&C แล้ว" บนมือถือ ประหยัดพื้นที่ */
+  .tc-accepted-badge{display:none!important}
+
   /* ปุ่ม "ถัดไป" บนหัว — ย่อ + เน้น */
   #btnNextToTemplate{
-    padding:9px 14px!important;font-size:.78rem!important;font-weight:800!important
+    padding:7px 11px!important;font-size:.7rem!important;font-weight:800!important
   }
   /* "+ เพิ่มรายการ" */
   .btn-ar{padding:8px!important;font-size:.78rem!important}
