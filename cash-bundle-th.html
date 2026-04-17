@@ -1746,7 +1746,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
           <span>✅</span><span style="font-size:.68rem">ยอมรับ T&C แล้ว</span>
         </div>
         <button class="btn-act" id="btnEditTC" onclick="editTC()" style="display:none;background:rgba(247,49,116,.12);color:#f73174;border:1.5px solid #f73174;font-size:.75rem;padding:6px 12px">📋 แก้ไข T&C</button>
-        <button class="btn-act" id="btnNextToTemplate" onclick="openTC()" style="background:#4a90d9;color:#fff">ถัดไป: พรีวิว →</button>
+        <button class="btn-act" id="btnNextToTemplate" onclick="openTC()" style="background:#4a90d9;color:#fff">ถัดไป: ยอมรับ T&C →</button>
       </div>
     </div>
     <div id="stepBar" style="display:none;align-items:center;gap:8px;margin-top:8px">
@@ -3489,6 +3489,8 @@ function goToStep(n){
     var editTCBtn2 = document.getElementById('btnEditTC');
     if(editTCBtn2) editTCBtn2.style.display='none';
     if(mobNav) mobNav.innerHTML='<button class="mob-nav-btn mob-nav-next" id="mobNavNextBtn" onclick="if(typeof bundleNextStep===\'function\')bundleNextStep();else openTC();">'+'ถัดไป: ยอมรับ T&C →'+'</button>';
+    // 🔄 sync text ปุ่มล่างกับ state ปัจจุบัน (เผื่อ T&C ยอมรับแล้ว)
+    if(typeof updateBundleNavBar === 'function') setTimeout(function(){ updateBundleNavBar(1); }, 0);
     if(s1){ s1.style.color='#fff'; s1.querySelector('div').style.background='#fff'; s1.querySelector('div').style.color='#8a3fd9'; }
     if(s2){ s2.style.color='rgba(255,255,255,.35)'; }
     if(s2c){ s2c.style.background='rgba(255,255,255,.15)'; s2c.style.color='rgba(255,255,255,.4)'; }
