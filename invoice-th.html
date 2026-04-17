@@ -3023,15 +3023,16 @@ function autoStamp(key, idx, cb){
 
     var lineH=imgH*0.095;
 
-    // เส้น 2 เส้น
+    // เส้น 2 เส้น — จาง ๆ แบบลายน้ำจริง
     var lh=lineH*1.7;
-    ctx.globalAlpha=0.50; ctx.strokeStyle='#111';
-    ctx.lineWidth=Math.max(imgH*0.014,1.5); ctx.lineCap='round';
+    ctx.globalAlpha=0.18; ctx.strokeStyle='#555';
+    ctx.lineWidth=Math.max(imgH*0.012,1.2); ctx.lineCap='round';
     ctx.beginPath(); ctx.moveTo(-diagW*0.55,-lh); ctx.lineTo(diagW*0.55,-lh); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(-diagW*0.55,lh); ctx.lineTo(diagW*0.55,lh); ctx.stroke();
 
-    ctx.globalAlpha=0.68; ctx.fillStyle='#111';
-    ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=2;
+    // ข้อความลายน้ำ — จางลงครึ่งนึง
+    ctx.globalAlpha=0.28; ctx.fillStyle='#444';
+    ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1.2;
 
     var line1='*ใช้สำหรับรับชำระค่าจ้างในการรีวิวสินค้า จาก บริษัท คอนวี่ อินเตอร์เนชั่นแนล จำกัด เท่านั้น*';
     var fs1=fitFont(line1,imgW*0.028,true);
@@ -3050,8 +3051,9 @@ function autoStamp(key, idx, cb){
     ctx.strokeText(name,0,lineH*1.5);
     ctx.fillText(name,0,lineH*1.5);
 
-    var fs4=fitFont(dateStr,imgW*0.024,false);
-    ctx.font=fs4+'px "Dancing Script",Georgia,cursive';
+    // วันที่ — ใช้ฟอนต์ปกติ (Sarabun) เพื่อให้อ่านง่าย
+    var fs4=fitFont(dateStr,imgW*0.022,false);
+    ctx.font=fs4+'px Sarabun, "Noto Sans Thai", sans-serif';
     ctx.strokeText(dateStr,0,lineH*2.3);
     ctx.fillText(dateStr,0,lineH*2.3);
 
@@ -3067,23 +3069,18 @@ function autoStamp(key, idx, cb){
     if(sigData){
       var sigEl=new Image();
       sigEl.onload=function(){
-        var sigMaxW=imgW*0.30;
-        var sigMaxH=imgH*0.15;
+        // ขยายลายเซ็นให้ใหญ่ + เห็นชัด (เหมือน cash-bundle)
+        var sigMaxW=imgW*0.45;
+        var sigMaxH=imgH*0.22;
         var sigRatio=sigEl.width/sigEl.height;
         var sw=sigMaxW, sh=sw/sigRatio;
         if(sh>sigMaxH){ sh=sigMaxH; sw=sh*sigRatio; }
 
-        // วาดในพิกัด canvas ปกติ (หลัง ctx.restore แล้ว)
-        // ตำแหน่ง: ใต้ลายน้ำ กึ่งกลางแนวตั้งของรูปถ่ายฝั่งขวา
-        // ลายน้ำอยู่ตรงกลางรูป หมุน -45° — จุดใต้วันที่ในพิกัดจริงคือ
-        // translate point + rotate ย้อนกลับ
-        // lineH*2.3 คือ offset ของวันที่ใน rotated space
-        var rotatedDateY = lineH*2.8; // ใต้วันที่นิดนึง
-        // แปลง rotated coordinate กลับเป็น canvas coordinate
+        // ตำแหน่ง: ใต้ลายน้ำ กึ่งกลาง
+        var rotatedDateY = lineH*3.0;
         var angle = -Math.PI/4;
         var rx = 0 * Math.cos(angle) - rotatedDateY * Math.sin(angle);
         var ry = 0 * Math.sin(angle) + rotatedDateY * Math.cos(angle);
-        // cx, cy คือ center ของ watermark ใน canvas
         var sigCX = cx + rx;
         var sigCY = cy + ry;
         var sx = sigCX - sw/2;
@@ -3091,11 +3088,23 @@ function autoStamp(key, idx, cb){
 
         // clamp ให้อยู่ในรูป
         if(sx < imgX) sx = imgX + imgW*0.02;
+        if(sx + sw > imgX + imgW) sx = imgX + imgW - sw - imgW*0.02;
         if(sy + sh > imgY + imgH) sy = imgY + imgH - sh - imgH*0.02;
 
+        // วาดลายเซ็นเข้มชัด — contrast แรง + วาด 3 รอบ overlay ให้เส้นหนา-เข้ม
+        var sigCanvas = document.createElement('canvas');
+        sigCanvas.width = sw * 2;
+        sigCanvas.height = sh * 2;
+        var sigCtx = sigCanvas.getContext('2d');
+        sigCtx.filter = 'contrast(3.5) brightness(0.25) saturate(0)';
+        sigCtx.drawImage(sigEl, 0, 0, sw*2, sh*2);
+
         ctx.save();
-        ctx.globalAlpha=0.92;
-        ctx.drawImage(sigEl, sx, sy, sw, sh);
+        ctx.globalAlpha=1.0;
+        // วาด 3 รอบ (overlay) ให้เส้นหนาและเข้มชัด
+        ctx.drawImage(sigCanvas, sx, sy, sw, sh);
+        ctx.drawImage(sigCanvas, sx, sy, sw, sh);
+        ctx.drawImage(sigCanvas, sx, sy, sw, sh);
         ctx.restore();
         finishStamp();
       };
