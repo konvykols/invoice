@@ -1854,7 +1854,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 })();
 </script>
         <div class="field"><label>วันที่ออก</label><input type="date" id="invDate" onchange="updateDue();renderInvoice()"></div>
-        <div class="field"><label>กำหนดชำระ <span style="color:#8a96a3;font-weight:400;font-size:.7rem">(วันที่ออก + 60 วัน)</span></label>
+        <div class="field"><label>กำหนดชำระ <span style="color:#8a96a3;font-weight:400;font-size:.7rem">(วันที่ออก + 30 วัน)</span></label>
           <div id="invDue" style="border:1.5px solid #e0e4ea;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;color:#1a1a2e;background:#f4f6f8;min-height:36px;pointer-events:none;user-select:none">–</div>
         </div>
         <div class="field"><label>ชื่อแคมเปญ</label><input id="invProject" placeholder="ชื่อแคมเปญ" oninput="renderInvoice()"></div>
@@ -3183,7 +3183,7 @@ function updateDue(){
   var dateVal=document.getElementById('invDate').value;
   if(!dateVal) return;
   var d=new Date(dateVal);
-  d.setDate(d.getDate()+60);
+  d.setDate(d.getDate()+30);
   var iso=d.toISOString().split('T')[0];
   window._invDueRaw=iso;
   var el=document.getElementById('invDue');
@@ -4806,7 +4806,7 @@ function setDocType(type){
   document.querySelectorAll('.fc-body .field label').forEach(function(lb){
     var t = lb.textContent.trim();
     if(t.includes('กำหนดชำระ') || t.includes('ใช้ได้ถึง')){
-      lb.textContent = type==='quot' ? 'ใช้ได้ถึง (+30 วัน)' : 'กำหนดชำระ (+60 วัน)';
+      lb.textContent = type==='quot' ? 'ใช้ได้ถึง (+30 วัน)' : 'กำหนดชำระ (+30 วัน)';
     }
   });
   // show/hide sections ตาม docType
