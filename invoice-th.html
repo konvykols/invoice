@@ -2841,60 +2841,259 @@ function handleFiles(input, key){
   input.value='';
 }
 
-// ── Crop System ──
+// ── Document Scanner Crop System (4-corner polygon + perspective correction) ──
 var _cropKey=null, _cropIdx=null, _cropOrigData=null;
 var _cropDrag=null, _cropStartX=0, _cropStartY=0;
-var _cropBox={x:0,y:0,w:0,h:0};
+// 4 มุม polygon ในพิกัด display (px) — เริ่มจากซ้ายบน ตามเข็ม
+var _cropPoly={tl:{x:0,y:0},tr:{x:0,y:0},br:{x:0,y:0},bl:{x:0,y:0}};
+var _cropDetected=false;
 
 function openCropModal(key, idx, dataUrl){
   _cropKey=key; _cropIdx=idx; _cropOrigData=dataUrl;
+  _cropDetected=false;
   var modal=document.getElementById('cropModal');
   var img=document.getElementById('cropImg');
+  // reset hint
+  var hint=document.getElementById('cropHint');
+  if(hint) hint.textContent='⏳ กำลังตรวจจับขอบเอกสาร...';
   modal.style.display='flex';
   document.body.style.overflow='hidden';
   img.src=dataUrl;
-  img.onload=function(){ initCropBox(); };
-  if(img.complete && img.naturalWidth) initCropBox();
+  img.onload=function(){ initCropPoly(); };
+  if(img.complete && img.naturalWidth) initCropPoly();
 }
 
-function initCropBox(){
+function initCropPoly(){
   var container=document.getElementById('cropContainer');
   var img=document.getElementById('cropImg');
   var cw=container.offsetWidth, ch=img.offsetHeight||img.clientHeight;
   container.style.height=ch+'px';
-  // กรอบเริ่มต้น: บัตรมักอยู่กลาง ประมาณ 80% กว้าง
-  var bw=Math.round(cw*0.82), bh=Math.round(bw*0.63); // ratio บัตร 85.6x54mm
-  var bx=Math.round((cw-bw)/2), by=Math.round((ch-bh)/2);
-  _cropBox={x:bx,y:by,w:bw,h:bh};
-  applyCropBox();
+
+  // เริ่มต้น: ใช้ default 4 มุมเต็มพื้นที่ก่อน (เผื่อตรวจจับไม่เจอ)
+  var pad=Math.round(cw*0.08);
+  _cropPoly={
+    tl:{x:pad, y:pad},
+    tr:{x:cw-pad, y:pad},
+    br:{x:cw-pad, y:ch-pad},
+    bl:{x:pad, y:ch-pad}
+  };
+  applyCropPoly();
   bindCropEvents();
+
+  // ตรวจจับขอบเอกสารอัตโนมัติ (async)
+  setTimeout(function(){
+    detectDocumentCorners(img, function(corners){
+      var hint=document.getElementById('cropHint');
+      if(corners){
+        // scale จาก natural coords → display coords
+        var sx=cw/img.naturalWidth, sy=ch/img.naturalHeight;
+        _cropPoly={
+          tl:{x:corners.tl[0]*sx, y:corners.tl[1]*sy},
+          tr:{x:corners.tr[0]*sx, y:corners.tr[1]*sy},
+          br:{x:corners.br[0]*sx, y:corners.br[1]*sy},
+          bl:{x:corners.bl[0]*sx, y:corners.bl[1]*sy}
+        };
+        _cropDetected=true;
+        applyCropPoly();
+        if(hint) hint.textContent='✨ ตรวจจับเอกสารอัตโนมัติ — ลากมุมปรับได้ตามต้องการ';
+      } else {
+        if(hint) hint.textContent='✂️ ลากมุมทั้ง 4 ให้พอดีกับเอกสาร';
+      }
+    });
+  }, 50);
 }
 
-function applyCropBox(){
-  var box=document.getElementById('cropBox');
-  box.style.left=_cropBox.x+'px'; box.style.top=_cropBox.y+'px';
-  box.style.width=_cropBox.w+'px'; box.style.height=_cropBox.h+'px';
+// ── Auto-detect document corners ──
+// ใช้ Otsu threshold + connected component หา quadrilateral ที่ใหญ่สุด
+function detectDocumentCorners(img, callback){
+  try{
+    var maxDim=400;
+    var scale=Math.min(maxDim/img.naturalWidth, maxDim/img.naturalHeight, 1);
+    var w=Math.max(60, Math.round(img.naturalWidth*scale));
+    var h=Math.max(60, Math.round(img.naturalHeight*scale));
+
+    var c=document.createElement('canvas');
+    c.width=w; c.height=h;
+    var ctx=c.getContext('2d');
+    ctx.drawImage(img,0,0,w,h);
+    var d=ctx.getImageData(0,0,w,h).data;
+
+    // Grayscale + histogram
+    var gray=new Uint8Array(w*h);
+    var hist=new Array(256); for(var i=0;i<256;i++) hist[i]=0;
+    for(var i=0;i<w*h;i++){
+      var v=(d[i*4]*0.299+d[i*4+1]*0.587+d[i*4+2]*0.114)|0;
+      gray[i]=v; hist[v]++;
+    }
+
+    // Otsu's threshold
+    var total=w*h, sumAll=0;
+    for(var t=0;t<256;t++) sumAll+=t*hist[t];
+    var sumB=0, wB=0, varMax=0, threshold=128;
+    for(var t=0;t<256;t++){
+      wB+=hist[t]; if(wB===0) continue;
+      var wF=total-wB; if(wF===0) break;
+      sumB+=t*hist[t];
+      var mB=sumB/wB, mF=(sumAll-sumB)/wF;
+      var vv=wB*wF*(mB-mF)*(mB-mF);
+      if(vv>varMax){ varMax=vv; threshold=t; }
+    }
+
+    // เช็คว่าเอกสารเป็นด้านสว่างหรือมืด — ดูจากค่าเฉลี่ยที่มุมภาพ (สมมติว่าพื้นหลัง)
+    var cs=0, cn=0;
+    function sampleArea(sx,sy){
+      for(var dy=0;dy<6;dy++) for(var dx=0;dx<6;dx++){
+        var px=Math.max(0,Math.min(w-1,sx+dx));
+        var py=Math.max(0,Math.min(h-1,sy+dy));
+        cs+=gray[py*w+px]; cn++;
+      }
+    }
+    sampleArea(0,0); sampleArea(w-6,0); sampleArea(0,h-6); sampleArea(w-6,h-6);
+    var bgAvg=cs/cn;
+    var docIsBright=bgAvg<threshold;
+
+    // Foreground mask
+    var fg=new Uint8Array(w*h);
+    for(var i=0;i<w*h;i++){
+      fg[i]=(docIsBright?gray[i]>=threshold:gray[i]<threshold)?1:0;
+    }
+
+    // Morphological erode (3x3) เล็กน้อย เพื่อตัดเสียงรบกวนรอบๆ
+    var eroded=new Uint8Array(w*h);
+    for(var y=1;y<h-1;y++) for(var x=1;x<w-1;x++){
+      var idx=y*w+x;
+      if(fg[idx] && fg[idx-1] && fg[idx+1] && fg[idx-w] && fg[idx+w]) eroded[idx]=1;
+    }
+
+    // หา connected component ใหญ่สุด (BFS)
+    var visited=new Uint8Array(w*h);
+    var queue=new Int32Array(w*h);
+    var bestPts=null, bestSize=0;
+    for(var sy2=0;sy2<h;sy2++){
+      for(var sx2=0;sx2<w;sx2++){
+        var sIdx=sy2*w+sx2;
+        if(!eroded[sIdx]||visited[sIdx]) continue;
+        var qH=0, qT=0;
+        queue[qT++]=sIdx; visited[sIdx]=1;
+        var pts=[];
+        var touchEdges=0, edgeFlags=0;
+        while(qH<qT){
+          var idx=queue[qH++];
+          var px=idx%w, py=(idx/w)|0;
+          pts.push(idx);
+          if(px===0) edgeFlags|=1;
+          if(px===w-1) edgeFlags|=2;
+          if(py===0) edgeFlags|=4;
+          if(py===h-1) edgeFlags|=8;
+          if(px>0 && !visited[idx-1] && eroded[idx-1]){ visited[idx-1]=1; queue[qT++]=idx-1; }
+          if(px<w-1 && !visited[idx+1] && eroded[idx+1]){ visited[idx+1]=1; queue[qT++]=idx+1; }
+          if(py>0 && !visited[idx-w] && eroded[idx-w]){ visited[idx-w]=1; queue[qT++]=idx-w; }
+          if(py<h-1 && !visited[idx+w] && eroded[idx+w]){ visited[idx+w]=1; queue[qT++]=idx+w; }
+        }
+        // นับจำนวนขอบที่แตะ
+        var ec=0; for(var k=0;k<4;k++) if(edgeFlags&(1<<k)) ec++;
+        // ข้าม component ที่แตะขอบ ≥ 3 ด้าน (น่าจะเป็น background)
+        if(ec>=3 && pts.length>total*0.5) continue;
+        if(pts.length>bestSize){ bestSize=pts.length; bestPts=pts; }
+      }
+    }
+
+    // ต้องมีขนาด ≥ 12% ของภาพถึงจะถือว่าเจอเอกสาร
+    if(!bestPts || bestSize<total*0.12){ callback(null); return; }
+
+    // หา 4 มุม extremum: tl(min x+y), tr(max x-y), br(max x+y), bl(min x-y)
+    var tlV=Infinity, trV=-Infinity, brV=-Infinity, blV=Infinity;
+    var tl=[0,0], tr=[w-1,0], br=[w-1,h-1], bl=[0,h-1];
+    for(var i=0;i<bestPts.length;i++){
+      var idx=bestPts[i];
+      var x=idx%w, y=(idx/w)|0;
+      var sxy=x+y, dxy=x-y;
+      if(sxy<tlV){ tlV=sxy; tl=[x,y]; }
+      if(sxy>brV){ brV=sxy; br=[x,y]; }
+      if(dxy>trV){ trV=dxy; tr=[x,y]; }
+      if(dxy<blV){ blV=dxy; bl=[x,y]; }
+    }
+
+    // Sanity check: 4 มุมต้องไม่ใกล้กันเกินไป
+    var minSep=Math.min(w,h)*0.15;
+    function dist(a,b){ return Math.sqrt((a[0]-b[0])*(a[0]-b[0])+(a[1]-b[1])*(a[1]-b[1])); }
+    if(dist(tl,tr)<minSep || dist(tr,br)<minSep || dist(br,bl)<minSep || dist(bl,tl)<minSep){
+      callback(null); return;
+    }
+
+    // Scale กลับเป็น natural coords
+    callback({
+      tl:[tl[0]/scale, tl[1]/scale],
+      tr:[tr[0]/scale, tr[1]/scale],
+      br:[br[0]/scale, br[1]/scale],
+      bl:[bl[0]/scale, bl[1]/scale]
+    });
+  } catch(e){
+    console.warn('detectDocumentCorners failed', e);
+    callback(null);
+  }
+}
+
+function applyCropPoly(){
+  var p=_cropPoly;
+  var pts=p.tl.x+','+p.tl.y+' '+p.tr.x+','+p.tr.y+' '+p.br.x+','+p.br.y+' '+p.bl.x+','+p.bl.y;
+  var stroke=document.getElementById('cropPolyStroke');
+  if(stroke) stroke.setAttribute('points', pts);
+
+  // dark mask path: รูปสี่เหลี่ยมเต็มพื้นที่ - polygon (evenodd)
+  var container=document.getElementById('cropContainer');
+  var W=container.offsetWidth, H=container.offsetHeight;
+  var maskPath=document.getElementById('cropMaskPath');
+  if(maskPath){
+    var d='M0,0 L'+W+',0 L'+W+','+H+' L0,'+H+' Z '+
+          'M'+p.tl.x+','+p.tl.y+' L'+p.tr.x+','+p.tr.y+' L'+p.br.x+','+p.br.y+' L'+p.bl.x+','+p.bl.y+' Z';
+    maskPath.setAttribute('d', d);
+  }
+
+  // วาง corner handles
+  var keys=['tl','tr','br','bl'];
+  for(var i=0;i<4;i++){
+    var k=keys[i];
+    var el=document.getElementById('cropC_'+k);
+    if(el){ el.style.left=(p[k].x-14)+'px'; el.style.top=(p[k].y-14)+'px'; }
+  }
+
+  // วาง midpoint handles
+  var mids={
+    t:{x:(p.tl.x+p.tr.x)/2, y:(p.tl.y+p.tr.y)/2},
+    r:{x:(p.tr.x+p.br.x)/2, y:(p.tr.y+p.br.y)/2},
+    b:{x:(p.br.x+p.bl.x)/2, y:(p.br.y+p.bl.y)/2},
+    l:{x:(p.bl.x+p.tl.x)/2, y:(p.bl.y+p.tl.y)/2}
+  };
+  var mkeys=['t','r','b','l'];
+  for(var i=0;i<4;i++){
+    var k=mkeys[i];
+    var el=document.getElementById('cropM_'+k);
+    if(el){ el.style.left=(mids[k].x-10)+'px'; el.style.top=(mids[k].y-10)+'px'; }
+  }
 }
 
 function bindCropEvents(){
-  var box=document.getElementById('cropBox');
   var container=document.getElementById('cropContainer');
-  var handles=box.querySelectorAll('.crop-h');
+  function getXY(e){ var s=e.touches?e.touches[0]:e; var r=container.getBoundingClientRect(); return {x:s.clientX-r.left, y:s.clientY-r.top}; }
 
-  function getXY(e){ var s=e.touches?e.touches[0]:e; return{x:s.clientX,y:s.clientY}; }
-
-  // drag กล่อง
-  box.onmousedown=box.ontouchstart=function(e){
-    if(e.target.classList.contains('crop-h')) return;
-    e.preventDefault(); _cropDrag='move';
-    var p=getXY(e); _cropStartX=p.x-_cropBox.x; _cropStartY=p.y-_cropBox.y;
-  };
-
-  // resize handles
-  handles.forEach(function(h){
-    h.onmousedown=h.ontouchstart=function(e){
+  // corner handles → ลากมุมเดียว
+  ['tl','tr','br','bl'].forEach(function(k){
+    var el=document.getElementById('cropC_'+k);
+    if(!el) return;
+    el.onmousedown=el.ontouchstart=function(e){
       e.preventDefault(); e.stopPropagation();
-      _cropDrag=h.dataset.pos;
+      _cropDrag={type:'corner', key:k};
+    };
+  });
+
+  // midpoint handles → ลากขอบ (ขยับ 2 มุมที่ติดกัน)
+  ['t','r','b','l'].forEach(function(k){
+    var el=document.getElementById('cropM_'+k);
+    if(!el) return;
+    el.onmousedown=el.ontouchstart=function(e){
+      e.preventDefault(); e.stopPropagation();
+      _cropDrag={type:'mid', key:k};
       var p=getXY(e); _cropStartX=p.x; _cropStartY=p.y;
     };
   });
@@ -2902,26 +3101,55 @@ function bindCropEvents(){
   document.onmousemove=document.ontouchmove=function(e){
     if(!_cropDrag) return; e.preventDefault();
     var p=getXY(e);
-    var cw=container.offsetWidth, ch=container.offsetHeight;
-    var minS=50;
-    if(_cropDrag==='move'){
-      _cropBox.x=Math.max(0,Math.min(p.x-_cropStartX, cw-_cropBox.w));
-      _cropBox.y=Math.max(0,Math.min(p.y-_cropStartY, ch-_cropBox.h));
-    } else {
-      var dx=p.x-_cropStartX, dy=p.y-_cropStartY;
-      _cropStartX=p.x; _cropStartY=p.y;
-      if(_cropDrag==='br'){ _cropBox.w=Math.max(minS,_cropBox.w+dx); _cropBox.h=Math.max(minS,_cropBox.h+dy); }
-      else if(_cropDrag==='bl'){ _cropBox.x+=dx; _cropBox.w=Math.max(minS,_cropBox.w-dx); _cropBox.h=Math.max(minS,_cropBox.h+dy); }
-      else if(_cropDrag==='tr'){ _cropBox.y+=dy; _cropBox.w=Math.max(minS,_cropBox.w+dx); _cropBox.h=Math.max(minS,_cropBox.h-dy); }
-      else if(_cropDrag==='tl'){ _cropBox.x+=dx; _cropBox.y+=dy; _cropBox.w=Math.max(minS,_cropBox.w-dx); _cropBox.h=Math.max(minS,_cropBox.h-dy); }
-      // clamp
-      _cropBox.x=Math.max(0,_cropBox.x); _cropBox.y=Math.max(0,_cropBox.y);
-      if(_cropBox.x+_cropBox.w>cw) _cropBox.w=cw-_cropBox.x;
-      if(_cropBox.y+_cropBox.h>ch) _cropBox.h=ch-_cropBox.y;
+    var W=container.offsetWidth, H=container.offsetHeight;
+    var px=Math.max(0, Math.min(W, p.x));
+    var py=Math.max(0, Math.min(H, p.y));
+
+    if(_cropDrag.type==='corner'){
+      _cropPoly[_cropDrag.key].x=px;
+      _cropPoly[_cropDrag.key].y=py;
+    } else if(_cropDrag.type==='mid'){
+      var dx=px-_cropStartX, dy=py-_cropStartY;
+      _cropStartX=px; _cropStartY=py;
+      // ขยับ 2 มุมที่ประกอบขอบ
+      var pairs={t:['tl','tr'], r:['tr','br'], b:['br','bl'], l:['bl','tl']};
+      var pp=pairs[_cropDrag.key];
+      _cropPoly[pp[0]].x=Math.max(0, Math.min(W, _cropPoly[pp[0]].x+dx));
+      _cropPoly[pp[0]].y=Math.max(0, Math.min(H, _cropPoly[pp[0]].y+dy));
+      _cropPoly[pp[1]].x=Math.max(0, Math.min(W, _cropPoly[pp[1]].x+dx));
+      _cropPoly[pp[1]].y=Math.max(0, Math.min(H, _cropPoly[pp[1]].y+dy));
     }
-    applyCropBox();
+    applyCropPoly();
   };
   document.onmouseup=document.ontouchend=function(){ _cropDrag=null; };
+}
+
+// แก้ขอบเอกสารตรงด้วย Homography (Direct Linear Transform)
+function _solveHomography(srcPts, dstPts){
+  // หา h ที่ map srcPts → dstPts
+  var A=[], b=[];
+  for(var i=0;i<4;i++){
+    var x=srcPts[i][0], y=srcPts[i][1];
+    var X=dstPts[i][0], Y=dstPts[i][1];
+    A.push([x,y,1,0,0,0,-X*x,-X*y]); b.push(X);
+    A.push([0,0,0,x,y,1,-Y*x,-Y*y]); b.push(Y);
+  }
+  // Gauss-Jordan
+  var n=8;
+  for(var i=0;i<n;i++){
+    var maxR=i;
+    for(var r=i+1;r<n;r++) if(Math.abs(A[r][i])>Math.abs(A[maxR][i])) maxR=r;
+    if(maxR!==i){ var t=A[i]; A[i]=A[maxR]; A[maxR]=t; var t2=b[i]; b[i]=b[maxR]; b[maxR]=t2; }
+    var pv=A[i][i]; if(Math.abs(pv)<1e-12) return null;
+    for(var j=i;j<n;j++) A[i][j]/=pv;
+    b[i]/=pv;
+    for(var r=0;r<n;r++){ if(r===i) continue;
+      var f=A[r][i];
+      for(var j=i;j<n;j++) A[r][j]-=f*A[i][j];
+      b[r]-=f*b[i];
+    }
+  }
+  return [b[0],b[1],b[2],b[3],b[4],b[5],b[6],b[7],1];
 }
 
 function confirmCrop(){
@@ -2929,16 +3157,71 @@ function confirmCrop(){
   var container=document.getElementById('cropContainer');
   var displayW=container.offsetWidth;
   var displayH=img.offsetHeight||img.clientHeight;
-  var scaleX=img.naturalWidth/displayW;
-  var scaleY=img.naturalHeight/displayH;
+  var sx=img.naturalWidth/displayW, sy=img.naturalHeight/displayH;
+  var p=_cropPoly;
 
-  var canvas=document.createElement('canvas');
-  var cx=Math.round(_cropBox.x*scaleX), cy=Math.round(_cropBox.y*scaleY);
-  var cw=Math.round(_cropBox.w*scaleX), ch=Math.round(_cropBox.h*scaleY);
-  canvas.width=cw; canvas.height=ch;
-  var ctx=canvas.getContext('2d');
-  ctx.drawImage(img, cx, cy, cw, ch, 0, 0, cw, ch);
-  var cropped=canvas.toDataURL('image/jpeg',0.95);
+  // 4 มุมในพิกัดของภาพต้นฉบับ
+  var tl=[p.tl.x*sx, p.tl.y*sy];
+  var tr=[p.tr.x*sx, p.tr.y*sy];
+  var br=[p.br.x*sx, p.br.y*sy];
+  var bl=[p.bl.x*sx, p.bl.y*sy];
+
+  // คำนวณขนาด output: max(ความกว้างบน, ความกว้างล่าง), max(ความสูงซ้าย, ความสูงขวา)
+  function d(a,b){ return Math.sqrt((a[0]-b[0])*(a[0]-b[0])+(a[1]-b[1])*(a[1]-b[1])); }
+  var outW=Math.round(Math.max(d(tl,tr), d(bl,br)));
+  var outH=Math.round(Math.max(d(tl,bl), d(tr,br)));
+  if(outW<50 || outH<50){ alert('กรอบเล็กเกินไป กรุณาลากใหม่'); return; }
+  // จำกัดขนาดเพื่อ performance
+  var maxOut=2000;
+  if(outW>maxOut || outH>maxOut){
+    var sc=maxOut/Math.max(outW,outH);
+    outW=Math.round(outW*sc); outH=Math.round(outH*sc);
+  }
+
+  // Homography: dest rectangle → source quadrilateral (สำหรับ inverse warp)
+  var dstPts=[[0,0],[outW,0],[outW,outH],[0,outH]];
+  var srcPts=[tl,tr,br,bl];
+  var H=_solveHomography(dstPts, srcPts);
+  if(!H){ alert('คำนวณ perspective ไม่สำเร็จ ใช้การครอปปกติแทน'); return; }
+
+  // วาดภาพต้นฉบับลง canvas เพื่อดึง pixel data
+  var srcCanvas=document.createElement('canvas');
+  srcCanvas.width=img.naturalWidth; srcCanvas.height=img.naturalHeight;
+  srcCanvas.getContext('2d').drawImage(img,0,0);
+  var srcCtx=srcCanvas.getContext('2d');
+  var srcImgData=srcCtx.getImageData(0,0,img.naturalWidth,img.naturalHeight);
+  var srcD=srcImgData.data;
+  var sw=img.naturalWidth, sh=img.naturalHeight;
+
+  // Output canvas + bilinear sampling
+  var outCanvas=document.createElement('canvas');
+  outCanvas.width=outW; outCanvas.height=outH;
+  var outCtx=outCanvas.getContext('2d');
+  var outImgData=outCtx.createImageData(outW,outH);
+  var outD=outImgData.data;
+
+  for(var y=0;y<outH;y++){
+    for(var x=0;x<outW;x++){
+      var ww=H[6]*x+H[7]*y+H[8];
+      var fx=(H[0]*x+H[1]*y+H[2])/ww;
+      var fy=(H[3]*x+H[4]*y+H[5])/ww;
+      var ix=fx|0, iy=fy|0;
+      var oi=(y*outW+x)*4;
+      if(ix<0||ix>=sw-1||iy<0||iy>=sh-1){
+        outD[oi]=255; outD[oi+1]=255; outD[oi+2]=255; outD[oi+3]=255;
+        continue;
+      }
+      var dxf=fx-ix, dyf=fy-iy;
+      var i00=(iy*sw+ix)*4, i10=i00+4, i01=i00+sw*4, i11=i01+4;
+      var w00=(1-dxf)*(1-dyf), w10=dxf*(1-dyf), w01=(1-dxf)*dyf, w11=dxf*dyf;
+      outD[oi]  =srcD[i00]*w00+srcD[i10]*w10+srcD[i01]*w01+srcD[i11]*w11;
+      outD[oi+1]=srcD[i00+1]*w00+srcD[i10+1]*w10+srcD[i01+1]*w01+srcD[i11+1]*w11;
+      outD[oi+2]=srcD[i00+2]*w00+srcD[i10+2]*w10+srcD[i01+2]*w01+srcD[i11+2]*w11;
+      outD[oi+3]=255;
+    }
+  }
+  outCtx.putImageData(outImgData,0,0);
+  var cropped=outCanvas.toDataURL('image/jpeg',0.95);
 
   cancelCrop();
 
@@ -2946,9 +3229,9 @@ function confirmCrop(){
   toGrayscale(cropped, function(grayData){
     if(_cropKey!==null && _cropIdx!==null){
       files[_cropKey][_cropIdx].data=grayData;
-      files[_cropKey][_cropIdx].originalData=grayData; // เก็บต้นฉบับหลัง crop+grayscale
+      files[_cropKey][_cropIdx].originalData=grayData;
       files[_cropKey][_cropIdx].certified=false;
-      if(_cropKey === 'credit'){   renderChips(_cropKey); } else {   autoStamp(_cropKey, _cropIdx, function(){ renderChips(_cropKey); }); }
+      if(_cropKey === 'credit'){ renderChips(_cropKey); } else { autoStamp(_cropKey, _cropIdx, function(){ renderChips(_cropKey); }); }
     }
   });
 }
@@ -2958,6 +3241,17 @@ function cancelCrop(){
   document.body.style.overflow='';
   document.onmousemove=null; document.ontouchmove=null;
   document.onmouseup=null; document.ontouchend=null;
+  _cropDrag=null;
+}
+
+// ปุ่ม "เลือกทั้งภาพ" — รีเซ็ต 4 มุมเป็นเต็มกรอบ
+function resetCropPoly(){
+  var container=document.getElementById('cropContainer');
+  var W=container.offsetWidth, H=container.offsetHeight;
+  _cropPoly={tl:{x:0,y:0},tr:{x:W,y:0},br:{x:W,y:H},bl:{x:0,y:H}};
+  applyCropPoly();
+  var hint=document.getElementById('cropHint');
+  if(hint) hint.textContent='✂️ ลากมุมทั้ง 4 ให้พอดีกับเอกสาร';
 }
 
 function autoStamp(key, idx, cb){
@@ -5249,22 +5543,35 @@ document.addEventListener('DOMContentLoaded', function(){
   <iframe id="iosPdfFrame" src="" style="flex:1;border:none;width:100%;background:#fff"></iframe>
 </div>
 
-<!-- Crop Modal -->
+<!-- Crop Modal — Document Scanner Style (auto-detect + 4-corner perspective crop) -->
 <div id="cropModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99997;flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto">
-  <!-- คำอธิบาย -->
+  <!-- Header + คำอธิบาย -->
   <div style="width:100%;max-width:500px;padding:12px 12px 6px">
-    <div style="font-size:.72rem;color:#fedf22;text-align:center;font-weight:700">✂️ ลากกรอบสีเหลืองให้พอดีบัตร</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div style="font-size:.85rem;color:#fff;font-weight:700">📐 ปรับขอบเอกสาร</div>
+      <button onclick="resetCropPoly()" style="padding:5px 10px;border:1px solid #fedf22;border-radius:6px;background:transparent;color:#fedf22;font-family:Sarabun,sans-serif;font-size:.7rem;font-weight:700;cursor:pointer">เลือกทั้งภาพ</button>
+    </div>
+    <div id="cropHint" style="font-size:.7rem;color:#fedf22;text-align:center;font-weight:600;line-height:1.3">⏳ กำลังตรวจจับขอบเอกสาร...</div>
   </div>
-  <!-- รูป + กรอบ -->
+  <!-- รูป + กรอบ polygon -->
   <div style="width:100%;max-width:500px;padding:0 12px;flex:1">
-    <div style="position:relative;background:#000;overflow:hidden;touch-action:none;border-radius:8px" id="cropContainer">
+    <div style="position:relative;background:#000;overflow:hidden;touch-action:none;border-radius:8px;user-select:none" id="cropContainer">
       <img id="cropImg" style="display:block;width:100%;user-select:none;-webkit-user-drag:none">
-      <div id="cropBox" style="position:absolute;border:2.5px solid #fedf22;box-shadow:0 0 0 9999px rgba(0,0,0,.5);cursor:move;box-sizing:border-box;touch-action:none">
-        <div class="crop-h" data-pos="tl" style="position:absolute;top:-7px;left:-7px;width:16px;height:16px;background:#fedf22;border-radius:3px;cursor:nw-resize;touch-action:none"></div>
-        <div class="crop-h" data-pos="tr" style="position:absolute;top:-7px;right:-7px;width:16px;height:16px;background:#fedf22;border-radius:3px;cursor:ne-resize;touch-action:none"></div>
-        <div class="crop-h" data-pos="bl" style="position:absolute;bottom:-7px;left:-7px;width:16px;height:16px;background:#fedf22;border-radius:3px;cursor:sw-resize;touch-action:none"></div>
-        <div class="crop-h" data-pos="br" style="position:absolute;bottom:-7px;right:-7px;width:16px;height:16px;background:#fedf22;border-radius:3px;cursor:se-resize;touch-action:none"></div>
-      </div>
+      <!-- SVG overlay สำหรับ dark mask + polygon outline -->
+      <svg id="cropOverlay" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+        <path id="cropMaskPath" fill="rgba(0,0,0,0.55)" fill-rule="evenodd"></path>
+        <polygon id="cropPolyStroke" fill="none" stroke="#fedf22" stroke-width="2.5" stroke-linejoin="round"></polygon>
+      </svg>
+      <!-- 4 corner handles (มุม) -->
+      <div id="cropC_tl" class="crop-corner" style="position:absolute;width:28px;height:28px;background:rgba(254,223,34,.25);border:2.5px solid #fedf22;border-radius:50%;cursor:grab;touch-action:none;box-sizing:border-box;z-index:3"></div>
+      <div id="cropC_tr" class="crop-corner" style="position:absolute;width:28px;height:28px;background:rgba(254,223,34,.25);border:2.5px solid #fedf22;border-radius:50%;cursor:grab;touch-action:none;box-sizing:border-box;z-index:3"></div>
+      <div id="cropC_br" class="crop-corner" style="position:absolute;width:28px;height:28px;background:rgba(254,223,34,.25);border:2.5px solid #fedf22;border-radius:50%;cursor:grab;touch-action:none;box-sizing:border-box;z-index:3"></div>
+      <div id="cropC_bl" class="crop-corner" style="position:absolute;width:28px;height:28px;background:rgba(254,223,34,.25);border:2.5px solid #fedf22;border-radius:50%;cursor:grab;touch-action:none;box-sizing:border-box;z-index:3"></div>
+      <!-- 4 midpoint handles (กลางขอบ) — สี่เหลี่ยมเล็ก -->
+      <div id="cropM_t" class="crop-mid" style="position:absolute;width:20px;height:20px;background:#fedf22;border:2px solid #fff;border-radius:4px;cursor:grab;touch-action:none;box-sizing:border-box;z-index:2"></div>
+      <div id="cropM_r" class="crop-mid" style="position:absolute;width:20px;height:20px;background:#fedf22;border:2px solid #fff;border-radius:4px;cursor:grab;touch-action:none;box-sizing:border-box;z-index:2"></div>
+      <div id="cropM_b" class="crop-mid" style="position:absolute;width:20px;height:20px;background:#fedf22;border:2px solid #fff;border-radius:4px;cursor:grab;touch-action:none;box-sizing:border-box;z-index:2"></div>
+      <div id="cropM_l" class="crop-mid" style="position:absolute;width:20px;height:20px;background:#fedf22;border:2px solid #fff;border-radius:4px;cursor:grab;touch-action:none;box-sizing:border-box;z-index:2"></div>
     </div>
   </div>
   <!-- ปุ่มด้านล่าง + padding พ้น nav bar Android -->
