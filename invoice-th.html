@@ -6142,11 +6142,16 @@ function validateBeforeNext(){
   if(!v('bankAccName')) errors.push({field:'bankAccName', label:'ชื่อบัญชี'});
   if(!v('bankAccNo'))   errors.push({field:'bankAccNo',   label:'เลขบัญชี'});
 
-  // ── 3. รายการค่าตอบแทน (อย่างน้อย 1 แถวที่มีข้อมูลครบ) ──
+  // ── 3. รายการค่าตอบแทน (ตรวจ row ทีละแถว — ถ้ากรอกบางส่วนต้องกรอกครบ) ──
   var itemsBody = document.getElementById('itemsBody');
   if(itemsBody){
     var rows = itemsBody.children;
     var hasValidRow = false;
+    // ล้าง highlight เก่าก่อน
+    for(var i=0; i<rows.length; i++){
+      rows[i].style.borderColor = '';
+      rows[i].style.background = '';
+    }
     for(var i=0; i<rows.length; i++){
       var inputs = rows[i].querySelectorAll('input');
       var desc='', qty='', price='';
@@ -6158,12 +6163,25 @@ function validateBeforeNext(){
           if(!desc) desc = inputs[j].value;
         }
       }
-      if(desc.trim() && Number(qty) > 0 && Number(price) > 0){
-        hasValidRow = true; break;
+      var descOk  = desc.trim().length > 0;
+      var priceOk = price && Number(price) > 0;
+      var qtyOk   = qty && Number(qty) > 0;
+      var anyInput = descOk || priceOk;
+      if(!anyInput){ continue; } // row ว่างเปล่า → skip
+      if(descOk && priceOk && qtyOk){
+        hasValidRow = true;
+        continue;
       }
+      // row บางส่วน → ระบุชัดว่าขาดอะไร + highlight
+      var miss = [];
+      if(!descOk)  miss.push('ชื่อรายการ');
+      if(!priceOk) miss.push('ราคา (มากกว่า 0)');
+      rows[i].style.borderColor = '#e05050';
+      rows[i].style.background  = '#fff5f5';
+      errors.push({field:'itemsBody', label:'รายการที่ '+(i+1)+': ขาด '+miss.join(' + ')});
     }
-    if(!hasValidRow){
-      errors.push({field:'itemsBody', label:'รายการค่าตอบแทน (ต้องมีอย่างน้อย 1 รายการ พร้อมจำนวนและราคา)'});
+    if(!hasValidRow && errors.filter(function(e){return e.field==='itemsBody';}).length===0){
+      errors.push({field:'itemsBody', label:'ต้องมีรายการค่าตอบแทนอย่างน้อย 1 รายการ (กดปุ่ม "+ เพิ่มรายการ")'});
     }
   }
 
@@ -6316,14 +6334,13 @@ function parseAddressString(addr){
   var zipcode = zipMatch ? zipMatch[1] : '';
   if(zipMatch) s = s.slice(0, zipMatch.index).trim();
 
-  // 2. province (กรุงเทพ / จ.xxx / จังหวัดxxx)
+  // 2. province (กรุงเทพ / กทม. / จ.xxx / จังหวัดxxx)
   var province = '';
-  var bkkMatch = s.match(/(กรุงเทพมหานคร|กรุงเทพฯ|กรุงเทพ)\s*$/);
+  var bkkMatch = s.match(/(กรุงเทพมหานคร|กรุงเทพฯ|กรุงเทพ|กทม\.?|ก\.ท\.ม\.?)\s*$/);
   if(bkkMatch){
     province = 'กรุงเทพมหานคร';
     s = s.slice(0, bkkMatch.index).trim();
   } else {
-    // จังหวัด (คำเต็ม) มาก่อน เพราะถ้าเช็ค จ. ก่อน อาจตัดเฉพาะ "จ" จาก "จังหวัด"
     var provFull = s.match(/จังหวัด\s*([^\s].*?)\s*$/);
     if(provFull){
       province = provFull[1].trim();
@@ -6337,7 +6354,7 @@ function parseAddressString(addr){
     }
   }
 
-  // 3. amphoe (อ. / อำเภอ / เขต) — เช็ค "อำเภอ" ก่อน "อ." กัน prefix collision
+  // 3. amphoe (อ. / อำเภอ / เขต)
   var amphoe = '';
   var ampFull = s.match(/(อำเภอ)\s*([^\s]+(?:\s+[^\s]+)*?)\s*(?=(ตำบล|ต\.|แขวง|จังหวัด|จ\.|$))/);
   if(ampFull){
@@ -6351,7 +6368,16 @@ function parseAddressString(addr){
     }
   }
 
-  // 4. district (ต. / ตำบล / แขวง) — เช็ค "ตำบล" ก่อน "ต."
+  // ── FALLBACK: amphoe มีหลายคำ → คำสุดท้าย = province (กรณีลืมใส่ "จ.")
+  if(!province && amphoe){
+    var ampParts = amphoe.split(/\s+/);
+    if(ampParts.length >= 2){
+      province = ampParts.pop();
+      amphoe = ampParts.join(' ');
+    }
+  }
+
+  // 4. district (ต. / ตำบล / แขวง)
   var district = '';
   var distFull = s.match(/(ตำบล)\s*([^\s]+(?:\s+[^\s]+)*?)\s*(?=(อำเภอ|อ\.|เขต|จังหวัด|จ\.|$))/);
   if(distFull){
@@ -6362,6 +6388,22 @@ function parseAddressString(addr){
     if(distMatch){
       district = distMatch[2].trim();
       s = s.replace(distMatch[0], '').trim();
+    }
+  }
+
+  // FALLBACK: district หลายคำ + ไม่มี amphoe → split
+  if(district && !amphoe){
+    var distParts = district.split(/\s+/);
+    if(distParts.length >= 2){
+      amphoe = distParts.pop();
+      district = distParts.join(' ');
+      if(!province){
+        var ampParts2 = amphoe.split(/\s+/);
+        if(ampParts2.length >= 2){
+          province = ampParts2.pop();
+          amphoe = ampParts2.join(' ');
+        }
+      }
     }
   }
 
