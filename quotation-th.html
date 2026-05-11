@@ -1481,8 +1481,36 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
   <div class="done-box">
     <div style="width:36px;height:4px;background:#dde3ea;border-radius:2px;margin:0 auto 16px"></div>
     <div style="font-size:2.4rem;margin-bottom:8px">✅</div>
-    <div style="font-size:1rem;font-weight:700;color:#1a1a2e;margin-bottom:6px">สร้าง PDF เรียบร้อย!</div>
+    <div style="font-size:1rem;font-weight:700;color:#1a1a2e;margin-bottom:6px">สร้างใบเสนอราคาเรียบร้อย!</div>
     <div style="font-size:.82rem;color:#8a96a3;line-height:1.6;margin-bottom:14px" id="doneMsg">เตรียมไฟล์แล้วค่ะ</div>
+
+    <!-- ══════════ ขั้นตอนถัดไป (NEXT STEPS) ══════════ -->
+    <div id="nextStepsCard" style="background:linear-gradient(135deg,#f0f9ff,#e6f4ff);border:1.5px solid #4a90d9;border-radius:12px;padding:12px 14px;margin-bottom:14px;text-align:left">
+      <div style="font-size:.78rem;font-weight:800;color:#1a5490;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <span>📋</span><span id="nextStepsTitle">ขั้นตอนถัดไป — มี 2 อย่าง</span>
+      </div>
+      <!-- Step 1 -->
+      <div id="nextStep1" style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
+        <div style="flex:none;width:24px;height:24px;background:#06c755;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800">1</div>
+        <div style="flex:1">
+          <div style="font-size:.82rem;font-weight:700;color:#1a1a2e;margin-bottom:2px">ส่ง PDF กลับให้แอดมิน KONVY</div>
+          <div style="font-size:.72rem;color:#666;line-height:1.5">→ ส่งไฟล์ PDF (ไม่ใช่ QR) ทาง Line / อีเมล ที่แอดมินติดต่อ</div>
+        </div>
+      </div>
+      <!-- Step 2 (เฉพาะ cash — เพราะ barter/credit ไม่มีใบแจ้งหนี้) -->
+      <div id="nextStep2" style="display:flex;gap:10px;align-items:flex-start">
+        <div style="flex:none;width:24px;height:24px;background:#f0c040;color:#1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800">2</div>
+        <div style="flex:1">
+          <div style="font-size:.82rem;font-weight:700;color:#1a1a2e;margin-bottom:2px">เซฟ QR เก็บไว้ในเครื่อง <span style="background:#fee;color:#c91f5e;padding:1px 6px;border-radius:8px;font-size:.65rem;margin-left:4px">เก็บไว้เอง</span></div>
+          <div style="font-size:.72rem;color:#666;line-height:1.5">→ <b style="color:#c91f5e">อย่าส่ง QR ให้ใคร</b> — ใช้สแกนเองตอนทำใบแจ้งหนี้ในภายหลัง</div>
+        </div>
+      </div>
+      <!-- Note สำหรับ Barter/Credit (ซ่อนอยู่ default) -->
+      <div id="nextStepBarterNote" style="display:none;background:#fff;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:.72rem;color:#666;line-height:1.55">
+        💡 <b style="color:#c2410c">Barter / KONVY Credit</b> — ไม่ต้องทำใบแจ้งหนี้ (Invoice) เพิ่มเติม ส่ง PDF ใบเสนอราคานี้ให้แอดมินอย่างเดียวค่ะ
+      </div>
+    </div>
+
     <div id="lineBrowserWarn" style="display:none;background:#fff8e1;border:1.5px solid #ffc107;border-radius:10px;padding:14px;margin-bottom:14px;text-align:left">
       <div style="font-size:.85rem;font-weight:700;color:#7a5c00;margin-bottom:6px">⚠️ เปิดผ่าน WeChat / DingTalk</div>
       <div style="font-size:.78rem;color:#7a5c00;line-height:1.6;margin-bottom:10px">แอปนี้บล็อคการดาวน์โหลดไฟล์ กรุณาเปิดลิงก์นี้ใน Safari หรือ Chrome แทนค่ะ</div>
@@ -1493,20 +1521,35 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
         <canvas id="lbwQrCanvas" width="120" height="120" style="border:3px solid #ffc107;border-radius:6px;background:#fff"></canvas>
       </div>
     </div>
-    <button class="done-btn" id="doneShareBtn" onclick="doShare()"
-      style="display:none;background:#06c755;color:#fff;font-size:1rem;font-family:Sarabun,sans-serif">
-      📤 ส่ง PDF ไปที่ Line / อีเมล / บันทึก
-    </button>
-    <button class="done-btn" id="doneDownloadBtn" onclick="downloadPDF()"
-      style="display:none;background:#4a90d9;color:#fff;font-family:Sarabun,sans-serif">
-      ⬇️ ดาวน์โหลด PDF
-    </button>
 
-    <!-- 🎯 QR Section — โชว์ QR ชัดๆ เรียบง่าย -->
-    <div id="qrInfoCard" style="background:linear-gradient(135deg,#fff5f9,#ffe6f0);border:2px dashed #f73174;border-radius:16px;padding:16px 14px;margin:14px 0 10px;text-align:center;font-family:Sarabun,sans-serif">
-      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px">
-        <span style="font-size:1.3rem">📱</span>
-        <span style="font-weight:800;color:#c91f5e;font-size:.95rem">QR สำหรับใบแจ้งหนี้</span>
+    <!-- ══════════ STEP 1: PDF ACTIONS (เด่นที่สุด) ══════════ -->
+    <div style="background:#f0fdf4;border:2px solid #06c755;border-radius:12px;padding:10px 12px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <span style="background:#06c755;color:#fff;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800">1</span>
+        <span style="font-size:.78rem;font-weight:800;color:#0a6e3f">ส่งไฟล์ PDF ให้แอดมิน</span>
+      </div>
+      <button class="done-btn" id="doneShareBtn" onclick="doShare()"
+        style="display:none;background:#06c755;color:#fff;font-size:1rem;font-family:Sarabun,sans-serif;margin-bottom:6px">
+        📤 ส่ง PDF ไปที่ Line / อีเมล
+      </button>
+      <button class="done-btn" id="doneDownloadBtn" onclick="downloadPDF()"
+        style="display:none;background:#4a90d9;color:#fff;font-family:Sarabun,sans-serif;margin-bottom:0">
+        ⬇️ ดาวน์โหลด PDF
+      </button>
+    </div>
+
+    <!-- ══════════ STEP 2: QR (เก็บไว้เอง) ══════════ -->
+    <div id="qrInfoCard" style="background:linear-gradient(135deg,#fff5f9,#ffe6f0);border:2px dashed #f73174;border-radius:12px;padding:12px 14px;margin-bottom:10px;text-align:center;font-family:Sarabun,sans-serif">
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px">
+        <span style="background:#f0c040;color:#1a1a2e;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800">2</span>
+        <span style="font-weight:800;color:#c91f5e;font-size:.88rem">QR ส่วนตัว — สำหรับใช้เอง</span>
+      </div>
+      <!-- Big warning -->
+      <div style="background:#fff;border:1.5px solid #f73174;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:left">
+        <div style="font-size:.72rem;color:#c91f5e;line-height:1.55;font-weight:600">
+          🔒 <b>อย่าส่ง QR นี้ให้แอดมิน</b> — เก็บไว้ในเครื่องตัวเอง<br>
+          📲 ใช้สแกนตอนทำ <b>ใบแจ้งหนี้ (Invoice)</b> เพื่อกรอกข้อมูลอัตโนมัติ ไม่ต้องพิมพ์ใหม่
+        </div>
       </div>
       <!-- QR Preview (รูปจริง — long-press บันทึกได้) -->
       <div id="qrPreviewWrap" style="background:#fff;border-radius:12px;padding:12px;margin:0 auto;display:inline-block;box-shadow:0 4px 16px rgba(247,49,116,.2)">
@@ -1515,17 +1558,18 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
           ⏳ กำลังสร้าง QR...
         </div>
       </div>
+      <div style="font-size:.66rem;color:#9a4a70;margin-top:8px">กดค้างที่ภาพ QR เพื่อบันทึกลงเครื่อง</div>
     </div>
 
-    <!-- ปุ่มแชร์ QR (สำหรับมือถือ) -->
+    <!-- ปุ่มเซฟ QR — เปลี่ยน copy จาก "ส่งไป Line" เป็น "เซฟในเครื่อง" -->
     <button class="done-btn" id="doneQRShareBtn" onclick="shareQRImage()"
-      style="display:none;background:#06c755;color:#fff;font-family:Sarabun,sans-serif;font-weight:700">
-      💚 ส่ง QR ไปที่ Line / บันทึก
+      style="display:none;background:#fff;color:#c91f5e;border:1.5px solid #f73174;font-family:Sarabun,sans-serif;font-weight:700">
+      💾 เซฟ QR ลงเครื่อง / Photos
     </button>
 
     <button class="done-btn" id="doneQRBtn" onclick="downloadQRImage()"
-      style="background:linear-gradient(135deg,#f73174,#c91f5e);color:#fff;font-family:Sarabun,sans-serif;font-weight:700">
-      📥 ดาวน์โหลด QR (.png)
+      style="background:#fff;color:#c91f5e;border:1.5px solid #f73174;font-family:Sarabun,sans-serif;font-weight:700">
+      📥 ดาวน์โหลด QR (.png) เก็บไว้
     </button>
     <!-- QT → INV link box (แสดงเฉพาะตอน quot) -->
     <button class="done-btn"
@@ -1904,8 +1948,10 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
           <div style="font-size:.72rem;font-weight:700;color:#c2410c;margin-bottom:6px">📦 รายละเอียดสินค้า Barter</div>
           <div class="field">
             <label>รายการงาน / สินค้าที่รีวิว</label>
-            <input id="barterJobDesc" placeholder="เช่น รีวิวครีม ABC / Unboxing Serum XYZ" oninput="updateBarterSummary();renderInvoice()"
+            <input id="barterJobDesc" placeholder="พิมพ์เอง หรือเลือกด้านล่าง" oninput="updateBarterSummary();renderInvoice()"
               style="border:1.5px solid #fed7aa;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none;box-sizing:border-box;margin-bottom:6px">
+            <!-- Quick-pick chips (เหมือนใน cash mode) -->
+            <div id="barterJobChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:2px;margin-bottom:4px"></div>
           </div>
           <div class="field">
             <label>ชื่อสินค้า / รายการ</label>
@@ -1924,8 +1970,10 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
           <div style="font-size:.72rem;font-weight:700;color:#f73174;margin-bottom:8px">🎁 ข้อมูล KONVY Credit</div>
           <div class="field">
             <label>รายการงาน / สินค้าที่รีวิว</label>
-            <input id="creditJobDesc" placeholder="เช่น รีวิวครีม ABC / Unboxing Serum XYZ" oninput="updateCreditSummary();renderInvoice()"
+            <input id="creditJobDesc" placeholder="พิมพ์เอง หรือเลือกด้านล่าง" oninput="updateCreditSummary();renderInvoice()"
               style="border:1.5px solid #f7c0d8;border-radius:6px;padding:8px 11px;font-size:.85rem;font-family:Sarabun,sans-serif;width:100%;outline:none;box-sizing:border-box;margin-bottom:6px">
+            <!-- Quick-pick chips (เหมือนใน cash mode) -->
+            <div id="creditJobChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:2px;margin-bottom:4px"></div>
           </div>
           <div class="field">
             <label style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">Member ID <span class="req">*</span>
@@ -2819,6 +2867,10 @@ function renderQuotation(c, invoiceHtml){
     .replace(/ข้อมูลบัญชีธนาคาร/g, 'บัญชีสำหรับชำระเงิน')
     .replace(/ข้อมูลการโอนเงิน/g, 'บัญชีสำหรับชำระเงิน')
     .replace(/กำหนดชำระ/g, 'ใช้ได้ถึง')
+    .replace(/ชำระภายใน/g, 'ใช้ได้ถึง')
+    .replace(/ครบกำหนด/g, 'ใช้ได้ถึง')
+    .replace(/>Due:/g, '>Valid until:')
+    .replace(/>DUE:/g, '>VALID UNTIL:')
     .replace(/เอกสารนี้ออกโดยอัตโนมัติโดยมีเจ้าหน้าที่จากระบบ KONVY KOL Invoice System/g, 'ใบเสนอราคานี้มีผลภายใน 30 วัน นับจากวันที่ออก ราคาดังกล่าวเป็นค่าบริการรีวิวสินค้าผ่าน Social Media เท่านั้น');
 
   // replace sig row ทั้งก้อน → 2 ช่อง
@@ -4178,10 +4230,10 @@ function savePDF(opts){
       // Mobile — แสดงปุ่ม share ให้ user กด (ต้องเป็น user gesture ถึงจะใช้ navigator.share บน Android ได้)
       if(shareBtn){
         shareBtn.style.display='block';
-        shareBtn.textContent='📤 แชร์ไปที่ LINE / อีเมล / บันทึก';
+        shareBtn.textContent='📤 ส่ง PDF ให้แอดมิน (LINE / อีเมล)';
       }
       if(dlBtn){ dlBtn.style.display='block'; dlBtn.textContent=isIOS?'📂 เปิด PDF':'⬇️ ดาวน์โหลด PDF'; }
-      if(doneMsg) doneMsg.textContent='กดปุ่มแชร์ด้านล่างเพื่อส่งไฟล์';
+      if(doneMsg) doneMsg.textContent='ทำตาม 2 ขั้นตอนด้านล่างค่ะ';
     } else {
       // Desktop — download อัตโนมัติ
       // Desktop — download อัตโนมัติ
@@ -4198,9 +4250,17 @@ function savePDF(opts){
     var _qrCard = document.getElementById('qrInfoCard');
     var _qrBtn = document.getElementById('doneQRBtn');
     var _qrShareBtn = document.getElementById('doneQRShareBtn');
+    // 🎯 toggle Next Steps card ตาม payType ด้วย
+    var _nextStep2 = document.getElementById('nextStep2');
+    var _nextNote  = document.getElementById('nextStepBarterNote');
+    var _nextTitle = document.getElementById('nextStepsTitle');
     if(_pt2 === 'cash'){
+      // Cash: โชว์ QR + Step 2
       if(_qrCard) _qrCard.style.display='block';
       if(_qrBtn) _qrBtn.style.display='flex';
+      if(_nextStep2) _nextStep2.style.display='flex';
+      if(_nextNote)  _nextNote.style.display='none';
+      if(_nextTitle) _nextTitle.textContent='ขั้นตอนถัดไป — มี 2 อย่าง';
       // โชว์ปุ่มแชร์ QR เฉพาะบนมือถือ (iOS/Android) ที่รองรับ Web Share API
       var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       var canShareFile = navigator.canShare && (function(){
@@ -4212,9 +4272,13 @@ function savePDF(opts){
       // โหลด QR preview ให้เห็นในหน้า done
       setTimeout(function(){ try { loadQRPreview(); } catch(e){ console.warn('loadQRPreview:', e); } }, 200);
     } else {
+      // Barter / KONVY Credit: ไม่มีใบแจ้งหนี้ → ไม่ต้องมี QR
       if(_qrCard) _qrCard.style.display='none';
       if(_qrBtn) _qrBtn.style.display='none';
       if(_qrShareBtn) _qrShareBtn.style.display='none';
+      if(_nextStep2) _nextStep2.style.display='none';
+      if(_nextNote)  _nextNote.style.display='block';
+      if(_nextTitle) _nextTitle.textContent='ขั้นตอนถัดไป';
     }
 
     document.getElementById('doneScreen').classList.add('show');
@@ -5383,6 +5447,37 @@ function loadFromUrl(){
 // ══ Payment Type (QUOT only) ════════════════════════════════════════
 var currentPayType = 'cash';
 
+// ── Render shortcut chips ในกล่อง Barter & Credit (เหมือน cash mode) ──
+function renderJobChips(containerId, targetInputId, onSelectFn){
+  var c = document.getElementById(containerId);
+  var inp = document.getElementById(targetInputId);
+  if(!c || !inp) return;
+  if(c.dataset.rendered === '1') return;   // กัน render ซ้ำ
+  c.innerHTML = '';
+  ITEM_SUGGESTIONS.forEach(function(s){
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = s;
+    // ใช้สีเดียวกับกล่อง (Barter=orange, Credit=pink)
+    var isBarter = containerId === 'barterJobChips';
+    b.style.cssText = 'background:'+(isBarter?'#fff3e6':'#fef2f6')+
+      ';border:0;color:'+(isBarter?'#9a4a10':'#7a0f3f')+
+      ';font-size:.7rem;padding:5px 10px;border-radius:14px;cursor:pointer;font-family:Sarabun,sans-serif;font-weight:500;transition:.12s';
+    var hoverBg = isBarter ? '#f97316' : '#f73173';
+    var idleBg  = isBarter ? '#fff3e6' : '#fef2f6';
+    var idleColor = isBarter ? '#9a4a10' : '#7a0f3f';
+    b.addEventListener('mouseenter',function(){this.style.background=hoverBg;this.style.color='#fff'});
+    b.addEventListener('mouseleave',function(){this.style.background=idleBg;this.style.color=idleColor});
+    b.addEventListener('click',function(){
+      inp.value = s;
+      inp.focus();
+      if(typeof onSelectFn === 'function') onSelectFn();
+      if(typeof renderInvoice === 'function') renderInvoice();
+    });
+    c.appendChild(b);
+  });
+  c.dataset.rendered = '1';
+}
+
 function setPayType(type){
   currentPayType = type;
   ['cash','credit','barter'].forEach(function(t){
@@ -5408,6 +5503,8 @@ function setPayType(type){
     if(iTitle) iTitle.textContent = '📦 มูลค่าสินค้า Barter';
     // init items[0] ถ้ายังว่าง
     if(!window.items || window.items.length===0) window.items=[{id:Date.now(),desc:'',qty:1,price:0}];
+    // render shortcut chips
+    renderJobChips('barterJobChips','barterJobDesc',updateBarterSummary);
     updateBarterSummary();
 
   } else if(type === 'credit'){
@@ -5419,6 +5516,8 @@ function setPayType(type){
     if(iTitle) iTitle.textContent = '🎁 มูลค่า KONVY Credit';
     // init items[0] ถ้ายังว่าง
     if(!window.items || window.items.length===0) window.items=[{id:Date.now(),desc:'',qty:1,price:0}];
+    // render shortcut chips
+    renderJobChips('creditJobChips','creditJobDesc',updateCreditSummary);
     updateCreditSummary();
 
   } else {
