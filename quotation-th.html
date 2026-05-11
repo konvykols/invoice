@@ -1530,12 +1530,15 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
       </div>
       <button class="done-btn" id="doneShareBtn" onclick="doShare()"
         style="display:none;background:#06c755;color:#fff;font-size:1rem;font-family:Sarabun,sans-serif;margin-bottom:6px">
-        📤 ส่ง PDF ไปที่ Line / อีเมล
+        📤 ส่ง PDF ให้แอดมิน (LINE / อีเมล)
       </button>
       <button class="done-btn" id="doneDownloadBtn" onclick="downloadPDF()"
         style="display:none;background:#4a90d9;color:#fff;font-family:Sarabun,sans-serif;margin-bottom:0">
         ⬇️ ดาวน์โหลด PDF
       </button>
+      <div id="shareHelpText" style="display:none;font-size:.7rem;color:#0a6e3f;line-height:1.5;margin-top:8px;padding:6px 8px;background:#fff;border-radius:6px;border:1px dashed #06c755">
+        💡 ถ้ากด <b>ส่ง PDF</b> แล้วไม่มีอะไรขึ้น → กด <b>ดาวน์โหลด PDF</b> ก่อน แล้วเปิด LINE / Gmail ส่งไฟล์ที่อยู่ในโฟลเดอร์ <b>Downloads</b> ของเครื่องค่ะ
+      </div>
     </div>
 
     <!-- ══════════ STEP 2: QR (เก็บไว้เอง) ══════════ -->
@@ -4233,6 +4236,9 @@ function savePDF(opts){
         shareBtn.textContent='📤 ส่ง PDF ให้แอดมิน (LINE / อีเมล)';
       }
       if(dlBtn){ dlBtn.style.display='block'; dlBtn.textContent=isIOS?'📂 เปิด PDF':'⬇️ ดาวน์โหลด PDF'; }
+      // โชว์ helper text เผื่อ share ไม่ work
+      var _helpText = document.getElementById('shareHelpText');
+      if(_helpText) _helpText.style.display='block';
       if(doneMsg) doneMsg.textContent='ทำตาม 2 ขั้นตอนด้านล่างค่ะ';
     } else {
       // Desktop — download อัตโนมัติ
@@ -4323,56 +4329,99 @@ function openInBrowser(){
 
 // ปุ่ม 📤 แชร์ — ต้องถูกเรียกจาก user click เท่านั้น (ไม่ใช่ setTimeout/Promise)
 function doShare(){
-  var blob=window._lastPdfBlob;
-  var name=window._lastPdfName||'invoice.pdf';
-  if(!blob){ alert('ไม่พบไฟล์ PDF กรุณาสร้างใหม่'); return; }
-
-  // ตรวจสอบ Web Share API support
-  if(!navigator.share){
-    // Browser เก่า — download แทน
-    downloadPDF();
-    return;
+  var btn = document.getElementById('doneShareBtn');
+  var _origHTML = '';
+  // ── 1) Visual feedback ทันที — กันปัญหา "กดแล้วไม่ขึ้นอะไร" ──
+  if(btn){
+    _origHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ กำลังเปิดเมนูแชร์...';
+    btn.style.opacity = '0.7';
   }
-
-  // สร้าง File object
-  var file;
-  try{
-    file=new File([blob], name, {type:'application/pdf'});
-  } catch(e){
-    // Android เก่าบางรุ่นไม่รองรับ File constructor — download แทน
-    downloadPDF();
-    return;
-  }
-
-  var shareData={
-    title:'KONVY KOL Document',
-    text:name,
-    files:[file]
-  };
-
-  // ตรวจสอบว่า browser แชร์ไฟล์แบบนี้ได้มั้ย (สำคัญสำหรับ Android)
-  if(navigator.canShare && !navigator.canShare(shareData)){
-    // Browser ไม่รองรับการแชร์ PDF — fallback เป็น download
-    alert('เบราว์เซอร์ของคุณไม่รองรับการแชร์ไฟล์ กำลังดาวน์โหลดแทนค่ะ');
-    downloadPDF();
-    return;
-  }
-
-  // เรียก share — ต้องอยู่ใน user gesture context
-  navigator.share(shareData).then(function(){
-    // สำเร็จ — user เลือก app ไปแล้ว
-  }).catch(function(err){
-    if(err.name==='AbortError') return; // user กด cancel — ไม่ต้องทำอะไร
-    // error อื่นๆ — บอก user แล้ว fallback
-    console.warn('Share failed:', err);
-    var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
-    if(isIOS && window._lastPdfDataUri){
-      openPDFiOS(window._lastPdfDataUri, name);
-    } else {
-      // Android fallback → download
-      downloadPDF();
+  function restoreBtn(){
+    if(btn){
+      btn.disabled = false;
+      btn.innerHTML = _origHTML || '📤 ส่ง PDF ให้แอดมิน (LINE / อีเมล)';
+      btn.style.opacity = '1';
     }
-  });
+  }
+  // ── 2) Safety net — auto-restore ภายใน 5s ไม่ว่าจะเกิดอะไรขึ้น ──
+  var restoreTimer = setTimeout(restoreBtn, 5000);
+
+  try {
+    var blob = window._lastPdfBlob;
+    var name = window._lastPdfName || 'invoice.pdf';
+
+    if(!blob){
+      clearTimeout(restoreTimer); restoreBtn();
+      alert('ไม่พบไฟล์ PDF กรุณากดสร้างใบเสนอราคาใหม่ค่ะ');
+      return;
+    }
+
+    // ── 3) ถ้า browser ไม่รองรับ navigator.share → download ตรงๆ ──
+    if(!navigator.share){
+      clearTimeout(restoreTimer); restoreBtn();
+      alert('เบราว์เซอร์นี้ไม่รองรับการแชร์ — ระบบจะดาวน์โหลด PDF ให้ แล้วส่งให้แอดมินจากแอป LINE / Gmail ค่ะ');
+      downloadPDF();
+      return;
+    }
+
+    // ── 4) สร้าง File object ──
+    var file;
+    try {
+      file = new File([blob], name, {type:'application/pdf'});
+    } catch(e){
+      clearTimeout(restoreTimer); restoreBtn();
+      alert('เบราว์เซอร์นี้สร้างไฟล์แชร์ไม่ได้ — ระบบจะดาวน์โหลด PDF ให้ค่ะ');
+      downloadPDF();
+      return;
+    }
+
+    var shareData = { title:'KONVY KOL Document', text:name, files:[file] };
+
+    // ── 5) เช็ค canShare — ถ้า false → ลอง share แบบไม่ส่ง file (text-only) เพื่อให้ user เห็น share sheet ──
+    var canShareFiles = true;
+    if(navigator.canShare){
+      try { canShareFiles = navigator.canShare(shareData); }
+      catch(e){ canShareFiles = false; }
+    }
+
+    if(!canShareFiles){
+      // Browser ไม่รองรับการแชร์ไฟล์ → download ก่อน แล้วเปิด share sheet (text) ให้ user
+      clearTimeout(restoreTimer); restoreBtn();
+      downloadPDF();
+      setTimeout(function(){
+        try {
+          navigator.share({
+            title: name,
+            text: 'ใบเสนอราคา KONVY KOL พร้อมส่งแล้ว — ไฟล์อยู่ในโฟลเดอร์ Downloads ของเครื่อง'
+          }).catch(function(){});
+        } catch(_){}
+      }, 400);
+      return;
+    }
+
+    // ── 6) Share PDF จริง ──
+    navigator.share(shareData).then(function(){
+      clearTimeout(restoreTimer); restoreBtn();
+    }).catch(function(err){
+      clearTimeout(restoreTimer); restoreBtn();
+      if(err && err.name === 'AbortError') return;   // user cancel — ไม่ทำอะไร
+      console.warn('Share failed:', err);
+      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if(isIOS && window._lastPdfDataUri){
+        openPDFiOS(window._lastPdfDataUri, name);
+      } else {
+        downloadPDF();
+      }
+    });
+
+  } catch(e){
+    clearTimeout(restoreTimer); restoreBtn();
+    console.error('doShare critical error:', e);
+    alert('เกิดข้อผิดพลาดในการเปิดเมนูแชร์\nระบบจะดาวน์โหลด PDF ให้แทนค่ะ\n\nรายละเอียด: ' + (e.message||e));
+    try { downloadPDF(); } catch(_){}
+  }
 }
 
 function openPDFiOS(dataUri, name){
