@@ -1477,6 +1477,68 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
 </head>
 <body>
 <div class="ov" id="ov"><div class="spin"></div><div style="font-size:.9rem;font-weight:600" id="ovMsg">กำลังสร้าง PDF...</div></div>
+
+<!-- ══════════ Android Share Guide Overlay ══════════ -->
+<div id="androidShareGuide" style="display:none;position:fixed;inset:0;background:rgba(15,25,35,.85);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:100000;align-items:center;justify-content:center;padding:20px;font-family:Sarabun,sans-serif">
+  <div style="background:#fff;border-radius:18px;max-width:380px;width:100%;max-height:90vh;overflow-y:auto;padding:22px 20px calc(22px + env(safe-area-inset-bottom));text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+    <div style="font-size:2.4rem;margin-bottom:6px">📱</div>
+    <div style="font-size:1.05rem;font-weight:800;color:#1a1a2e;margin-bottom:4px">ไฟล์ใหญ่ — ใช้วิธีนี้แทน</div>
+    <div style="font-size:.78rem;color:#666;line-height:1.55;margin-bottom:16px">
+      <b style="color:#06c755">3 ขั้นตอนง่ายๆ:</b> เปิด PDF → กด ⋮ → แชร์ไป LINE
+    </div>
+
+    <!-- Step 1: เปิด PDF -->
+    <div style="background:linear-gradient(135deg,#fef9f0,#fcf0d6);border:1.5px solid #f0a040;border-radius:12px;padding:12px 14px;margin-bottom:10px;text-align:left">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="flex:none;width:26px;height:26px;background:#f0a040;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800">1</div>
+        <div style="flex:1">
+          <div style="font-size:.84rem;font-weight:800;color:#8a5a00;margin-bottom:4px">กดปุ่มสีส้มข้างล่าง → เปิด PDF</div>
+          <div style="font-size:.72rem;color:#444;line-height:1.5">→ PDF จะเปิดในแท็บใหม่ ใน Chrome PDF viewer</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: กดเมนู -->
+    <div style="background:linear-gradient(135deg,#f0fdf4,#d1f7e0);border:1.5px solid #06c755;border-radius:12px;padding:12px 14px;margin-bottom:10px;text-align:left">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="flex:none;width:26px;height:26px;background:#06c755;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800">2</div>
+        <div style="flex:1">
+          <div style="font-size:.84rem;font-weight:800;color:#0a6e3f;margin-bottom:4px">กดปุ่ม <span style="background:#fff;border:1.5px solid #06c755;padding:1px 8px;border-radius:6px;font-family:monospace;color:#0a6e3f">⋮</span> มุมขวาบน</div>
+          <div style="font-size:.72rem;color:#444;line-height:1.5">→ จุด 3 จุดบนสุด แล้วเลือก <b style="color:#06c755">📤 แชร์ / Share</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: เลือก LINE -->
+    <div style="background:linear-gradient(135deg,#f0f9ff,#dceeff);border:1.5px solid #4a90d9;border-radius:12px;padding:12px 14px;margin-bottom:14px;text-align:left">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="flex:none;width:26px;height:26px;background:#4a90d9;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800">3</div>
+        <div style="flex:1">
+          <div style="font-size:.84rem;font-weight:800;color:#1a5490;margin-bottom:4px">เลือก <b style="color:#06c755">LINE</b> ส่งให้แอดมิน</div>
+          <div style="font-size:.72rem;color:#444;line-height:1.5">→ หรือ Gmail, Drive, ฯลฯ ตามที่ต้องการ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- File size info -->
+    <div id="androidGuideSizeInfo" style="background:#fff8e1;border:1px solid #ffc107;border-radius:8px;padding:8px 10px;margin-bottom:14px;font-size:.7rem;color:#7a5c00;line-height:1.5;text-align:left">
+      💡 <b>ทำไมต้องทำแบบนี้?</b><br>
+      Android แชร์ไฟล์ PDF ขนาดใหญ่ตรงจากเว็บไม่ได้ ต้องผ่าน Chrome PDF viewer
+    </div>
+
+    <!-- Main CTA — เปิด PDF (user gesture สดๆ → window.open ไม่ block) -->
+    <button onclick="openPDFAndroidFromGuide()" style="width:100%;padding:14px;background:linear-gradient(135deg,#f0a040,#e08020);color:#fff;border:none;border-radius:10px;font-family:Sarabun,sans-serif;font-size:1rem;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 4px 14px rgba(240,160,64,.4)">
+      📄 เปิด PDF เลย
+    </button>
+    <button onclick="downloadPDF();closeAndroidShareGuide()" style="width:100%;padding:11px;background:#fff;color:#4a90d9;border:1.5px solid #4a90d9;border-radius:10px;font-family:Sarabun,sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;margin-bottom:6px">
+      ⬇️ หรือดาวน์โหลด PDF (วิธีสำรอง)
+    </button>
+    <button onclick="closeAndroidShareGuide()" style="width:100%;padding:9px;background:transparent;color:#888;border:none;font-family:Sarabun,sans-serif;font-size:.78rem;font-weight:600;cursor:pointer">
+      ปิด
+    </button>
+  </div>
+</div>
+
 <div class="done-screen" id="doneScreen">
   <div class="done-box">
     <div style="width:36px;height:4px;background:#dde3ea;border-radius:2px;margin:0 auto 16px"></div>
@@ -1536,8 +1598,11 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
         style="display:none;background:#4a90d9;color:#fff;font-family:Sarabun,sans-serif;margin-bottom:0">
         ⬇️ ดาวน์โหลด PDF
       </button>
-      <div id="shareHelpText" style="display:none;font-size:.7rem;color:#0a6e3f;line-height:1.5;margin-top:8px;padding:6px 8px;background:#fff;border-radius:6px;border:1px dashed #06c755">
-        💡 ถ้ากด <b>ส่ง PDF</b> แล้วไม่มีอะไรขึ้น → กด <b>ดาวน์โหลด PDF</b> ก่อน แล้วเปิด LINE / Gmail ส่งไฟล์ที่อยู่ในโฟลเดอร์ <b>Downloads</b> ของเครื่องค่ะ
+      <div id="shareHelpText" style="display:none;font-size:.72rem;color:#0a6e3f;line-height:1.6;margin-top:8px;padding:10px 12px;background:#fff;border-radius:8px;border:1px dashed #06c755;text-align:left">
+        <div style="font-weight:800;color:#0a6e3f;margin-bottom:6px">💡 ส่ง PDF ให้แอดมินได้ 3 วิธี — ใช้วิธีไหนก็ได้</div>
+        <div style="display:flex;gap:7px;margin-bottom:5px"><span style="color:#06c755;font-weight:800;flex:none">1.</span><span><b>กด "ส่ง PDF"</b> → เลือก LINE / Gmail (ปกติ)</span></div>
+        <div style="display:flex;gap:7px;margin-bottom:5px"><span style="color:#06c755;font-weight:800;flex:none">2.</span><span><b>กด "ดาวน์โหลด PDF"</b> → เปิด LINE → แนบไฟล์จากโฟลเดอร์ <b>Downloads</b></span></div>
+        <div style="display:flex;gap:7px"><span style="color:#06c755;font-weight:800;flex:none">3.</span><span>ถ้าไฟล์ใหญ่ → ระบบจะเปิด PDF ให้ → กด <span style="background:#f4f6f8;padding:1px 6px;border-radius:4px;font-family:monospace">⋮</span> ขวาบน → <b>Share</b> → LINE</span></div>
       </div>
     </div>
 
@@ -4328,6 +4393,45 @@ function openInBrowser(){
 }
 
 // ปุ่ม 📤 แชร์ — ต้องถูกเรียกจาก user click เท่านั้น (ไม่ใช่ setTimeout/Promise)
+// ── Android Share Guide overlay ──
+function showAndroidShareGuide(sizeMB){
+  var overlay = document.getElementById('androidShareGuide');
+  if(!overlay) return;
+  // update size info ถ้ามี
+  var sizeInfo = document.getElementById('androidGuideSizeInfo');
+  if(sizeInfo && typeof sizeMB === 'number'){
+    sizeInfo.innerHTML =
+      '💡 <b>ทำไมต้องทำแบบนี้?</b><br>' +
+      'ไฟล์ PDF ขนาด <b>' + sizeMB.toFixed(1) + ' MB</b> — Android แชร์ไฟล์ใหญ่ตรงจากเว็บไม่ได้<br>' +
+      'ต้องผ่าน Chrome PDF viewer จะส่งไฟล์ได้สมบูรณ์';
+  }
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAndroidShareGuide(){
+  var overlay = document.getElementById('androidShareGuide');
+  if(overlay) overlay.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// เปิด PDF ใน new tab จาก user gesture ในปุ่ม (overlay) — popup ไม่ block
+function openPDFAndroidFromGuide(){
+  var blob = window._lastPdfBlob;
+  if(!blob){ alert('ไม่พบไฟล์ PDF กรุณาสร้างใหม่ค่ะ'); return; }
+  if(!window._lastPdfBlobUrl){
+    window._lastPdfBlobUrl = URL.createObjectURL(blob);
+  }
+  var w = window.open(window._lastPdfBlobUrl, '_blank');
+  if(!w || w.closed || typeof w.closed === 'undefined'){
+    // Popup ถูก block แม้มี user gesture (browser policy แปลก) → fallback download
+    alert('เบราว์เซอร์บล็อก popup\nระบบดาวน์โหลด PDF ให้แทนแล้ว → เปิด LINE แนบไฟล์จาก Downloads ค่ะ');
+    downloadPDF();
+    closeAndroidShareGuide();
+  }
+  // ถ้าเปิดสำเร็จ — overlay ยังอยู่ใน background user กลับมาเห็น instruction ได้
+}
+
 function doShare(){
   var btn = document.getElementById('doneShareBtn');
   var _origHTML = '';
@@ -4345,8 +4449,8 @@ function doShare(){
       btn.style.opacity = '1';
     }
   }
-  // ── 2) Safety net — auto-restore ภายใน 5s ไม่ว่าจะเกิดอะไรขึ้น ──
-  var restoreTimer = setTimeout(restoreBtn, 5000);
+  // ── 2) Safety net — auto-restore ภายใน 4s ──
+  var restoreTimer = setTimeout(restoreBtn, 4000);
 
   try {
     var blob = window._lastPdfBlob;
@@ -4358,7 +4462,27 @@ function doShare(){
       return;
     }
 
-    // ── 3) ถ้า browser ไม่รองรับ navigator.share → download ตรงๆ ──
+    // ── 3) 🎯 SIZE CHECK + Android Open-PDF flow ──
+    // Chrome Android มี hidden limit ~5MB สำหรับ Web Share file
+    // ถ้าเกิน → navigator.share() promise ค้าง pending ไม่ resolve
+    // → เปิด PDF ใน new tab (Chrome native PDF viewer) แล้วให้ user กด menu → Share จาก viewer
+    //   (Chrome viewer ใช้ Android Intent system → ไม่มี size limit)
+    var sizeMB = blob.size / (1024 * 1024);
+    var SHARE_LIMIT_MB = 4;
+    var isAndroid = /Android/.test(navigator.userAgent);
+
+    if(sizeMB > SHARE_LIMIT_MB && isAndroid){
+      // สร้าง blob URL เก็บไว้ — user จะกด "เปิด PDF" จากใน guide เอง (user gesture ยังสด)
+      if(!window._lastPdfBlobUrl){
+        window._lastPdfBlobUrl = URL.createObjectURL(blob);
+      }
+      clearTimeout(restoreTimer); restoreBtn();
+      // แสดง guide overlay ก่อน user กด "เปิด PDF" จากใน overlay
+      showAndroidShareGuide(sizeMB);
+      return;
+    }
+
+    // ── 4) ถ้า browser ไม่รองรับ navigator.share → download ตรงๆ ──
     if(!navigator.share){
       clearTimeout(restoreTimer); restoreBtn();
       alert('เบราว์เซอร์นี้ไม่รองรับการแชร์ — ระบบจะดาวน์โหลด PDF ให้ แล้วส่งให้แอดมินจากแอป LINE / Gmail ค่ะ');
@@ -4366,7 +4490,7 @@ function doShare(){
       return;
     }
 
-    // ── 4) สร้าง File object ──
+    // ── 5) สร้าง File object ──
     var file;
     try {
       file = new File([blob], name, {type:'application/pdf'});
@@ -4379,7 +4503,7 @@ function doShare(){
 
     var shareData = { title:'KONVY KOL Document', text:name, files:[file] };
 
-    // ── 5) เช็ค canShare — ถ้า false → ลอง share แบบไม่ส่ง file (text-only) เพื่อให้ user เห็น share sheet ──
+    // ── 6) เช็ค canShare — ถ้า false → download + เปิด share sheet text-only ──
     var canShareFiles = true;
     if(navigator.canShare){
       try { canShareFiles = navigator.canShare(shareData); }
@@ -4387,7 +4511,6 @@ function doShare(){
     }
 
     if(!canShareFiles){
-      // Browser ไม่รองรับการแชร์ไฟล์ → download ก่อน แล้วเปิด share sheet (text) ให้ user
       clearTimeout(restoreTimer); restoreBtn();
       downloadPDF();
       setTimeout(function(){
@@ -4401,12 +4524,12 @@ function doShare(){
       return;
     }
 
-    // ── 6) Share PDF จริง ──
+    // ── 7) Share PDF จริง — ไฟล์เล็กพอ (< 4MB) ──
     navigator.share(shareData).then(function(){
       clearTimeout(restoreTimer); restoreBtn();
     }).catch(function(err){
       clearTimeout(restoreTimer); restoreBtn();
-      if(err && err.name === 'AbortError') return;   // user cancel — ไม่ทำอะไร
+      if(err && err.name === 'AbortError') return;
       console.warn('Share failed:', err);
       var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       if(isIOS && window._lastPdfDataUri){
@@ -5918,26 +6041,24 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <!-- Member ID How-To Modal -->
 <div id="memberIdModal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(20,10,40,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:99999;align-items:center;justify-content:center;padding:20px;font-family:Sarabun,sans-serif">
-  <div style="background:#fff;border-radius:22px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(138,63,217,.45);border:2px solid rgba(165,97,239,.3)">
-    <div style="background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;padding:20px 24px;border-radius:20px 20px 0 0">
-      <div style="font-size:1.05rem;font-weight:800;margin-bottom:4px">💳 วิธีเช็ค KONVY Member ID</div>
-      <div style="font-size:.75rem;opacity:.92">ทำตาม 2 ขั้นตอนในแอป KONVY</div>
-    </div>
-    <div style="padding:22px 24px">
-      <div style="margin-bottom:20px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.82rem;flex-shrink:0">1</div>
-          <div style="font-size:.85rem;font-weight:700;color:#4a2580">เปิดแอป → กด "บัญชี" → กด QR มุมขวาบน</div>
+  <div style="background:#fff;border-radius:22px;max-width:520px;width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 25px 60px rgba(138,63,217,.45);border:2px solid rgba(165,97,239,.3)">
+    <div style="background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;padding:18px 22px;border-radius:20px 20px 0 0;position:sticky;top:0;z-index:2">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div style="flex:1">
+          <div style="font-size:1.02rem;font-weight:800;margin-bottom:3px">💳 วิธีเช็ค KONVY Member ID</div>
+          <div style="font-size:.74rem;opacity:.92">ทำตาม 2 ขั้นตอนในแอป KONVY</div>
         </div>
-        <img src="https://konvykols.github.io/invoice/assets/member-step1.png" style="width:100%;border-radius:12px;border:1.5px solid #e8d6f7;display:block" alt="Step 1">
+        <button onclick="document.getElementById('memberIdModal').style.display='none'" aria-label="ปิด" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:50%;width:30px;height:30px;font-size:1.1rem;cursor:pointer;line-height:1;flex-shrink:0;font-family:Sarabun,sans-serif">✕</button>
       </div>
-      <div style="margin-bottom:18px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.82rem;flex-shrink:0">2</div>
-          <div style="font-size:.85rem;font-weight:700;color:#4a2580">ชื่อตัวหนาใต้โลโก้ = Member ID</div>
-        </div>
-        <img src="https://konvykols.github.io/invoice/assets/member-step2.png" style="width:100%;border-radius:12px;border:1.5px solid #e8d6f7;display:block" alt="Step 2">
-        <div style="margin-top:10px;background:#f5ebff;border-left:3px solid #8a3fd9;padding:9px 12px;border-radius:6px;font-size:.75rem;color:#4a2580">💡 ตัวอย่าง: <b>Konnie coco</b> คือ Member ID</div>
+    </div>
+    <div style="padding:18px 18px 22px">
+      <!-- ภาพ infographic เดียว รวม 2 step -->
+      <img src="https://konvykols.github.io/invoice/assets/member-howto.png"
+           style="width:100%;border-radius:14px;border:1.5px solid #e8d6f7;display:block;margin-bottom:14px;background:#faf6ff"
+           alt="วิธีเช็ค KONVY Member ID">
+      <!-- Note สรุป -->
+      <div style="background:#f5ebff;border-left:3px solid #8a3fd9;padding:10px 13px;border-radius:6px;font-size:.78rem;color:#4a2580;line-height:1.6;margin-bottom:14px">
+        💡 <b>ตัวอย่าง:</b> ชื่อข้างรูปโปรไฟล์ของท่าน เช่น <b>Konnie coco</b> = คือ Member ID ของท่านเอง
       </div>
       <button onclick="document.getElementById('memberIdModal').style.display='none'" style="width:100%;background:linear-gradient(135deg,#a561ef,#8a3fd9);color:#fff;border:none;border-radius:12px;padding:13px;font-size:.92rem;font-weight:800;cursor:pointer;font-family:Sarabun,sans-serif;box-shadow:0 6px 16px rgba(138,63,217,.35)">เข้าใจแล้ว ✓</button>
     </div>
