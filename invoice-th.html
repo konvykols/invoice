@@ -2,6 +2,140 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
+<!-- ===== In-app browser escape (LINE / Facebook / Instagram / Messenger / TikTok / WeChat …) ===== -->
+<script>
+(function(){
+  var ua = navigator.userAgent || '';
+  var isAndroid = /Android/i.test(ua);
+  var isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
+
+  // restore #hash that was moved into ?_h= while jumping to the external browser
+  try{
+    var q0 = new URLSearchParams(location.search);
+    if(q0.has('_h')){
+      var h = q0.get('_h'); q0.delete('_h');
+      var qs = q0.toString();
+      history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + '#' + h);
+    }
+  }catch(e){}
+
+  var app =
+    /\bLine\//i.test(ua)                         ? 'LINE' :
+    /MicroMessenger/i.test(ua)                   ? 'WeChat' :
+    /\bMessenger|FB_IAB\/MESSENGER/i.test(ua)     ? 'Messenger' :
+    /FBAN|FBAV|FB_IAB|FBIOS|FB4A/i.test(ua)      ? 'Facebook' :
+    /Instagram/i.test(ua)                        ? 'Instagram' :
+    /Barcelona/i.test(ua)                        ? 'Threads' :
+    /musical_ly|BytedanceWebview|TikTok/i.test(ua) ? 'TikTok' :
+    /MicroMessenger/i.test(ua)                   ? 'WeChat' :
+    /aweme|Douyin/i.test(ua)                     ? 'Douyin' :
+    /XiaoHongShu|xhsdiscover/i.test(ua)          ? 'Xiaohongshu' :
+    /Weibo/i.test(ua)                            ? 'Weibo' :
+    /DingTalk/i.test(ua)                         ? 'DingTalk' : null;
+  window.__inAppName = app;
+  if(!app) return;
+
+  // apps that block intent:// / x-safari → show instructions only
+  var noAuto = /WeChat|Douyin|Xiaohongshu|Weibo|DingTalk/.test(app);
+
+  function externalUrl(){
+    var href = location.href.split('#');
+    var base = href[0], hash = href.slice(1).join('#');
+    if(hash) base += (base.indexOf('?') > -1 ? '&' : '?') + '_h=' + encodeURIComponent(hash);
+    return base;
+  }
+  function jump(){
+    if(location.protocol === 'file:') return;
+    if(app === 'LINE'){
+      var u = new URL(location.href);
+      if(u.searchParams.get('openExternalBrowser') !== '1'){
+        u.searchParams.set('openExternalBrowser', '1');
+        location.replace(u.toString());
+      }
+      return;
+    }
+    if(noAuto) return;
+    var target = externalUrl();
+    if(isAndroid){
+      location.href = 'intent://' + target.replace(/^https?:\/\//, '') +
+        '#Intent;scheme=' + location.protocol.replace(':','') +
+        ';S.browser_fallback_url=' + encodeURIComponent(target) + ';end';
+    } else if(isIOS){
+      location.href = 'x-safari-' + target;   // iOS 17+ opens Safari
+    }
+  }
+  window.__openExternalBrowser = jump;
+
+  // auto-try once per session
+  var tried = false;
+  try{ tried = sessionStorage.getItem('_iabTried') === '1'; sessionStorage.setItem('_iabTried', '1'); }catch(e){}
+  function autoJump(){ if(!tried) setTimeout(jump, 300); }
+
+  // ---------- instruction overlay ----------
+  var L = (document.documentElement.lang || 'th').slice(0,2);
+  var TT = {
+    th:{t:'เปิดในเบราว์เซอร์ก่อนนะคะ', s:'แอป '+app+' บล็อคการบันทึก PDF กรุณาเปิดลิงก์นี้ใน Chrome หรือ Safari',
+        s1:'แตะปุ่ม <b>···</b> หรือ <b>⋮</b> ที่มุมขวาบน', s2:'เลือก <b>"เปิดในเบราว์เซอร์"</b><br><span style="opacity:.7">(Open in browser / Open in Safari / Open in Chrome)</span>',
+        open:'🌐 เปิดในเบราว์เซอร์', copy:'📋 คัดลอกลิงก์', copied:'✅ คัดลอกแล้ว — วางลิงก์ในช่องที่อยู่ของ Chrome / Safari ได้เลย',
+        stay:'ใช้งานต่อในแอปนี้ (อาจบันทึก PDF ไม่ได้)'},
+    en:{t:'Please open in your browser', s:app+' blocks PDF saving. Please open this link in Chrome or Safari.',
+        s1:'Tap <b>···</b> or <b>⋮</b> in the top-right corner', s2:'Choose <b>"Open in browser"</b><br><span style="opacity:.7">(Open in Safari / Open in Chrome / Open in external browser)</span>',
+        open:'🌐 Open in Browser', copy:'📋 Copy Link', copied:'✅ Copied — paste it into the Chrome / Safari address bar',
+        stay:'Continue in this app (PDF saving may not work)'},
+    zh:{t:'请在浏览器中打开', s:app+' 会拦截 PDF 保存，请在 Chrome 或 Safari 中打开此链接。',
+        s1:'点击右上角的 <b>···</b> 或 <b>⋮</b>', s2:'选择 <b>“在浏览器中打开”</b><br><span style="opacity:.7">（Open in browser / 在 Safari 中打开 / 在 Chrome 中打开）</span>',
+        open:'🌐 在浏览器中打开', copy:'📋 复制链接', copied:'✅ 已复制 — 请粘贴到 Chrome / Safari 地址栏',
+        stay:'继续在此应用中使用（可能无法保存 PDF）'}
+  };
+  var T = TT[L] || TT.th;
+
+  function copyLink(btn){
+    var link = location.href, done = function(){ btn.innerHTML = T.copied; };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(link).then(done, fallback);
+    } else fallback();
+    function fallback(){
+      var ta = document.createElement('textarea'); ta.value = link;
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try{ document.execCommand('copy'); done(); }catch(e){ prompt('', link); }
+      document.body.removeChild(ta);
+    }
+  }
+
+  function show(){
+    if(document.getElementById('iabOverlay')){ document.getElementById('iabOverlay').style.display='flex'; return; }
+    var o = document.createElement('div');
+    o.id = 'iabOverlay';
+    o.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(30,10,60,.88);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Sarabun,-apple-system,sans-serif';
+    o.innerHTML =
+      '<div style="position:absolute;top:8px;right:14px;font-size:2.6rem;color:#fff;animation:iabBounce 1s infinite">↗</div>'+
+      '<div style="background:#fff;border-radius:18px;max-width:380px;width:100%;padding:22px 20px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.4)">'+
+        '<div style="font-size:2.2rem;margin-bottom:6px">🌐</div>'+
+        '<div style="font-size:1.1rem;font-weight:800;color:#1a1a2e;margin-bottom:6px">'+T.t+'</div>'+
+        '<div style="font-size:.82rem;color:#666;line-height:1.6;margin-bottom:14px">'+T.s+'</div>'+
+        '<div style="text-align:left;background:#f6f1ff;border-radius:12px;padding:12px 14px;font-size:.84rem;color:#3b2470;line-height:1.7;margin-bottom:14px">'+
+          '<div><b style="color:#8b3ff0">1.</b> '+T.s1+'</div><div><b style="color:#8b3ff0">2.</b> '+T.s2+'</div></div>'+
+        (noAuto || location.protocol==='file:' ? '' :
+        '<button id="iabOpen" style="width:100%;border:none;border-radius:12px;padding:13px;margin-bottom:8px;font-size:.95rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#a55cf0,#7b2ff0);font-family:inherit">'+T.open+'</button>')+
+        '<button id="iabCopy" style="width:100%;border:1.5px solid #c9b3f5;border-radius:12px;padding:12px;margin-bottom:8px;font-size:.9rem;font-weight:700;color:#6b2fd0;background:#fff;font-family:inherit">'+T.copy+'</button>'+
+        '<button id="iabStay" style="width:100%;border:none;background:none;padding:8px;font-size:.78rem;color:#999;text-decoration:underline;font-family:inherit">'+T.stay+'</button>'+
+      '</div>'+
+      '<style>@keyframes iabBounce{0%,100%{transform:translate(0,0)}50%{transform:translate(4px,-4px)}}</style>';
+    document.body.appendChild(o);
+    var b1 = document.getElementById('iabOpen');
+    if(b1) b1.onclick = function(){ try{ sessionStorage.removeItem('_iabTried'); }catch(e){} jump(); };
+    document.getElementById('iabCopy').onclick = function(){ copyLink(this); };
+    document.getElementById('iabStay').onclick = function(){ o.style.display = 'none'; };
+  }
+  window.__showOpenInBrowser = show;
+
+  function start(){ autoJump(); setTimeout(show, 900); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+</script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KONVY KOL — ใบแจ้งหนี้ (Invoice)</title>
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Sarabun:wght@300;400;500;600;700&family=Playfair+Display:wght@700;900&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -1487,7 +1621,7 @@ body{font-family:'Sarabun',sans-serif;background:#eef2f7;color:#1a1a2e;min-heigh
     <div style="font-size:1rem;font-weight:700;color:#1a1a2e;margin-bottom:6px">สร้าง PDF เรียบร้อย!</div>
     <div style="font-size:.82rem;color:#8a96a3;line-height:1.6;margin-bottom:14px" id="doneMsg">เตรียมไฟล์แล้วค่ะ</div>
     <div id="lineBrowserWarn" style="display:none;background:#fff8e1;border:1.5px solid #ffc107;border-radius:10px;padding:14px;margin-bottom:14px;text-align:left">
-      <div style="font-size:.85rem;font-weight:700;color:#7a5c00;margin-bottom:6px">⚠️ เปิดผ่าน WeChat / DingTalk</div>
+      <div style="font-size:.85rem;font-weight:700;color:#7a5c00;margin-bottom:6px">⚠️ เปิดผ่าน LINE / Facebook / Instagram / WeChat</div>
       <div style="font-size:.78rem;color:#7a5c00;line-height:1.6;margin-bottom:10px">แอปนี้บล็อคการดาวน์โหลดไฟล์ กรุณาเปิดลิงก์นี้ใน Safari หรือ Chrome แทนค่ะ</div>
       <!-- URL box -->
       <!-- QR Code -->
@@ -4305,7 +4439,7 @@ function savePDF(opts){
     var ua=navigator.userAgent;
     var isIOS=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
     var isAndroid=/Android/.test(ua);
-    var isLineBrowser=/Line\/|NAVER|naver|linecorp|MicroMessenger|DingTalk|Weibo|weibo|Douyin|XiaoHongShu|qq\/|QQBrowser|ToutiaoMicroApp|Bytedance/.test(ua);
+    var isLineBrowser=/Line\/|NAVER|naver|linecorp|MicroMessenger|DingTalk|Weibo|weibo|Douyin|XiaoHongShu|qq\/|QQBrowser|ToutiaoMicroApp|Bytedance|FBAN|FBAV|FB_IAB|FBIOS|Instagram|Barcelona|musical_ly/.test(ua);
 
     var name=(v('infName')||'KOL').replace(/\s+/g,'-');
     var camp=(v('invProject')||'invoice').replace(/\s+/g,'_');
@@ -4330,7 +4464,8 @@ function savePDF(opts){
 
     if(isLineBrowser){
       if(lineWarn){ lineWarn.style.display='block'; lbwDrawQR(); }
-      if(doneMsg) doneMsg.textContent='WeChat / DingTalk ไม่รองรับการดาวน์โหลด กรุณาเปิดใน Safari หรือ Chrome ค่ะ';
+      if(window.__showOpenInBrowser) window.__showOpenInBrowser();
+      if(doneMsg) doneMsg.textContent='LINE / Facebook / Instagram / WeChat ไม่รองรับการดาวน์โหลด กรุณาเปิดใน Safari หรือ Chrome ค่ะ';
     } else if(isIOS||isAndroid){
       // Mobile — แสดงปุ่ม share ให้ user กด (ต้องเป็น user gesture ถึงจะใช้ navigator.share บน Android ได้)
       if(shareBtn){
